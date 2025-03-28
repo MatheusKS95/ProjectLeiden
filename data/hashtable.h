@@ -11,7 +11,7 @@
 #ifndef HASHTABLE
 #define HASHTABLE
 
-#include <stdbool.h>
+#include <SDL3/SDL_stdinc.h>
 
 #define HASH_SIZE 2048
 

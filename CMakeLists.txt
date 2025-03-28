@@ -72,7 +72,6 @@ add_executable(ProjectLeiden main.c)
 #install(TARGETS ProjectRockport RUNTIME DESTINATION bin)
 
 target_link_libraries(ProjectLeiden PRIVATE SDL3_image::SDL3_image SDL3::SDL3)
-target_link_libraries(ProjectLeiden PRIVATE )
 target_link_libraries(ProjectLeiden PRIVATE assimp::assimp)
 target_link_libraries(ProjectLeiden PRIVATE data)
 target_link_libraries(ProjectLeiden PRIVATE filesystem)

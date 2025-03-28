@@ -117,19 +117,11 @@ int main(int argc, char *argv[])
 	SDL_Window *window;
 	if(fullscreen)
 	{
-		#ifdef USING_SDLGPU
 		window = SDL_CreateWindow("Project Leiden", width, height, SDL_WINDOW_FULLSCREEN);
-		#else //USING_OPENGL
-		window = SDL_CreateWindow("Project Leiden", width, height, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL);
-		#endif
 	}
 	else
 	{
-		#ifdef USING_SDLGPU
 		window = SDL_CreateWindow("Project Leiden", width, height, 0);
-		#else //USING_SOKOL
-		window = SDL_CreateWindow("Project Leiden", width, height, SDL_WINDOW_OPENGL);
-		#endif
 	}
 
 	if (window == NULL)

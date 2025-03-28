@@ -8,7 +8,7 @@
  * - Matheus Klein Schaefer (email here)
 */
 
-#include "dynarray.h"
+#include <dynarray.h>
 
 static bool DynarrayRealocFloat(DynArrayF *arr, size_t new_size)
 {

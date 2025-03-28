@@ -11,10 +11,10 @@ add_library(graphics STATIC
 	renderer.c
 	shaders.c
 )
-target_compile_definitions(graphics PUBLIC USING_SDLGPU)
+
 target_include_directories(graphics PUBLIC .)
 target_link_libraries(graphics PUBLIC SDL3_image::SDL3_image)
 target_link_libraries(graphics PUBLIC SDL3::SDL3)
+target_link_libraries(graphics PRIVATE data)
 target_link_libraries(graphics PRIVATE filesystem)
 target_link_libraries(graphics PRIVATE linmath)
-target_link_libraries(graphics PRIVATE data)

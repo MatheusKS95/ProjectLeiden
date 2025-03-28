@@ -3,6 +3,10 @@
 
 #include <SDL3/SDL.h>
 #include <linmath.h>
+//FIGURE OUT WTF IS GOING ON HERE, this is ridiculous
+//data module is a PITA already, dynarray is outdated...
+//if this don't work anyway, replace with SDL's one
+#include <hashtable.h>
 
 /*
  * TODO:
@@ -14,6 +18,8 @@
  * manager, or the graphics engine? If the graphics engine, how
  * could the assets be managed without eating ungodly amounts of
  * RAM?
+ *
+ * Update: hybrid approach wins
 */
 
 /*******************************************************************
@@ -26,9 +32,6 @@ typedef struct GraphicsContext
 	unsigned int height;
 	SDL_Window *window;
 	SDL_GPUDevice *device;
-
-	//standardized pipelines
-	SDL_GPUGraphicsPipeline *test0pipeline;
 } GraphicsContext;
 
 extern GraphicsContext context;
