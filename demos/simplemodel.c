@@ -4,7 +4,6 @@
 #include <assimp/scene.h>          // Output data structure
 #include <assimp/postprocess.h>    // Post processing flags
 #include <graphics.h>
-#include <stb_image.h>
 #include <fileio.h>
 #include <demos.h>
 

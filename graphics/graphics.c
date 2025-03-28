@@ -21,12 +21,18 @@ bool Graphics_Init()
 		return false;
 	}
 
+	//TODO in preparation for a scene manager
+	context.global_textures = HashtableInit();
+	context.global_models = HashtableInit();
+
 	return true;
 }
 
 void Graphics_Deinit()
 {
 	//shutdown
+	HashtableDestroy(context.global_textures);
+	HashtableDestroy(context.global_models);
 	SDL_ReleaseWindowFromGPUDevice(context.device, context.window);
 	SDL_DestroyGPUDevice(context.device);
 	return;

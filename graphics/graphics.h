@@ -32,6 +32,10 @@ typedef struct GraphicsContext
 	unsigned int height;
 	SDL_Window *window;
 	SDL_GPUDevice *device;
+
+	//global hashtables, for persistent content
+	Hashtable *global_textures;
+	Hashtable *global_models;
 } GraphicsContext;
 
 extern GraphicsContext context;
