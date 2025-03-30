@@ -3,10 +3,6 @@
 
 #include <SDL3/SDL.h>
 #include <linmath.h>
-//FIGURE OUT WTF IS GOING ON HERE, this is ridiculous
-//data module is a PITA already, dynarray is outdated...
-//if this don't work anyway, replace with SDL's one
-#include <hashtable.h>
 
 /*
  * TODO:
@@ -32,10 +28,6 @@ typedef struct GraphicsContext
 	unsigned int height;
 	SDL_Window *window;
 	SDL_GPUDevice *device;
-
-	//global hashtables, for persistent content
-	Hashtable *global_textures;
-	Hashtable *global_models;
 } GraphicsContext;
 
 extern GraphicsContext context;
