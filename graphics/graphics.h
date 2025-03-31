@@ -4,20 +4,6 @@
 #include <SDL3/SDL.h>
 #include <linmath.h>
 
-/*
- * TODO:
- * since 2D textures and other stuff can be used several times
- * during a scene lifetime, upon loading keep them in a hashtable.
- * Free them when terminating. Reference them on material struct
- * using keys instead of a pointer.
- * Now begs the question... Who will own the hashtable? The scene
- * manager, or the graphics engine? If the graphics engine, how
- * could the assets be managed without eating ungodly amounts of
- * RAM?
- *
- * Update: hybrid approach wins
-*/
-
 /*******************************************************************
  * GENERAL GRAPHICAL STUFF
  ******************************************************************/
@@ -182,6 +168,9 @@ bool Graphics_LoadShaderFromFS(Shader *shader,
 /*******************************************************************
  * 2D TEXTURES
  ******************************************************************/
+/*
+ * Notice: Project Leiden doesn't support PBR at this moment
+*/
 
 typedef enum SamplerFilter
 {
@@ -196,11 +185,21 @@ typedef enum SamplerMode
 	SAMPLER_MODE_MIRROREDREPEAT
 } SamplerMode;
 
+typedef enum TextureType
+{
+	TEXTURE_DIFFUSE = 0,
+	TEXTURE_NORMAL,
+	TEXTURE_SPECULAR,
+	TEXTURE_EMISSION,
+	TEXTURE_HEIGHT
+} TextureType;
+
 typedef SDL_GPUSampler Sampler;
 
 typedef struct Texture2D
 {
 	SDL_GPUTexture *texture;
+	TextureType type;
 	SDL_Surface *surface;
 } Texture2D;
 
@@ -209,10 +208,12 @@ Sampler* Graphics_GenerateSampler(SamplerFilter filter, SamplerMode mode);
 void Graphics_ReleaseSampler(Sampler *sampler);
 
 bool Graphics_LoadTextureFromMem(Texture2D *texture,
-									uint8_t *buffer, size_t size);
+									uint8_t *buffer, size_t size,
+									TextureType type);
 
 bool Graphics_LoadTextureFromFS(Texture2D *texture,
-								const char *path);
+								const char *path,
+								TextureType type);
 
 void Graphics_ReleaseTexture(Texture2D *texture);
 
@@ -253,6 +254,17 @@ typedef struct IndexArray
 	size_t capacity;
 	Uint32 *indices;
 } IndexArray;
+
+typedef struct Material
+{
+	Vector4 diffuse;
+	Vector4 specular;
+	Vector4 ambient;
+	float shininess;
+	float emission;
+	//ts_texture tex_diffuse, tex_normal, tex_specular, tex_emission;
+	char name[64];
+} Material;
 
 typedef struct Mesh
 {

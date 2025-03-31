@@ -794,13 +794,13 @@ void Demo_Set1_Setup()
 
 	Cube1Sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 	Cube1TextureDiffuse = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-	if(!Graphics_LoadTextureFromFS(Cube1TextureDiffuse, "test_tex/container2.png"))
+	if(!Graphics_LoadTextureFromFS(Cube1TextureDiffuse, "test_tex/container2.png", TEXTURE_DIFFUSE))
 	{
 		//check for errors
 		return;
 	}
 	Cube1TextureSpecular = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-	if(!Graphics_LoadTextureFromFS(Cube1TextureSpecular, "test_tex/container2_specular.png"))
+	if(!Graphics_LoadTextureFromFS(Cube1TextureSpecular, "test_tex/container2_specular.png", TEXTURE_SPECULAR))
 	{
 		//check for errors
 		return;

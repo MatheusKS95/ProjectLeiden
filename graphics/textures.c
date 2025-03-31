@@ -63,7 +63,8 @@ void Graphics_ReleaseSampler(Sampler *sampler)
 }
 
 bool Graphics_LoadTextureFromMem(Texture2D *texture,
-									uint8_t *buffer, size_t size)
+									uint8_t *buffer, size_t size,
+									TextureType type)
 {
 	if(texture == NULL)
 	{
@@ -100,15 +101,17 @@ bool Graphics_LoadTextureFromMem(Texture2D *texture,
 		//TODO check for errors SDL_GetError
 		return false;
 	}
+	texture->type = type;
 	return true;
 }
 
 bool Graphics_LoadTextureFromFS(Texture2D *texture,
-								const char *path)
+								const char *path,
+								TextureType type)
 {
 	size_t filesize;
 	uint8_t *file = FileIOReadBytes(path, &filesize);
-	return Graphics_LoadTextureFromMem(texture, file, filesize);
+	return Graphics_LoadTextureFromMem(texture, file, filesize, type);
 }
 
 void Graphics_ReleaseTexture(Texture2D *texture)
