@@ -3,6 +3,7 @@
 
 #include <SDL3/SDL.h>
 #include <linmath.h>
+#include <hashtable.h>
 
 /*******************************************************************
  * GENERAL GRAPHICAL STUFF
@@ -262,7 +263,8 @@ typedef struct Material
 	Vector4 ambient;
 	float shininess;
 	float emission;
-	//ts_texture tex_diffuse, tex_normal, tex_specular, tex_emission;
+	size_t texture_count;
+	Uint32 *texture_hashes;
 	char name[64];
 } Material;
 
@@ -284,25 +286,25 @@ typedef struct MeshArray
 	Mesh *meshes;
 } MeshArray;
 
+typedef struct MaterialArray
+{
+	size_t count;
+	size_t capacity;
+	Material *materials;
+} MaterialArray;
+
 typedef struct Model
 {
 	MeshArray meshes;
+	MaterialArray *materials;
+	Hashtable *textures;
 	SDL_GPUGraphicsPipeline *pipeline;
 } Model;
 
-/*bool Graphics_NewMesh(Mesh *mesh, VertexData vdata,
-					  uint8_t material_index);
+bool Graphics_ImportModelMem(Model *model, Uint8 *buffer,
+								size_t size);
 
-void Graphics_DestroyMesh(Mesh *mesh);
-
-bool Graphics_NewModel(Model *model, Mesh *meshes,
-						uint16_t mesh_count, Material *materials,
-						uint16_t material_count);
-
-void Graphics_DestroyModel(Model *model);*/
-
-//TODO conceive own 3D model format to be used directly
-//TODO remake IQM loader
+bool Graphics_ImportModelFS(Model *model, const char *path);
 
 /*******************************************************************
  ******************************************************************/
