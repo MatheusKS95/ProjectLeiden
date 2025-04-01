@@ -276,7 +276,6 @@ typedef struct Mesh
 	SDL_GPUBuffer *ibuffer;
 	char meshname[64];
 	char matname[64];
-	//TODO add material
 } Mesh;
 
 typedef struct MeshArray
@@ -296,7 +295,7 @@ typedef struct MaterialArray
 typedef struct Model
 {
 	MeshArray meshes;
-	MaterialArray *materials;
+	MaterialArray materials;
 	Hashtable *textures;
 	SDL_GPUGraphicsPipeline *pipeline;
 } Model;
