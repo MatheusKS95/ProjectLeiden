@@ -263,6 +263,41 @@ static void _arrayClearMaterials(MaterialArray *arr)
 /**************************************************************************************
  * ASSIMP RELATED
 ***************************************************************************************/
+static void assimp_loadtextures(Model *model, Mesh *mesh, struct aiMaterial *material, enum aiTextureType type, const char *typename)
+{
+	for(unsigned int i = 0; i < aiGetMaterialTextureCount(material, type); i++)
+	{
+		struct aiString str;
+		aiGetMaterialTexture(material, type, 0, &str, NULL, NULL, NULL, NULL, NULL, NULL);
+		if(HashtableFind(model->textures, str.data) != NULL)
+		{
+			continue;
+		}
+		Texture2D *texture = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+		if(texture == NULL) continue;
+		TextureType texttype;
+		switch(type)
+		{
+			case aiTextureType_DIFFUSE: texttype = TEXTURE_DIFFUSE; break;
+			case aiTextureType_NORMALS: texttype = TEXTURE_NORMAL; break;
+			case aiTextureType_SPECULAR: texttype = TEXTURE_SPECULAR; break;
+			case aiTextureType_EMISSIVE: texttype = TEXTURE_EMISSION; break;
+			case aiTextureType_HEIGHT: texttype = TEXTURE_HEIGHT; break;
+			default: break;
+		}
+		if(!Graphics_LoadTextureFromFS(texture, str.data, texttype))
+		{
+			continue;
+		}
+		if(!HashtableInsert(model->textures, str.data, texture))
+		{
+			SDL_free(texture);
+			continue;
+		}
+	}
+	//CONTINUE
+}
+
 static void assimp_processmesh(Model *model, Mesh *mesh, struct aiMesh *aimesh, const struct aiScene *scene)
 {
 	_arrayInitVertex(&mesh->vertices);
