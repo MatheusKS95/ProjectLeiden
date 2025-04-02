@@ -35,4 +35,6 @@ void *HashtableFind(Hashtable *table, const char *key);
 
 void HashtableDestroy(Hashtable *table);
 
+unsigned int HashtableGetHashFromKey(const char *key);
+
 #endif

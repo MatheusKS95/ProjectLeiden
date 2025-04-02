@@ -99,3 +99,8 @@ void HashtableDestroy(Hashtable *table)
 	}
 	SDL_free(table);
 }
+
+unsigned int HashtableGetHashFromKey(const char *key)
+{
+	return hashtable_hash(key);
+}
