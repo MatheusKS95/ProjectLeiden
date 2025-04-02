@@ -14,7 +14,7 @@
 #include <fileio.h>
 
 /**************************************************************************************
- * ARRAY HELPERS (vertices, indices, meshes and materials
+ * ARRAY HELPERS (vertices, indices, textures, meshes and materials
 ***************************************************************************************/
 static bool _arrayRealocVertex(VertexArray *arr, size_t new_size)
 {
@@ -136,6 +136,67 @@ static void _arrayClearIndices(IndexArray *arr)
 {
 	_arrayDestroyIndices(arr);
 	_arrayInitIndices(arr);
+}
+
+static bool _arrayRealocTextures(TextureArray *arr, size_t new_size)
+{
+	if(arr->textures != NULL)
+	{
+		Texture2D *aux = (Texture2D*)SDL_realloc(arr->textures, sizeof(Texture2D) * new_size);
+		if(aux != NULL)
+		{
+			arr->textures = aux;
+			arr->capacity = new_size;
+			return true;
+		}
+	}
+	return false;
+}
+
+static void _arrayInitTextures(TextureArray *arr)
+{
+	arr->capacity = 1;
+	arr->count = 0;
+	arr->textures = (Texture2D*)SDL_calloc(arr->capacity, sizeof(Texture2D));
+}
+
+static bool _arrayPushLastTextures(TextureArray *arr, Texture2D value)
+{
+	if(arr->capacity == arr->count)
+	{
+		if(!_arrayRealocTextures(arr, arr->capacity + 1))
+		{
+			return false;
+		}
+	}
+	arr->count++;
+	arr->textures[arr->count - 1] = value;
+	return true;
+}
+
+static bool _arrayPopAtTextures(TextureArray *arr, unsigned int index, Texture2D *value)
+{
+	if(arr->count == 0)
+	{
+		return false;
+	}
+	*value = arr->textures[index];
+	SDL_memmove(&arr->textures[index], &arr->textures[index + 1], sizeof(Texture2D) * ((arr->count - 1) - index));
+	arr->count--;
+	_arrayRealocTextures(arr, arr->capacity - 1);
+	return true;
+}
+
+static void _arrayDestroyTextures(TextureArray *arr)
+{
+	SDL_free(arr->textures);
+	arr->textures = NULL;
+}
+
+static void _arrayClearTextures(TextureArray *arr)
+{
+	_arrayDestroyTextures(arr);
+	_arrayInitTextures(arr);
 }
 
 static bool _arrayRealocMeshes(MeshArray *arr, size_t new_size)

@@ -256,6 +256,13 @@ typedef struct IndexArray
 	Uint32 *indices;
 } IndexArray;
 
+typedef struct TextureArray
+{
+	size_t count;
+	size_t capacity;
+	Texture2D *textures;
+} TextureArray;
+
 typedef struct Material
 {
 	Vector4 diffuse;
