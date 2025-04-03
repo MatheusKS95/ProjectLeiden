@@ -192,7 +192,8 @@ typedef enum TextureType
 	TEXTURE_NORMAL,
 	TEXTURE_SPECULAR,
 	TEXTURE_EMISSION,
-	TEXTURE_HEIGHT
+	TEXTURE_HEIGHT,
+	TEXTURE_DEFAULT //unused, placeholder
 } TextureType;
 
 typedef SDL_GPUSampler Sampler;
@@ -256,13 +257,6 @@ typedef struct IndexArray
 	Uint32 *indices;
 } IndexArray;
 
-typedef struct TextureArray
-{
-	size_t count;
-	size_t capacity;
-	Texture2D *textures;
-} TextureArray;
-
 typedef struct Material
 {
 	Vector4 diffuse;
@@ -270,8 +264,7 @@ typedef struct Material
 	Vector4 ambient;
 	float shininess;
 	float emission;
-	size_t texture_count;
-	Uint32 *texture_hashes;
+	Texture2D textures[TEXTURE_DEFAULT];
 	char name[64];
 } Material;
 
@@ -281,8 +274,8 @@ typedef struct Mesh
 	IndexArray indices;
 	SDL_GPUBuffer *vbuffer;
 	SDL_GPUBuffer *ibuffer;
+	Material material;
 	char meshname[64];
-	char matname[64];
 } Mesh;
 
 typedef struct MeshArray
@@ -292,25 +285,25 @@ typedef struct MeshArray
 	Mesh *meshes;
 } MeshArray;
 
-typedef struct MaterialArray
-{
-	size_t count;
-	size_t capacity;
-	Material *materials;
-} MaterialArray;
-
 typedef struct Model
 {
 	MeshArray meshes;
-	MaterialArray materials;
-	Hashtable *textures;
 	SDL_GPUGraphicsPipeline *pipeline;
 } Model;
 
-bool Graphics_ImportModelMem(Model *model, Uint8 *buffer,
-								size_t size);
+bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
+							size_t size,
+							SDL_GPUGraphicsPipeline *pipeline);
 
-bool Graphics_ImportModelFS(Model *model, const char *path);
+bool Graphics_ImportIQMFS(Model *model, const char *path,
+							SDL_GPUGraphicsPipeline *pipeline);
+
+bool Graphics_ImportOBJMem(Model *model, const char *buffer,
+							size_t size,
+							SDL_GPUGraphicsPipeline *pipeline);
+
+bool Graphics_ImportOBJFS(Model *model, const char *path,
+							SDL_GPUGraphicsPipeline *pipeline);
 
 /*******************************************************************
  ******************************************************************/

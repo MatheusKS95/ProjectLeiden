@@ -6,12 +6,22 @@
  * - Matheus Klein Schaefer (email here)
 */
 
-#include <assimp/cimport.h>        // Plain-C interface
-#include <assimp/scene.h>          // Output data structure
-#include <assimp/postprocess.h>    // Post processing flags
-
 #include <graphics.h>
 #include <fileio.h>
+#include <iqm.h>
+
+/*
+ * About Assimp:
+ * Assimp is huge and takes a lot of time to build.
+ * It's due to usage of RTTI and other C++ stuff.
+ * Assimp is kept in a demo (that will be removed later), so these are my options for official stuff:
+ * > IQM: I did it before for OpenGL stuff, I just need to adapt. Don't need 3rd party tools.
+ * > M3D: I have little idea how to import it, but can't be that difficult. Easy way? 3rd party tools.
+ * > GLTF/GLB: Too painful to do own my own, but needed. Will need cgltf. Need recursion.
+ * > WAVEFRONT OBJ: C makes it difficult to parse, but it's doable. No 3rd party tools needed.
+ * > OTHERS: either obsolete or niche.
+ * > CUSTOM: need further study.
+*/
 
 /**************************************************************************************
  * ARRAY HELPERS (vertices, indices, textures, meshes and materials
@@ -138,67 +148,6 @@ static void _arrayClearIndices(IndexArray *arr)
 	_arrayInitIndices(arr);
 }
 
-static bool _arrayRealocTextures(TextureArray *arr, size_t new_size)
-{
-	if(arr->textures != NULL)
-	{
-		Texture2D *aux = (Texture2D*)SDL_realloc(arr->textures, sizeof(Texture2D) * new_size);
-		if(aux != NULL)
-		{
-			arr->textures = aux;
-			arr->capacity = new_size;
-			return true;
-		}
-	}
-	return false;
-}
-
-static void _arrayInitTextures(TextureArray *arr)
-{
-	arr->capacity = 1;
-	arr->count = 0;
-	arr->textures = (Texture2D*)SDL_calloc(arr->capacity, sizeof(Texture2D));
-}
-
-static bool _arrayPushLastTextures(TextureArray *arr, Texture2D value)
-{
-	if(arr->capacity == arr->count)
-	{
-		if(!_arrayRealocTextures(arr, arr->capacity + 1))
-		{
-			return false;
-		}
-	}
-	arr->count++;
-	arr->textures[arr->count - 1] = value;
-	return true;
-}
-
-static bool _arrayPopAtTextures(TextureArray *arr, unsigned int index, Texture2D *value)
-{
-	if(arr->count == 0)
-	{
-		return false;
-	}
-	*value = arr->textures[index];
-	SDL_memmove(&arr->textures[index], &arr->textures[index + 1], sizeof(Texture2D) * ((arr->count - 1) - index));
-	arr->count--;
-	_arrayRealocTextures(arr, arr->capacity - 1);
-	return true;
-}
-
-static void _arrayDestroyTextures(TextureArray *arr)
-{
-	SDL_free(arr->textures);
-	arr->textures = NULL;
-}
-
-static void _arrayClearTextures(TextureArray *arr)
-{
-	_arrayDestroyTextures(arr);
-	_arrayInitTextures(arr);
-}
-
 static bool _arrayRealocMeshes(MeshArray *arr, size_t new_size)
 {
 	if(arr->meshes != NULL)
@@ -260,232 +209,37 @@ static void _arrayClearMeshes(MeshArray *arr)
 	_arrayInitMeshes(arr);
 }
 
-static bool _arrayRealocMaterials(MaterialArray *arr, size_t new_size)
-{
-	if(arr->materials != NULL)
-	{
-		Material *aux = (Material*)SDL_realloc(arr->materials, sizeof(Material) * new_size);
-		if(aux != NULL)
-		{
-			arr->materials = aux;
-			arr->capacity = new_size;
-			return true;
-		}
-	}
-	return false;
-}
-
-static void _arrayInitMaterials(MaterialArray *arr)
-{
-	arr->capacity = 1;
-	arr->count = 0;
-	arr->materials = (Material*)SDL_calloc(arr->capacity, sizeof(Material));
-}
-
-static bool _arrayPushLastMaterials(MaterialArray *arr, Material value)
-{
-	if(arr->capacity == arr->count)
-	{
-		if(!_arrayRealocMaterials(arr, arr->capacity + 1))
-		{
-			return false;
-		}
-	}
-	arr->count++;
-	arr->materials[arr->count - 1] = value;
-	return true;
-}
-
-static bool _arrayPopAtMaterials(MaterialArray *arr, unsigned int index, Material *value)
-{
-	if(arr->count == 0)
-	{
-		return false;
-	}
-	*value = arr->materials[index];
-	SDL_memmove(&arr->materials[index], &arr->materials[index + 1], sizeof(Material) * ((arr->count - 1) - index));
-	arr->count--;
-	_arrayRealocMaterials(arr, arr->capacity - 1);
-	return true;
-}
-
-static void _arrayDestroyMaterials(MaterialArray *arr)
-{
-	SDL_free(arr->materials);
-	arr->materials = NULL;
-}
-
-static void _arrayClearMaterials(MaterialArray *arr)
-{
-	_arrayDestroyMaterials(arr);
-	_arrayInitMaterials(arr);
-}
-
 /**************************************************************************************
- * ASSIMP RELATED
+ * From the header
 ***************************************************************************************/
-static void assimp_loadtextures(Model *model, Mesh *mesh, struct aiMaterial *material, enum aiTextureType type, const char *typename)
+bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
+							size_t size,
+							SDL_GPUGraphicsPipeline *pipeline)
 {
-	for(unsigned int i = 0; i < aiGetMaterialTextureCount(material, type); i++)
-	{
-		struct aiString str;
-		aiGetMaterialTexture(material, type, 0, &str, NULL, NULL, NULL, NULL, NULL, NULL);
-		if(HashtableFind(model->textures, str.data) != NULL)
-		{
-			continue;
-		}
-		Texture2D *texture = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-		if(texture == NULL) continue;
-		TextureType texttype;
-		switch(type)
-		{
-			case aiTextureType_DIFFUSE: texttype = TEXTURE_DIFFUSE; break;
-			case aiTextureType_NORMALS: texttype = TEXTURE_NORMAL; break;
-			case aiTextureType_SPECULAR: texttype = TEXTURE_SPECULAR; break;
-			case aiTextureType_EMISSIVE: texttype = TEXTURE_EMISSION; break;
-			case aiTextureType_HEIGHT: texttype = TEXTURE_HEIGHT; break;
-			default: break;
-		}
-		if(!Graphics_LoadTextureFromFS(texture, str.data, texttype))
-		{
-			continue;
-		}
-		if(!HashtableInsert(model->textures, str.data, texture))
-		{
-			SDL_free(texture);
-			continue;
-		}
-	}
-	//CONTINUE
-}
-
-static void assimp_processmesh(Model *model, Mesh *mesh, struct aiMesh *aimesh, const struct aiScene *scene)
-{
-	_arrayInitVertex(&mesh->vertices);
-	_arrayInitIndices(&mesh->indices);
-
-	for(unsigned int i = 0; i < aimesh->mNumVertices; ++i)
-	{
-		Vertex vertex = { 0 };
-		vertex.position.x = aimesh->mVertices[i].x;
-		vertex.position.y = aimesh->mVertices[i].y;
-		vertex.position.z = aimesh->mVertices[i].z;
-
-		vertex.normal.x = aimesh->mNormals[i].x;
-		vertex.normal.y = aimesh->mNormals[i].y;
-		vertex.normal.z = aimesh->mNormals[i].z;
-
-		vertex.uv.x = aimesh->mTextureCoords[0][i].x;
-		vertex.uv.y = aimesh->mTextureCoords[0][i].y;
-
-		vertex.tangent.x = aimesh->mTangents[i].x;
-		vertex.tangent.y = aimesh->mTangents[i].y;
-		vertex.tangent.z = aimesh->mTangents[i].z;
-
-		if(aimesh->mColors[0] != NULL)
-		{
-			vertex.color.r = aimesh->mColors[0][i].r;
-			vertex.color.g = aimesh->mColors[0][i].g;
-			vertex.color.b = aimesh->mColors[0][i].b;
-			vertex.color.a = aimesh->mColors[0][i].a;
-		}
-		else
-		{
-			vertex.color.r = 0.0f;
-			vertex.color.g = 0.0f;
-			vertex.color.b = 0.0f;
-			vertex.color.a = 0.0f;
-		}
-
-		_arrayPushLastVertex(&mesh->vertices, vertex);
-	}
-
-	//debug, safety purposes
-	if(aimesh->mNumVertices != mesh->vertices.count)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Assimp vertex count and mesh vertex count are not equal");
-	}
-
-	for(unsigned int i = 0; i < aimesh->mNumFaces; ++i)
-	{
-		struct aiFace face = aimesh->mFaces[i];
-		for(unsigned int j = 0; j < face.mNumIndices; ++j)
-		{
-			//printf("%d ", face.mIndices[j]);
-			_arrayPushLastIndices(&mesh->indices, face.mIndices[j]);
-		}
-	}
-	//SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Model loading: Vertices processed: %d of %d. Indices processed: %d of %d", (int)mesh->vertices.count, aimesh->mNumVertices, (int)mesh->indices.count, aimesh->mNumFaces * 3);
-	SDL_snprintf(mesh->meshname, 64, "%s", aimesh->mName.data);
-
-	//TODO get this stuff done
-	struct aiMaterial *material = scene->mMaterials[aimesh->mMaterialIndex];
-	struct aiString name;
-	struct aiString path;
-	//aiGetMaterialTexture(material, aiTextureType_DIFFUSE, 0, &path, NULL, NULL,	NULL, NULL, NULL, NULL);
-	SDL_snprintf(mesh->matname, 64, "%s", aimesh->mName.data);
-}
-
-static void assimp_processnode(Model *model, struct aiNode *node, const struct aiScene *scene)
-{
-	for(unsigned int i = 0; i < node->mNumMeshes; i++)
-	{
-		struct aiMesh *aimesh = scene->mMeshes[node->mMeshes[i]];
-		Mesh mesh = { 0 };
-		assimp_processmesh(model, &mesh, aimesh, scene);
-		_arrayPushLastMeshes(&model->meshes, mesh);
-	}
-	for(unsigned int i = 0; i < node->mNumChildren; i++)
-	{
-		assimp_processnode(model, node->mChildren[i], scene);
-	}
-}
-
-bool Graphics_ImportModelMem(Model *model, Uint8 *buffer,
-								size_t size)
-{
-	/*
-	 * About Assimp:
-	 * Assimp is huge and takes a lot of time to build.
-	 * It's due to usage of RTTI and other C++ stuff.
-	 * Despite this, I'll keep using it for now, but I plan to make other loaders on my own.
-	 * > IQM: I did it before for OpenGL stuff, I just need to adapt. Don't need 3rd party tools.
-	 * > M3D: I have little idea how to import it, but can't be that difficult. Easy way? 3rd party tools.
-	 * > GLTF/GLB: Too painful to do own my own, but needed. Will need cgltf. Need recursion.
-	 * > WAVEFRONT OBJ: C makes it difficult to parse, but it's doable. No 3rd party tools needed.
-	 * > OTHERS: either obsolete or niche.
-	 * > CUSTOM: need further study.
-	 */
-	if(model == NULL || buffer == NULL)
+	if(model == NULL || buffer == NULL || size <= 0)
 	{
 		return false;
 	}
-	const struct aiScene *scene = aiImportFileFromMemory((char*)buffer, size,
-															aiProcess_CalcTangentSpace |
-															aiProcess_Triangulate |
-															aiProcess_JoinIdenticalVertices |
-															aiProcess_GenSmoothNormals |
-															aiProcess_FlipUVs,
-															NULL);
-
-	if(scene == NULL || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene->mRootNode == NULL)
-	{
-		return false;
-	}
-	_arrayInitMeshes(&model->meshes);
-	_arrayInitMaterials(&model->materials);
-	model->textures = HashtableInit();
-
-	//TODO process node
-
-	aiReleaseImport(scene);
-	return false;
+	return true;
 }
 
-bool Graphics_ImportModelFS(Model *model, const char *path)
+bool Graphics_ImportIQMFS(Model *model, const char *path,
+							SDL_GPUGraphicsPipeline *pipeline)
 {
 	size_t filesize;
 	Uint8 *file = FileIOReadBytes(path, &filesize);
-	return Graphics_ImportModelMem(model, file, filesize);
+	return Graphics_ImportIQMMem(model, file, filesize, pipeline);
 }
 
+bool Graphics_ImportOBJMem(Model *model, const char *buffer,
+							size_t size,
+							SDL_GPUGraphicsPipeline *pipeline)
+{
+	return false;
+}
+
+bool Graphics_ImportOBJFS(Model *model, const char *path,
+							SDL_GPUGraphicsPipeline *pipeline)
+{
+	return false;
+}
