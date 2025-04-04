@@ -212,6 +212,18 @@ static void _arrayClearMeshes(MeshArray *arr)
 /**************************************************************************************
  * From the header
 ***************************************************************************************/
+/*
+ * IQM loading:
+ * 1) will assume default (zeroed) material, since the only data about material stored
+ * in an IQM file is text.
+ * 2) the material name should not be a texture path, but a simple name instead.
+ * 3) for the reason above, the loader will try to load the textures following the
+ * rule: material name + "_" + type (diff, spec, norm, emis, etc..)
+ * 4) textures shall be either png or tga, and at the same location of the iqm file
+ * materialname_diff.tga
+ * 5) loader will not flip if exported from blender (so Y and Z will be flipped)
+ * 6) but not less important: SHALL BE TRIANGULATED!
+*/
 bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 							size_t size,
 							SDL_GPUGraphicsPipeline *pipeline)
@@ -220,6 +232,26 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 	{
 		return false;
 	}
+
+	struct iqmheader header;
+	SDL_memcpy(header.magic, buffer, 16);
+	unsigned int *head = (unsigned int *)&buffer[16];
+	header.version = head[0];
+	if(SDL_strcmp(header.magic, IQM_MAGIC) != 0 || header.version != IQM_VERSION)
+	{
+		SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Failed to load IQM model - invalid IQM file.");
+		return NULL;
+	}
+
+	SDL_memcpy(&header, buffer, sizeof(struct iqmheader));
+
+	struct iqmmesh *meshes = (struct iqmmesh *)&buffer[header.ofs_meshes];
+	char *file_texts = header.ofs_text ? (char *)&buffer[header.ofs_text] : "";
+
+	/*float *position, *uv, *normal, *tangent;
+	uint8_t *blend_indexes, *blend_weights, *color;
+	struct iqmvertexarray *vertarrs = (struct iqmvertexarray *)&buffer[header.ofs_vertexarrays];*/
+
 	return true;
 }
 
@@ -231,6 +263,14 @@ bool Graphics_ImportIQMFS(Model *model, const char *path,
 	return Graphics_ImportIQMMem(model, file, filesize, pipeline);
 }
 
+/*
+ * Wavefront OBJ loading:
+ * 1) mtl file at the same path of obj file.
+ * 2) if mtl file absent, will assume default (zeroed) material.
+ * 3) mesh = object, grouping by object is what is expected here.
+ * 4) textures shall be at the same path, if any (loader will look at mtl)
+ * 5) but not less important: SHALL BE TRIANGULATED!
+*/
 bool Graphics_ImportOBJMem(Model *model, const char *buffer,
 							size_t size,
 							SDL_GPUGraphicsPipeline *pipeline)
