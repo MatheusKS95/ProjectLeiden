@@ -248,9 +248,143 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 	struct iqmmesh *meshes = (struct iqmmesh *)&buffer[header.ofs_meshes];
 	char *file_texts = header.ofs_text ? (char *)&buffer[header.ofs_text] : "";
 
-	/*float *position, *uv, *normal, *tangent;
+	Vertex *vertices = (Vertex*)SDL_malloc(sizeof(Vertex) * (header.num_vertexes));
+	float *position, *uv, *normal, *tangent;
 	uint8_t *blend_indexes, *blend_weights, *color;
-	struct iqmvertexarray *vertarrs = (struct iqmvertexarray *)&buffer[header.ofs_vertexarrays];*/
+	struct iqmvertexarray *vertarrs = (struct iqmvertexarray *)&buffer[header.ofs_vertexarrays];
+
+	for(int i = 0; i < header.num_vertexarrays; i++)
+	{
+		struct iqmvertexarray vertarr = vertarrs[i];
+
+		switch(vertarr.type)
+		{
+			case IQM_POSITION:
+			{
+				position = (float *)&buffer[vertarr.offset];
+				for(int x = 0; x < header.num_vertexes; x++)
+				{
+					SDL_memcpy(&vertices[x].position, &position[x * vertarr.size], vertarr.size * sizeof(float));
+				}
+				break;
+			}
+			case IQM_TEXCOORD:
+			{
+				uv = (float *)&buffer[vertarr.offset];
+				for(int x = 0; x < header.num_vertexes; x++)
+				{
+					SDL_memcpy(&vertices[x].uv, &uv[x * vertarr.size], vertarr.size * sizeof(float));
+				}
+				break;
+			}
+			case IQM_NORMAL:
+			{
+				normal = (float *)&buffer[vertarr.offset];
+				for(int x = 0; x < header.num_vertexes; x++)
+				{
+					SDL_memcpy(&vertices[x].normal, &normal[x * vertarr.size], vertarr.size * sizeof(float));
+				}
+				break;
+			}
+			case IQM_TANGENT:
+			{
+				tangent = (float *)&buffer[vertarr.offset];
+				for(int x = 0; x < header.num_vertexes; x++)
+				{
+					SDL_memcpy(&vertices[x].tangent, &tangent[x * vertarr.size], vertarr.size * sizeof(float));
+				}
+				break;
+			}
+			case IQM_BLENDINDEXES:
+			{
+				blend_indexes = (uint8_t *)&buffer[vertarr.offset];
+				/*for(int x = 0; x < header.num_vertexes; x++)
+				{
+					SDL_memcpy(&vertices[x].blend_indexes, &blend_indexes[x * vertarr.size], vertarr.size * sizeof(uint8_t));
+				}*/
+				break;
+			}
+			case IQM_BLENDWEIGHTS:
+			{
+				blend_weights = (uint8_t *)&buffer[vertarr.offset];
+				/*for(int x = 0; x < header.num_vertexes; x++)
+				{
+					SDL_memcpy(&vertices[x].blend_weights, &blend_weights[x * vertarr.size], vertarr.size * sizeof(uint8_t));
+				}*/
+				break;
+			}
+			case IQM_COLOR:
+			{
+				color = (uint8_t *)&buffer[vertarr.offset];
+				for(int x = 0; x < header.num_vertexes; x++)
+				{
+					SDL_memcpy(&vertices[x].color, &color[x * vertarr.size], vertarr.size * sizeof(uint8_t));
+				}
+			}
+		}
+	}
+	//bones and joints (not used yet) TODO
+
+	//indices
+	Uint32 *indices = (Uint32*)SDL_malloc(sizeof(Uint32) * (header.num_triangles * 3));
+	SDL_memcpy(indices, &buffer[header.ofs_triangles], (header.num_triangles * 3) * sizeof(Uint32));
+
+	_arrayInitMeshes(&model->meshes);
+
+	//add meshes to the model
+	uint32_t index_offset = 0;
+	for(int i = 0; i < header.num_meshes; i++)
+	{
+		Vertex *imported_vertices = &vertices[meshes[i].first_vertex];
+		uint32_t *imported_indices = &indices[meshes[i].first_triangle * 3];
+
+		uint32_t offset = 0;
+		for(int k = 0; k < meshes[i].num_triangles * 3; k++)
+		{
+			imported_indices[k] -= index_offset;
+			if(imported_indices[k] > offset)
+			{
+				offset = imported_indices[k];
+			}
+		}
+		index_offset += ++offset;
+
+		uint16_t vcount = meshes[i].num_vertexes;
+		uint16_t icount = meshes[i].num_triangles * 3;
+
+		// get material and texture names
+		char *iqm_material = &file_texts[meshes[i].material];
+		char *iqm_mesh_name = &file_texts[meshes[i].name];
+
+		Mesh mesh = { 0 };
+		_arrayInitVertex(&mesh.vertices);
+		for(unsigned int m = 0; m < vcount; m++)
+		{
+			Vertex vert = imported_vertices[m];
+			//TODO CLEANUP if false
+			bool test = _arrayPushLastVertex(&mesh.vertices, vert);
+		}
+		_arrayInitIndices(&mesh.indices);
+		for(unsigned int n = 0; n < icount; n++)
+		{
+			Uint32 indice = imported_indices[n];
+			//TODO CLEANUP if false
+			bool test = _arrayPushLastIndices(&mesh.indices, indice);
+		}
+		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
+
+		//TODO begin loading material
+
+		//TODO CLEANUP if false
+		bool testload = _arrayPushLastMeshes(&model->meshes, mesh);
+	}
+
+	model->pipeline = pipeline;
+
+	SDL_free(vertices);
+	vertices = NULL;
+	SDL_free(indices);
+	indices = NULL;
 
 	return true;
 }
