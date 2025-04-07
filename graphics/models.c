@@ -442,3 +442,113 @@ bool Graphics_ImportOBJFS(Model *model, const char *path,
 {
 	return false;
 }
+
+static void uploadmesh(Mesh *mesh)
+{
+	if(mesh == NULL) return;
+
+	mesh->vbuffer = SDL_CreateGPUBuffer(
+		context.device,
+		&(SDL_GPUBufferCreateInfo) {
+			.usage = SDL_GPU_BUFFERUSAGE_VERTEX,
+			.size = sizeof(Mesh) * mesh->vertices.count
+		}
+	);
+
+	mesh->ibuffer = SDL_CreateGPUBuffer(
+		context.device,
+		&(SDL_GPUBufferCreateInfo) {
+			.usage = SDL_GPU_BUFFERUSAGE_INDEX,
+			.size = sizeof(Uint32) * mesh->indices.count
+		}
+	);
+
+	SDL_GPUTransferBuffer* vbufferTransferBuffer = SDL_CreateGPUTransferBuffer(
+		context.device,
+		&(SDL_GPUTransferBufferCreateInfo) {
+			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+			.size = (sizeof(Mesh) * mesh->vertices.count)
+		}
+	);
+	SDL_GPUTransferBuffer* ibufferTransferBuffer = SDL_CreateGPUTransferBuffer(
+		context.device,
+		&(SDL_GPUTransferBufferCreateInfo) {
+			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+			.size = (sizeof(Uint32) * mesh->indices.count)
+		}
+	);
+
+	//TODO maybe separate two buffers, one for vertices and other for indices, maybe this helps
+	Vertex* bufferTransferData = SDL_MapGPUTransferBuffer(context.device, vbufferTransferBuffer, false);
+	SDL_memcpy(bufferTransferData, mesh->vertices.vertices, sizeof(Vertex) * mesh->vertices.count);
+	SDL_UnmapGPUTransferBuffer(context.device, vbufferTransferBuffer);
+	Uint32* indexData = SDL_MapGPUTransferBuffer(context.device, ibufferTransferBuffer, false);
+	SDL_memcpy(indexData, mesh->indices.indices, sizeof(Uint32) * mesh->indices.count);
+	SDL_UnmapGPUTransferBuffer(context.device, ibufferTransferBuffer);
+
+	// Upload the transfer data to the GPU buffers
+	SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdbuf);
+
+	SDL_UploadToGPUBuffer(
+		copyPass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = vbufferTransferBuffer,
+			.offset = 0
+		},
+		&(SDL_GPUBufferRegion) {
+			.buffer = mesh->vbuffer,
+			.offset = 0,
+			.size = sizeof(Vertex) * mesh->vertices.count
+		},
+		false
+	);
+
+	SDL_UploadToGPUBuffer(
+		copyPass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = ibufferTransferBuffer,
+			.offset = 0
+		},
+		&(SDL_GPUBufferRegion) {
+			.buffer = mesh->ibuffer,
+			.offset = 0,
+			.size = sizeof(Uint32) * mesh->indices.count
+		},
+		false
+	);
+	SDL_EndGPUCopyPass(copyPass);
+
+	SDL_ReleaseGPUTransferBuffer(context.device, vbufferTransferBuffer);
+	SDL_ReleaseGPUTransferBuffer(context.device, ibufferTransferBuffer);
+
+	SDL_SubmitGPUCommandBuffer(cmdbuf);
+
+	//DynarrayClearVertex(&mesh->arrv);
+	//DynarrayClearIndices(&mesh->arri);
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Mesh %s uploaded.", mesh->meshname);
+}
+
+void Graphics_UploadModel(Model *model, bool upload_textures)
+{
+	if(model == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "No model to upload.");
+		return;
+	}
+
+	for(Uint32 i = 0; i < model->meshes.count; i++)
+	{
+		if(upload_textures)
+		{
+			for(Uint8 j = 0; j < TEXTURE_DEFAULT; j++)
+			{
+				if(model->meshes.meshes[i].material.textures[j] != NULL)
+				{
+					Graphics_UploadTexture(model->meshes.meshes[i].material.textures[j]);
+				}
+			}
+		}
+		uploadmesh(&model->meshes.meshes[i]);
+	}
+}

@@ -312,6 +312,8 @@ bool Graphics_ImportOBJMem(Model *model, const char *buffer,
 bool Graphics_ImportOBJFS(Model *model, const char *path,
 							SDL_GPUGraphicsPipeline *pipeline);
 
+void Graphics_UploadModel(Model *model, bool upload_textures);
+
 /*******************************************************************
  ******************************************************************/
 
