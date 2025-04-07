@@ -264,7 +264,7 @@ typedef struct Material
 	Vector4 ambient;
 	float shininess;
 	float emission;
-	Texture2D textures[TEXTURE_DEFAULT];
+	Texture2D *textures[TEXTURE_DEFAULT];
 	char name[64];
 } Material;
 
@@ -290,6 +290,13 @@ typedef struct Model
 	MeshArray meshes;
 	SDL_GPUGraphicsPipeline *pipeline;
 } Model;
+
+bool Graphics_SetMaterialTextures(Material *material,
+									Texture2D *diffuse,
+									Texture2D *normal,
+									Texture2D *specular,
+									Texture2D *emission,
+									Texture2D *height);
 
 bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 							size_t size,

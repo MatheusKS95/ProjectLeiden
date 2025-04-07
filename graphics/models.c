@@ -16,7 +16,7 @@
  * It's due to usage of RTTI and other C++ stuff.
  * Assimp is kept in a demo (that will be removed later), so these are my options for official stuff:
  * > IQM: I did it before for OpenGL stuff, I just need to adapt. Don't need 3rd party tools.
- * > M3D: I have little idea how to import it, but can't be that difficult. Easy way? 3rd party tools.
+ * > M3D: I have little idea how to import it, but can't be that difficult. Easy way? Official header only lib.
  * > GLTF/GLB: Too painful to do own my own, but needed. Will need cgltf. Need recursion.
  * > WAVEFRONT OBJ: C makes it difficult to parse, but it's doable. No 3rd party tools needed.
  * > OTHERS: either obsolete or niche.
@@ -212,17 +212,39 @@ static void _arrayClearMeshes(MeshArray *arr)
 /**************************************************************************************
  * From the header
 ***************************************************************************************/
+bool Graphics_SetMaterialTextures(Material *material,
+									Texture2D *diffuse,
+									Texture2D *normal,
+									Texture2D *specular,
+									Texture2D *emission,
+									Texture2D *height)
+{
+	//this might look painful
+	//and it is
+	//that's why I plan to create my own model format later in the future
+	if(material == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics_LoadMaterialTextures unable to proceed without a valid material.");
+		return false;
+	}
+
+	//will assume everything inside material is already filled, except textures
+	//not all textures are needed
+	material->textures[TEXTURE_DIFFUSE] = diffuse;
+	material->textures[TEXTURE_NORMAL] = normal;
+	material->textures[TEXTURE_SPECULAR] = specular;
+	material->textures[TEXTURE_EMISSION] = emission;
+	material->textures[TEXTURE_HEIGHT] = height;
+	return true;
+}
+
+
 /*
  * IQM loading:
  * 1) will assume default (zeroed) material, since the only data about material stored
- * in an IQM file is text.
- * 2) the material name should not be a texture path, but a simple name instead.
- * 3) for the reason above, the loader will try to load the textures following the
- * rule: material name + "_" + type (diff, spec, norm, emis, etc..)
- * 4) textures shall be either png or tga, and at the same location of the iqm file
- * materialname_diff.tga
- * 5) loader will not flip if exported from blender (so Y and Z will be flipped)
- * 6) but not less important: SHALL BE TRIANGULATED!
+ * in an IQM file is text (intended to be a texture filename, but not in this case)
+ * 2) loader will not flip if exported from blender (so Y and Z will be flipped)
+ * 3) but not less important: SHALL BE TRIANGULATED!
 */
 bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 							size_t size,
@@ -373,7 +395,10 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 		}
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
-		//TODO begin loading material
+		//IQM doesn't load any material or texture, you need to provide it later
+		Material material = { 0 };
+		SDL_snprintf(material.name, 64, "%s", iqm_material);
+		mesh.material = material;
 
 		//TODO CLEANUP if false
 		bool testload = _arrayPushLastMeshes(&model->meshes, mesh);
