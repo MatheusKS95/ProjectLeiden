@@ -4,8 +4,8 @@
 # The rockport-util target
 add_library(demos STATIC
 	clearscreen.c
-	simplelightcube.c
-	#iqmmodels.c
+	#simplelightcube.c
+	iqmobjteste.c
 	simplemodel.c
 )
 target_include_directories(demos PUBLIC .)
