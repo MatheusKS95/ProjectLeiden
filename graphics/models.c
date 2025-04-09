@@ -422,25 +422,29 @@ bool Graphics_ImportIQMFS(Model *model, const char *path,
 	return Graphics_ImportIQMMem(model, file, filesize, pipeline);
 }
 
-/*
- * Wavefront OBJ loading:
- * 1) mtl file at the same path of obj file.
- * 2) if mtl file absent, will assume default (zeroed) material.
- * 3) mesh = object, grouping by object is what is expected here.
- * 4) textures shall be at the same path, if any (loader will look at mtl)
- * 5) but not less important: SHALL BE TRIANGULATED!
-*/
-bool Graphics_ImportOBJMem(Model *model, const char *buffer,
-							size_t size,
-							SDL_GPUGraphicsPipeline *pipeline)
+bool Graphics_ImportMaterialFS(Material *materials,
+								size_t material_count,
+								const char *path)
 {
-	return false;
-}
+	size_t filesize;
+	char *file = FileIOReadText(path, &filesize);
+	if(file == NULL)
+	{
+		return false;
+	}
 
-bool Graphics_ImportOBJFS(Model *model, const char *path,
-							SDL_GPUGraphicsPipeline *pipeline)
-{
-	return false;
+	//remove whitespace
+	int j = 0;
+	for(int i = 0; i < strlen(file); i++)
+	{
+		if(file[i] != ' ' && file[i] != '\t')
+		{
+			file[j++] = file[i];
+		}
+	}
+	file[j] = 0;
+	//TODO CONTINUE
+	return true;
 }
 
 static void uploadmesh(Mesh *mesh)
