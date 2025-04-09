@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.20)
 
-include(FetchContent)
+#include(FetchContent)
 
 project(
 	ProjectLeiden
@@ -61,7 +61,7 @@ endif()
 add_subdirectory(data)
 add_subdirectory(filesystem)
 add_subdirectory(graphics)
-#add_subdirectory(audio-miniaudio)
+add_subdirectory(audio)
 add_subdirectory(input)
 add_subdirectory(linmath)
 add_subdirectory(demos)
@@ -76,7 +76,7 @@ target_link_libraries(ProjectLeiden PRIVATE assimp::assimp)
 target_link_libraries(ProjectLeiden PRIVATE data)
 target_link_libraries(ProjectLeiden PRIVATE filesystem)
 target_link_libraries(ProjectLeiden PRIVATE graphics)
-#target_link_libraries(ProjectLeiden PRIVATE audio)
+target_link_libraries(ProjectLeiden PRIVATE audio)
 target_link_libraries(ProjectLeiden PRIVATE input)
 target_link_libraries(ProjectLeiden PRIVATE linmath)
 target_link_libraries(ProjectLeiden PRIVATE demos)
