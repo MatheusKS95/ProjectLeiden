@@ -305,12 +305,9 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 bool Graphics_ImportIQMFS(Model *model, const char *path,
 							SDL_GPUGraphicsPipeline *pipeline);
 
-bool Graphics_ImportOBJMem(Model *model, const char *buffer,
-							size_t size,
-							SDL_GPUGraphicsPipeline *pipeline);
-
-bool Graphics_ImportOBJFS(Model *model, const char *path,
-							SDL_GPUGraphicsPipeline *pipeline);
+bool Graphics_ImportMaterialFS(Material *materials,
+								size_t material_count,
+								const char *path);
 
 void Graphics_UploadModel(Model *model, bool upload_textures);
 
