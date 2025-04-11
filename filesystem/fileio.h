@@ -83,4 +83,12 @@ bool FileIOWrite(const char *filename, const void *data, size_t len,
 */
 const char* FileIOGetWritableDir();
 
+/**
+ * @brief Gives the base path from a given filepath.
+ * @param filepath (const char*) file path
+ * @param out (char *) base path
+ * @param max_len (size_t) max size for base path
+*/
+void FileIOGetBasePath(const char *filepath, char *out, size_t max_len);
+
 #endif

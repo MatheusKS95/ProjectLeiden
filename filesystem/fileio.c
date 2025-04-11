@@ -177,3 +177,25 @@ const char* FileIOGetWritableDir()
 		return NULL;
 	}
 }
+
+void FileIOGetBasePath(const char *filepath, char *out, size_t max_len)
+{
+	const char *last_slash = strrchr(filepath, '/');
+#ifdef _WIN32
+	const char *last_backslash = SDL_strrchr(filepath, '\\');
+	if (!last_slash || (last_backslash && last_backslash > last_slash))
+		last_slash = last_backslash;
+#endif
+	if (last_slash)
+	{
+		size_t len = last_slash - filepath;
+		if (len >= max_len) len = max_len - 1;
+		SDL_strlcpy(out, filepath, len);
+		out[len] = '\0';
+	}
+	else
+	{
+		SDL_strlcpy(out, ".", max_len);
+		out[max_len - 1] = '\0';
+	}
+}

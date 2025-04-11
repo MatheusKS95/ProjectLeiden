@@ -8,7 +8,27 @@
 
 #include <graphics.h>
 #include <fileio.h>
+#include <ini.h>
 #include <iqm.h>
+
+//TODO place this on filesystem later
+static void GetBasePath(const char *filepath, char *out, size_t max_len) {
+	const char *last_slash = strrchr(filepath, '/');
+#ifdef _WIN32
+	const char *last_backslash = strrchr(filepath, '\\');
+	if (!last_slash || (last_backslash && last_backslash > last_slash))
+		last_slash = last_backslash;
+#endif
+	if (last_slash) {
+		size_t len = last_slash - filepath;
+		if (len >= max_len) len = max_len - 1;
+		strncpy(out, filepath, len);
+		out[len] = '\0';
+	} else {
+		strncpy(out, ".", max_len);
+		out[max_len - 1] = '\0';
+	}
+}
 
 /*
  * About Assimp:
@@ -238,26 +258,27 @@ bool Graphics_SetMaterialTextures(Material *material,
 	return true;
 }
 
-
-/*
- * IQM loading:
- * 1) will assume default (zeroed) material, since the only data about material stored
- * in an IQM file is text (intended to be a texture filename, but not in this case)
- * 2) loader will not flip if exported from blender (so Y and Z will be flipped)
- * 3) but not less important: SHALL BE TRIANGULATED!
-*/
-bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
-							size_t size,
+bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
+							size_t iqmsize,
+							const char *materialfile,
 							SDL_GPUGraphicsPipeline *pipeline)
 {
-	if(model == NULL || buffer == NULL || size <= 0)
+	if(model == NULL || iqmbuffer == NULL || iqmsize <= 0)
 	{
 		return false;
 	}
 
+	bool has_material = false;
+	INIstruct *material_ini = ININew();
+	if(materialfile != NULL)
+	{
+		if(INILoad(material_ini, materialfile))
+			has_material = true;
+	}
+
 	struct iqmheader header;
-	SDL_memcpy(header.magic, buffer, 16);
-	unsigned int *head = (unsigned int *)&buffer[16];
+	SDL_memcpy(header.magic, iqmbuffer, 16);
+	unsigned int *head = (unsigned int *)&iqmbuffer[16];
 	header.version = head[0];
 	if(SDL_strcmp(header.magic, IQM_MAGIC) != 0 || header.version != IQM_VERSION)
 	{
@@ -265,15 +286,15 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 		return NULL;
 	}
 
-	SDL_memcpy(&header, buffer, sizeof(struct iqmheader));
+	SDL_memcpy(&header, iqmbuffer, sizeof(struct iqmheader));
 
-	struct iqmmesh *meshes = (struct iqmmesh *)&buffer[header.ofs_meshes];
-	char *file_texts = header.ofs_text ? (char *)&buffer[header.ofs_text] : "";
+	struct iqmmesh *meshes = (struct iqmmesh *)&iqmbuffer[header.ofs_meshes];
+	char *file_texts = header.ofs_text ? (char *)&iqmbuffer[header.ofs_text] : "";
 
 	Vertex *vertices = (Vertex*)SDL_malloc(sizeof(Vertex) * (header.num_vertexes));
 	float *position, *uv, *normal, *tangent;
 	uint8_t *blend_indexes, *blend_weights, *color;
-	struct iqmvertexarray *vertarrs = (struct iqmvertexarray *)&buffer[header.ofs_vertexarrays];
+	struct iqmvertexarray *vertarrs = (struct iqmvertexarray *)&iqmbuffer[header.ofs_vertexarrays];
 
 	for(int i = 0; i < header.num_vertexarrays; i++)
 	{
@@ -283,7 +304,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 		{
 			case IQM_POSITION:
 			{
-				position = (float *)&buffer[vertarr.offset];
+				position = (float *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].position, &position[x * vertarr.size], vertarr.size * sizeof(float));
@@ -292,7 +313,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 			}
 			case IQM_TEXCOORD:
 			{
-				uv = (float *)&buffer[vertarr.offset];
+				uv = (float *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].uv, &uv[x * vertarr.size], vertarr.size * sizeof(float));
@@ -301,7 +322,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 			}
 			case IQM_NORMAL:
 			{
-				normal = (float *)&buffer[vertarr.offset];
+				normal = (float *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].normal, &normal[x * vertarr.size], vertarr.size * sizeof(float));
@@ -310,7 +331,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 			}
 			case IQM_TANGENT:
 			{
-				tangent = (float *)&buffer[vertarr.offset];
+				tangent = (float *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].tangent, &tangent[x * vertarr.size], vertarr.size * sizeof(float));
@@ -319,7 +340,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 			}
 			case IQM_BLENDINDEXES:
 			{
-				blend_indexes = (uint8_t *)&buffer[vertarr.offset];
+				blend_indexes = (uint8_t *)&iqmbuffer[vertarr.offset];
 				/*for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].blend_indexes, &blend_indexes[x * vertarr.size], vertarr.size * sizeof(uint8_t));
@@ -328,7 +349,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 			}
 			case IQM_BLENDWEIGHTS:
 			{
-				blend_weights = (uint8_t *)&buffer[vertarr.offset];
+				blend_weights = (uint8_t *)&iqmbuffer[vertarr.offset];
 				/*for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].blend_weights, &blend_weights[x * vertarr.size], vertarr.size * sizeof(uint8_t));
@@ -337,7 +358,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 			}
 			case IQM_COLOR:
 			{
-				color = (uint8_t *)&buffer[vertarr.offset];
+				color = (uint8_t *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].color, &color[x * vertarr.size], vertarr.size * sizeof(uint8_t));
@@ -349,7 +370,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 
 	//indices
 	Uint32 *indices = (Uint32*)SDL_malloc(sizeof(Uint32) * (header.num_triangles * 3));
-	SDL_memcpy(indices, &buffer[header.ofs_triangles], (header.num_triangles * 3) * sizeof(Uint32));
+	SDL_memcpy(indices, &iqmbuffer[header.ofs_triangles], (header.num_triangles * 3) * sizeof(Uint32));
 
 	_arrayInitMeshes(&model->meshes);
 
@@ -396,8 +417,61 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
 		//IQM doesn't load any material or texture, you need to provide it later
+		//TODO load material using INI (easiest right now, can expand)
 		Material material = { 0 };
 		SDL_snprintf(material.name, 64, "%s", iqm_material);
+		if(has_material)
+		{
+			//TODO check if fields exist at least
+			SDL_sscanf(INIGetString(material_ini, material.name, "ambient"), "%f %f %f", &material.ambient.x, &material.ambient.y, &material.ambient.z);
+			SDL_sscanf(INIGetString(material_ini, material.name, "diffuse"), "%f %f %f", &material.diffuse.x, &material.diffuse.y, &material.diffuse.z);
+			SDL_sscanf(INIGetString(material_ini, material.name, "specular"), "%f %f %f", &material.specular.x, &material.specular.y, &material.specular.z);
+			material.emission = INIGetFloat(material_ini, material.name, "emission");
+			material.shininess = INIGetFloat(material_ini, material.name, "shininess");
+			//TODO textures
+			char material_dir[256];
+			SDL_strlcpy(material_dir, materialfile, sizeof(material_dir));
+			char* lastslash = strrchr(material_dir, '/');
+			if (lastslash != NULL) {
+				*lastslash = '\0';
+			} else {
+				// Não foi encontrado um caractere de barra (possivelmente um caminho relativo)
+				material_dir[0] = '\0';
+			}
+
+			char diffusepath[512];
+			const char *diff_map = INIGetString(material_ini, iqm_material, "diffuse_map");
+			SDL_snprintf(diffusepath, sizeof(diffusepath), "%s/%s", material_dir, diff_map);
+			if(diff_map != NULL && SDL_strcmp(diff_map, ""))
+			{
+				material.textures[TEXTURE_DIFFUSE] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(material.textures[TEXTURE_DIFFUSE] != NULL)
+					Graphics_LoadTextureFromFS(material.textures[TEXTURE_DIFFUSE], diffusepath, TEXTURE_DIFFUSE);
+			}
+
+			char normalpath[512];
+			const char *norm_map = INIGetString(material_ini, iqm_material, "normal_map");
+			SDL_snprintf(normalpath, sizeof(normalpath), "%s/%s", material_dir, norm_map);
+			if(norm_map != NULL && SDL_strcmp(norm_map, ""))
+			{
+				Texture2D *norm_texture = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(norm_texture != NULL)
+					Graphics_LoadTextureFromFS(norm_texture, normalpath, TEXTURE_NORMAL);
+			}
+			//TODO the rest
+		}
+		else
+		{
+			material.ambient = (Vector3){ 0 };
+			material.diffuse = (Vector3){ 0 };
+			material.specular = (Vector3){ 0 };
+			material.emission = material.shininess = 0.0f;
+			material.textures[TEXTURE_EMISSION] = NULL;
+			material.textures[TEXTURE_DIFFUSE] = NULL;
+			material.textures[TEXTURE_HEIGHT] = NULL;
+			material.textures[TEXTURE_NORMAL] = NULL;
+			material.textures[TEXTURE_SPECULAR] = NULL;
+		}
 		mesh.material = material;
 
 		//TODO CLEANUP if false
@@ -414,37 +488,13 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
 	return true;
 }
 
-bool Graphics_ImportIQMFS(Model *model, const char *path,
+bool Graphics_ImportIQMFS(Model *model, const char *iqmfile,
+							const char *materialfile,
 							SDL_GPUGraphicsPipeline *pipeline)
 {
-	size_t filesize;
-	Uint8 *file = FileIOReadBytes(path, &filesize);
-	return Graphics_ImportIQMMem(model, file, filesize, pipeline);
-}
-
-bool Graphics_ImportMaterialFS(Material *materials,
-								size_t material_count,
-								const char *path)
-{
-	size_t filesize;
-	char *file = FileIOReadText(path, &filesize);
-	if(file == NULL)
-	{
-		return false;
-	}
-
-	//remove whitespace
-	int j = 0;
-	for(int i = 0; i < strlen(file); i++)
-	{
-		if(file[i] != ' ' && file[i] != '\t')
-		{
-			file[j++] = file[i];
-		}
-	}
-	file[j] = 0;
-	//TODO CONTINUE
-	return true;
+	size_t iqmfilesize;
+	Uint8 *modelfile = FileIOReadBytes(iqmfile, &iqmfilesize);
+	return Graphics_ImportIQMMem(model, modelfile, iqmfilesize, materialfile, pipeline);
 }
 
 static void uploadmesh(Mesh *mesh)
@@ -545,13 +595,15 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 	{
 		if(upload_textures)
 		{
-			for(Uint8 j = 0; j < TEXTURE_DEFAULT; j++)
+			if(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE] != NULL)
 			{
-				if(model->meshes.meshes[i].material.textures[j] != NULL)
-				{
-					Graphics_UploadTexture(model->meshes.meshes[i].material.textures[j]);
-				}
+				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE]);
 			}
+			if(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL] != NULL)
+			{
+				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL]);
+			}
+			//TODO not ideal, but deal with the rest
 		}
 		uploadmesh(&model->meshes.meshes[i]);
 	}

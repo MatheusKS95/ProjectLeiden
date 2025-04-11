@@ -259,9 +259,9 @@ typedef struct IndexArray
 
 typedef struct Material
 {
-	Vector4 diffuse;
-	Vector4 specular;
-	Vector4 ambient;
+	Vector3 diffuse;
+	Vector3 specular;
+	Vector3 ambient;
 	float shininess;
 	float emission;
 	Texture2D *textures[TEXTURE_DEFAULT];
@@ -298,16 +298,14 @@ bool Graphics_SetMaterialTextures(Material *material,
 									Texture2D *emission,
 									Texture2D *height);
 
-bool Graphics_ImportIQMMem(Model *model, Uint8 *buffer,
-							size_t size,
+bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
+							size_t iqmsize,
+							const char *materialfile,
 							SDL_GPUGraphicsPipeline *pipeline);
 
-bool Graphics_ImportIQMFS(Model *model, const char *path,
+bool Graphics_ImportIQMFS(Model *model, const char *iqmfile,
+							const char *materialfile,
 							SDL_GPUGraphicsPipeline *pipeline);
-
-bool Graphics_ImportMaterialFS(Material *materials,
-								size_t material_count,
-								const char *path);
 
 void Graphics_UploadModel(Model *model, bool upload_textures);
 
