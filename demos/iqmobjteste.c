@@ -111,7 +111,11 @@ void Demo_Set1_Setup()
 	SDL_ReleaseGPUShader(context.device, modelvsshader.shader);
 	SDL_ReleaseGPUShader(context.device, modelfsshader.shader);
 
-	if(!Graphics_ImportIQMFS(&testmodel, "test_models/house/house.iqm", "test_models/house/house.material", testmodel.pipeline))
+	/*if(!Graphics_ImportIQMFS(&testmodel, "test_models/house/house.iqm", "test_models/house/house.material", testmodel.pipeline))
+	{
+		return;
+	}*/
+	if(!Graphics_ImportIQMFS(&testmodel, "test_models/pub/Building6.iqm", "test_models/pub/pub.material", testmodel.pipeline))
 	{
 		return;
 	}

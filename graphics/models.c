@@ -11,25 +11,6 @@
 #include <ini.h>
 #include <iqm.h>
 
-//TODO place this on filesystem later
-static void GetBasePath(const char *filepath, char *out, size_t max_len) {
-	const char *last_slash = strrchr(filepath, '/');
-#ifdef _WIN32
-	const char *last_backslash = strrchr(filepath, '\\');
-	if (!last_slash || (last_backslash && last_backslash > last_slash))
-		last_slash = last_backslash;
-#endif
-	if (last_slash) {
-		size_t len = last_slash - filepath;
-		if (len >= max_len) len = max_len - 1;
-		strncpy(out, filepath, len);
-		out[len] = '\0';
-	} else {
-		strncpy(out, ".", max_len);
-		out[max_len - 1] = '\0';
-	}
-}
-
 /*
  * About Assimp:
  * Assimp is huge and takes a lot of time to build.
@@ -454,11 +435,20 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 			SDL_snprintf(normalpath, sizeof(normalpath), "%s/%s", material_dir, norm_map);
 			if(norm_map != NULL && SDL_strcmp(norm_map, ""))
 			{
-				Texture2D *norm_texture = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(norm_texture != NULL)
-					Graphics_LoadTextureFromFS(norm_texture, normalpath, TEXTURE_NORMAL);
+				material.textures[TEXTURE_NORMAL] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(material.textures[TEXTURE_NORMAL] != NULL)
+					Graphics_LoadTextureFromFS(material.textures[TEXTURE_NORMAL], normalpath, TEXTURE_NORMAL);
 			}
-			//TODO the rest
+
+			char specularpath[512];
+			const char *spec_map = INIGetString(material_ini, iqm_material, "specular_map");
+			SDL_snprintf(specularpath, sizeof(specularpath), "%s/%s", material_dir, spec_map);
+			if(spec_map != NULL && SDL_strcmp(norm_map, ""))
+			{
+				material.textures[TEXTURE_SPECULAR] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(material.textures[TEXTURE_SPECULAR] != NULL)
+					Graphics_LoadTextureFromFS(material.textures[TEXTURE_SPECULAR], specularpath, TEXTURE_SPECULAR);
+			}
 		}
 		else
 		{
@@ -602,6 +592,10 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 			if(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL] != NULL)
 			{
 				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL]);
+			}
+			if(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR] != NULL)
+			{
+				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]);
 			}
 			//TODO not ideal, but deal with the rest
 		}

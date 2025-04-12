@@ -178,6 +178,7 @@ const char* FileIOGetWritableDir()
 	}
 }
 
+//FIXME
 void FileIOGetBasePath(const char *filepath, char *out, size_t max_len)
 {
 	const char *last_slash = strrchr(filepath, '/');
