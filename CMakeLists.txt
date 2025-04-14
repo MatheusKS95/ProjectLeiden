@@ -40,24 +40,6 @@ else()
 	find_package(SDL3_image REQUIRED CONFIG REQUIRED COMPONENTS SDL3_image)
 endif()
 
-option(ROCKPORT_ASSIMP_VENDORED "I don't have assimp installed" ON)
-if(ROCKPORT_ASSIMP_VENDORED)
-	set(ASSIMP_NO_EXPORT ON)
-	#set(ASSIMP_BUILD_ZLIB ON)
-	set(ASSIMP_BUILD_TESTS OFF)
-	set(ASSIMP_INSTALL OFF)
-	set(ASSIMP_BUILD_ASSIMP_VIEW OFF)
-	#FetchContent_Declare(
-	#	assimp
-	#	GIT_REPOSITORY https://github.com/assimp/assimp/
-	#	GIT_TAG v5.4.3
-	#)
-	#FetchContent_MakeAvailable(assimp)
-	add_subdirectory(vendored/assimp)
-else()
-	find_package(assimp REQUIRED CONFIG REQUIRED COMPONENTS assimp)
-endif()
-
 add_subdirectory(data)
 add_subdirectory(filesystem)
 add_subdirectory(graphics)
@@ -72,7 +54,6 @@ add_executable(ProjectLeiden main.c)
 #install(TARGETS ProjectRockport RUNTIME DESTINATION bin)
 
 target_link_libraries(ProjectLeiden PRIVATE SDL3_image::SDL3_image SDL3::SDL3)
-target_link_libraries(ProjectLeiden PRIVATE assimp::assimp)
 target_link_libraries(ProjectLeiden PRIVATE data)
 target_link_libraries(ProjectLeiden PRIVATE filesystem)
 target_link_libraries(ProjectLeiden PRIVATE graphics)

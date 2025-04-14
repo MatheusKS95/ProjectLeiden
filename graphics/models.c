@@ -443,14 +443,14 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 			char specularpath[512];
 			const char *spec_map = INIGetString(material_ini, iqm_material, "specular_map");
 			SDL_snprintf(specularpath, sizeof(specularpath), "%s/%s", material_dir, spec_map);
-			if(spec_map != NULL && SDL_strcmp(norm_map, ""))
+			if(spec_map != NULL && SDL_strcmp(spec_map, ""))
 			{
 				material.textures[TEXTURE_SPECULAR] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 				if(material.textures[TEXTURE_SPECULAR] != NULL)
 					Graphics_LoadTextureFromFS(material.textures[TEXTURE_SPECULAR], specularpath, TEXTURE_SPECULAR);
 			}
 		}
-		else
+		else //redundant, material is already zeroed
 		{
 			material.ambient = (Vector3){ 0 };
 			material.diffuse = (Vector3){ 0 };

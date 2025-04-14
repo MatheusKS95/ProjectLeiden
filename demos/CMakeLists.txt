@@ -4,14 +4,12 @@
 # The rockport-util target
 add_library(demos STATIC
 	clearscreen.c
-	#simplelightcube.c
-	iqmobjteste.c
-	simplemodel.c
+	demo1.c
+	demo2.c
 )
 target_include_directories(demos PUBLIC .)
 target_link_libraries(demos PUBLIC SDL3_image::SDL3_image)
 target_link_libraries(demos PUBLIC SDL3::SDL3)
-target_link_libraries(demos PUBLIC assimp::assimp)
 target_link_libraries(demos PRIVATE linmath)
 target_link_libraries(demos PRIVATE filesystem)
 target_link_libraries(demos PRIVATE data)

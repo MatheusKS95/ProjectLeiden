@@ -1,3 +1,27 @@
+/*
+No CMakeLists principal
+option(ROCKPORT_ASSIMP_VENDORED "I don't have assimp installed" ON)
+if(ROCKPORT_ASSIMP_VENDORED)
+	set(ASSIMP_NO_EXPORT ON)
+	#set(ASSIMP_BUILD_ZLIB ON)
+	set(ASSIMP_BUILD_TESTS OFF)
+	set(ASSIMP_INSTALL OFF)
+	set(ASSIMP_BUILD_ASSIMP_VIEW OFF)
+	#FetchContent_Declare(
+	#	assimp
+	#	GIT_REPOSITORY https://github.com/assimp/assimp/
+	#	GIT_TAG v5.4.3
+	#)
+	#FetchContent_MakeAvailable(assimp)
+	add_subdirectory(vendored/assimp)
+else()
+	find_package(assimp REQUIRED CONFIG REQUIRED COMPONENTS assimp)
+endif()
+
+No CMakeLists principal, do módulo graphics e módulo demo
+target_link_libraries(ProjectLeiden PRIVATE assimp::assimp)
+*/
+
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <assimp/cimport.h>        // Plain-C interface

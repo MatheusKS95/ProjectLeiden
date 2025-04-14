@@ -115,21 +115,12 @@ void Demo_Set1_Setup()
 	{
 		return;
 	}*/
-	if(!Graphics_ImportIQMFS(&testmodel, "test_models/pub/Building6.iqm", "test_models/pub/pub.material", testmodel.pipeline))
+	if(!Graphics_ImportIQMFS(&testmodel, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material", testmodel.pipeline))
 	{
 		return;
 	}
 
 	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
-
-	/*Texture2D *texturediff = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-	if(texturediff == NULL) return;
-	//TODO make a mtl parser, both for IQM and OBJ
-	if(!Graphics_LoadTextureFromFS(texturediff, "test_models/house/texture2.png", TEXTURE_DIFFUSE))
-	{
-		return;
-	}
-	Graphics_SetMaterialTextures(&testmodel.meshes.meshes[0].material, texturediff, NULL, NULL, NULL, NULL);*/
 
 	texturedepth = SDL_CreateGPUTexture(
 		context.device,
