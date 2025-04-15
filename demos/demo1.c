@@ -115,7 +115,7 @@ void Demo_Set1_Setup()
 	{
 		return;
 	}*/
-	if(!Graphics_ImportIQMFS(&testmodel, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material", testmodel.pipeline))
+	if(!Graphics_ImportIQM(&testmodel, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material", testmodel.pipeline))
 	{
 		return;
 	}
