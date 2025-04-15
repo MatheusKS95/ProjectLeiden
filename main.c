@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 			}
 			Input_GetState(&state, &event);
 		}
-		Demo_Set1_Logic(&state);
+		//Demo_Set1_Logic(&state);
 		//Demo_Set2_Logic(&state);
 
 		Demo_ClearScreen();

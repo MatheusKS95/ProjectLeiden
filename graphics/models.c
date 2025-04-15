@@ -12,16 +12,99 @@
 #include <iqm.h>
 
 /*
- * About Assimp:
- * Assimp is huge and takes a lot of time to build.
- * It's due to usage of RTTI and other C++ stuff.
- * Assimp is kept in a demo (that will be removed later), so these are my options for official stuff:
- * > IQM: I did it before for OpenGL stuff, I just need to adapt. Don't need 3rd party tools.
- * > M3D: I have little idea how to import it, but can't be that difficult. Easy way? Official header only lib.
- * > GLTF/GLB: Too painful to do own my own, but needed. Will need cgltf. Need recursion.
- * > WAVEFRONT OBJ: C makes it difficult to parse, but it's doable. No 3rd party tools needed.
- * > OTHERS: either obsolete or niche.
+ * About 3D model support:
+ * > IQM: Official support, no dependency. External INI as material data.
+ * > M3D: Not supported. Not planned.
+ * > GLTF/GLB: Not supported. Planned (with cgltf).
+ * > WAVEFRONT OBJ: Not supported. Not planned.
+ * > FBX: Not supported. Not planned.
+ * > COLLADA: Not supported. Not planned (legacy).
  * > CUSTOM: need further study.
+ * > OTHER: either niche or legacy. Not supported. Not planned.
+ *
+ * IQM:
+ * > Pros:
+ * >> Easiest, quickest to load.
+ * >> Support skeletal animations.
+ * > Cons:
+ * >> Old design, from Quake era.
+ * >> No material besides a string.
+ * >> No blendshapes and other stuff to animate faces.
+ * I chose this because I already know how to load it. The material issue was solved
+ * (more like MacGyverism kind of solved) using the existing INI parser due to
+ * flexibility. Don't support blendshapes (used often to animate clothes and faces).
+ * It's likely I'll replace IQM in favor of another format in a future version.
+ *
+ * M3D:
+ * > Pros:
+ * >> Quick to load.
+ * >> Lightweight file.
+ * >> Support skeletal animations.
+ * >> Material included.
+ * > Cons:
+ * >> Complicated to load (even with the official header-only lib).
+ * >> Not sure about the rest.
+ * Support for this format was intended but, based on some design choices, I ended up
+ * dropping the idea.
+ *
+ * GLTF/GLB:
+ * > Pros:
+ * >> Industry standard.
+ * >> All the information needed, including embedded textures.
+ * >> Support blendshapes and more advanced animations.
+ * > Cons:
+ * >> Very complicated to load (will require cgltf and recursion to help).
+ * >> Scene graph is not compatible with Project Leiden's architecture.
+ * >> Big, with lots of unnecessary information.
+ * >> GLTF is text-based (JSON), thus inefficient to load, but GLB is binary.
+ * Despite cons, support for this format is planned. Scene graph info will be
+ * discarded upon loading and only mesh data and materials will be kept (pretty much
+ * how raylib deals with gltf). A scene graph might be developed as default in a
+ * future version, so GLB might become the official model/scene format.
+ *
+ * WAVEFRONT OBJ:
+ * > Pros:
+ * >> Despite age, still industry standard somehow.
+ * >> Straightforward in design.
+ * >> Flexible.
+ * > Cons:
+ * >> No material, requires separate file (mtl).
+ * >> No animations.
+ * >> Text based format is inefficient to load, string parsing can be dangerous.
+ * Supporting this format was intended, but the amount of work required to parse it
+ * and check all the possible variations of a given property made us drop it.
+ * Official IQM cli converter tool is able to convert OBJ to IQM easily, so another
+ * reason to drop OBJ.
+ *
+ * FBX
+ * > Pros:
+ * >> ?
+ * > Cons:
+ * >> Proprietary (yet there are open-source loaders).
+ * I've seen a lot of implementations but seems like this format is not great for use
+ * here. Also, official IQM cli converter tool is able to convert FBX to IQM.
+ *
+ * COLLADA (DAE)
+ * > Pros:
+ * >> Same as GLTF, except embedded textures (not big of a deal however)
+ * > Cons:
+ * >> No binary file.
+ * >> Is text format (dae is xml), painful and inefficient to load without right tools.
+ * >> Complicated format, with scene graph design, and lots of unneeded data.
+ * >> Legacy, replaced by GLTF.
+ * Painful to work with. Not even considered.
+ *
+ * CUSTOM FORMAT
+ * This offers greatest freedom. We can include anything that's needed and avoid bloat.
+ * However, this require further study to establish a specification and blender
+ * plugins. This might be the format that will replace IQM, if we keep the engine
+ * smaller and simpler (like raylib).
+ *
+ * OTHER FORMATS:
+ * We don't plan to support any other format. Assimp could, but there are no benefit
+ * into support niche formats or formats that could be easily imported into blender
+ * and exported as either something supported or something that the IQM cli tools
+ * support.
 */
 
 /**************************************************************************************
@@ -213,39 +296,14 @@ static void _arrayClearMeshes(MeshArray *arr)
 /**************************************************************************************
  * From the header
 ***************************************************************************************/
-bool Graphics_SetMaterialTextures(Material *material,
-									Texture2D *diffuse,
-									Texture2D *normal,
-									Texture2D *specular,
-									Texture2D *emission,
-									Texture2D *height)
-{
-	//this might look painful
-	//and it is
-	//that's why I plan to create my own model format later in the future
-	if(material == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics_LoadMaterialTextures unable to proceed without a valid material.");
-		return false;
-	}
-
-	//will assume everything inside material is already filled, except textures
-	//not all textures are needed
-	material->textures[TEXTURE_DIFFUSE] = diffuse;
-	material->textures[TEXTURE_NORMAL] = normal;
-	material->textures[TEXTURE_SPECULAR] = specular;
-	material->textures[TEXTURE_EMISSION] = emission;
-	material->textures[TEXTURE_HEIGHT] = height;
-	return true;
-}
-
-bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
-							size_t iqmsize,
-							const char *materialfile,
-							SDL_GPUGraphicsPipeline *pipeline)
+static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
+									size_t iqmsize,
+									const char *materialfile,
+									SDL_GPUGraphicsPipeline *pipeline)
 {
 	if(model == NULL || iqmbuffer == NULL || iqmsize <= 0)
 	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Invalid model structure or invalid file.");
 		return false;
 	}
 
@@ -263,7 +321,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 	header.version = head[0];
 	if(SDL_strcmp(header.magic, IQM_MAGIC) != 0 || header.version != IQM_VERSION)
 	{
-		SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Failed to load IQM model - invalid IQM file.");
+		SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - invalid IQM file.");
 		return NULL;
 	}
 
@@ -385,20 +443,33 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 		for(unsigned int m = 0; m < vcount; m++)
 		{
 			Vertex vert = imported_vertices[m];
-			//TODO CLEANUP if false
-			bool test = _arrayPushLastVertex(&mesh.vertices, vert);
+			if(!_arrayPushLastVertex(&mesh.vertices, vert))
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - unable to copy vertices.");
+				SDL_free(vertices);
+				vertices = NULL;
+				SDL_free(indices);
+				indices = NULL;
+				return false;
+			}
 		}
 		_arrayInitIndices(&mesh.indices);
 		for(unsigned int n = 0; n < icount; n++)
 		{
 			Uint32 indice = imported_indices[n];
-			//TODO CLEANUP if false
-			bool test = _arrayPushLastIndices(&mesh.indices, indice);
+			if(!_arrayPushLastIndices(&mesh.indices, indice))
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - unable to copy indices.");
+				SDL_free(vertices);
+				vertices = NULL;
+				SDL_free(indices);
+				indices = NULL;
+				return false;
+			}
 		}
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
-		//IQM doesn't load any material or texture, you need to provide it later
-		//TODO load material using INI (easiest right now, can expand)
+		//IQM doesn't load any material or texture, you need to provide it
 		Material material = { 0 };
 		SDL_snprintf(material.name, 64, "%s", iqm_material);
 		if(has_material)
@@ -407,9 +478,10 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 			SDL_sscanf(INIGetString(material_ini, material.name, "ambient"), "%f %f %f", &material.ambient.x, &material.ambient.y, &material.ambient.z);
 			SDL_sscanf(INIGetString(material_ini, material.name, "diffuse"), "%f %f %f", &material.diffuse.x, &material.diffuse.y, &material.diffuse.z);
 			SDL_sscanf(INIGetString(material_ini, material.name, "specular"), "%f %f %f", &material.specular.x, &material.specular.y, &material.specular.z);
+			//automatically zeroed if absent
 			material.emission = INIGetFloat(material_ini, material.name, "emission");
 			material.shininess = INIGetFloat(material_ini, material.name, "shininess");
-			//TODO textures
+
 			char material_dir[256];
 			SDL_strlcpy(material_dir, materialfile, sizeof(material_dir));
 			char* lastslash = strrchr(material_dir, '/');
@@ -449,6 +521,26 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 				if(material.textures[TEXTURE_SPECULAR] != NULL)
 					Graphics_LoadTextureFromFS(material.textures[TEXTURE_SPECULAR], specularpath, TEXTURE_SPECULAR);
 			}
+
+			char emissionpath[512];
+			const char *emission_map = INIGetString(material_ini, iqm_material, "emission_map");
+			SDL_snprintf(emissionpath, sizeof(emissionpath), "%s/%s", material_dir, emission_map);
+			if(emission_map != NULL && SDL_strcmp(emission_map, ""))
+			{
+				material.textures[TEXTURE_EMISSION] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(material.textures[TEXTURE_EMISSION] != NULL)
+					Graphics_LoadTextureFromFS(material.textures[TEXTURE_EMISSION], emissionpath, TEXTURE_EMISSION);
+			}
+
+			char heightpath[512];
+			const char *height_map = INIGetString(material_ini, iqm_material, "height_map");
+			SDL_snprintf(heightpath, sizeof(heightpath), "%s/%s", material_dir, height_map);
+			if(height_map != NULL && SDL_strcmp(height_map, ""))
+			{
+				material.textures[TEXTURE_HEIGHT] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(material.textures[TEXTURE_HEIGHT] != NULL)
+					Graphics_LoadTextureFromFS(material.textures[TEXTURE_HEIGHT], heightpath, TEXTURE_HEIGHT);
+			}
 		}
 		else //redundant, material is already zeroed
 		{
@@ -465,7 +557,15 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 		mesh.material = material;
 
 		//TODO CLEANUP if false
-		bool testload = _arrayPushLastMeshes(&model->meshes, mesh);
+		if(!_arrayPushLastMeshes(&model->meshes, mesh))
+		{
+			SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - unable to copy meshes.");
+			SDL_free(vertices);
+			vertices = NULL;
+			SDL_free(indices);
+			indices = NULL;
+			return false;
+		}
 	}
 
 	model->pipeline = pipeline;
@@ -478,13 +578,13 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 	return true;
 }
 
-bool Graphics_ImportIQMFS(Model *model, const char *iqmfile,
+bool Graphics_ImportIQM(Model *model, const char *iqmfile,
 							const char *materialfile,
 							SDL_GPUGraphicsPipeline *pipeline)
 {
 	size_t iqmfilesize;
 	Uint8 *modelfile = FileIOReadBytes(iqmfile, &iqmfilesize);
-	return Graphics_ImportIQMMem(model, modelfile, iqmfilesize, materialfile, pipeline);
+	return _import_iqm_buffer(model, modelfile, iqmfilesize, materialfile, pipeline);
 }
 
 static void uploadmesh(Mesh *mesh)
@@ -522,7 +622,6 @@ static void uploadmesh(Mesh *mesh)
 		}
 	);
 
-	//TODO maybe separate two buffers, one for vertices and other for indices, maybe this helps
 	Vertex* bufferTransferData = SDL_MapGPUTransferBuffer(context.device, vbufferTransferBuffer, false);
 	SDL_memcpy(bufferTransferData, mesh->vertices.vertices, sizeof(Vertex) * mesh->vertices.count);
 	SDL_UnmapGPUTransferBuffer(context.device, vbufferTransferBuffer);
@@ -597,8 +696,44 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 			{
 				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]);
 			}
-			//TODO not ideal, but deal with the rest
+			if(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION] != NULL)
+			{
+				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION]);
+			}
+			if(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT] != NULL)
+			{
+				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT]);
+			}
+			//not ideal, i know, but loop don't work
 		}
 		uploadmesh(&model->meshes.meshes[i]);
 	}
+}
+
+void Graphics_ReleaseModel(Model *model)
+{
+	for(Uint32 i = 0; i < model->meshes.count; i++)
+	{
+		//destroy buffers
+		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].vbuffer);
+		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].ibuffer);
+
+		//destroy textures
+		if(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT]);
+
+		//destroy arrays
+		_arrayDestroyIndices(&model->meshes.meshes[i].indices);
+		_arrayDestroyVertex(&model->meshes.meshes[i].vertices);
+	}
+	//finally, destroy meshes
+	_arrayDestroyMeshes(&model->meshes);
 }
