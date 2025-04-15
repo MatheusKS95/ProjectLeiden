@@ -303,6 +303,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 {
 	if(model == NULL || iqmbuffer == NULL || iqmsize <= 0)
 	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Invalid model structure or invalid file.");
 		return false;
 	}
 
@@ -320,7 +321,7 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 	header.version = head[0];
 	if(SDL_strcmp(header.magic, IQM_MAGIC) != 0 || header.version != IQM_VERSION)
 	{
-		SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Failed to load IQM model - invalid IQM file.");
+		SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - invalid IQM file.");
 		return NULL;
 	}
 
@@ -442,20 +443,33 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 		for(unsigned int m = 0; m < vcount; m++)
 		{
 			Vertex vert = imported_vertices[m];
-			//TODO CLEANUP if false
-			bool test = _arrayPushLastVertex(&mesh.vertices, vert);
+			if(!_arrayPushLastVertex(&mesh.vertices, vert))
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - unable to copy vertices.");
+				SDL_free(vertices);
+				vertices = NULL;
+				SDL_free(indices);
+				indices = NULL;
+				return false;
+			}
 		}
 		_arrayInitIndices(&mesh.indices);
 		for(unsigned int n = 0; n < icount; n++)
 		{
 			Uint32 indice = imported_indices[n];
-			//TODO CLEANUP if false
-			bool test = _arrayPushLastIndices(&mesh.indices, indice);
+			if(!_arrayPushLastIndices(&mesh.indices, indice))
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - unable to copy indices.");
+				SDL_free(vertices);
+				vertices = NULL;
+				SDL_free(indices);
+				indices = NULL;
+				return false;
+			}
 		}
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
-		//IQM doesn't load any material or texture, you need to provide it later
-		//TODO load material using INI (easiest right now, can expand)
+		//IQM doesn't load any material or texture, you need to provide it
 		Material material = { 0 };
 		SDL_snprintf(material.name, 64, "%s", iqm_material);
 		if(has_material)
@@ -464,9 +478,10 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 			SDL_sscanf(INIGetString(material_ini, material.name, "ambient"), "%f %f %f", &material.ambient.x, &material.ambient.y, &material.ambient.z);
 			SDL_sscanf(INIGetString(material_ini, material.name, "diffuse"), "%f %f %f", &material.diffuse.x, &material.diffuse.y, &material.diffuse.z);
 			SDL_sscanf(INIGetString(material_ini, material.name, "specular"), "%f %f %f", &material.specular.x, &material.specular.y, &material.specular.z);
+			//automatically zeroed if absent
 			material.emission = INIGetFloat(material_ini, material.name, "emission");
 			material.shininess = INIGetFloat(material_ini, material.name, "shininess");
-			//TODO textures
+
 			char material_dir[256];
 			SDL_strlcpy(material_dir, materialfile, sizeof(material_dir));
 			char* lastslash = strrchr(material_dir, '/');
@@ -506,6 +521,26 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 				if(material.textures[TEXTURE_SPECULAR] != NULL)
 					Graphics_LoadTextureFromFS(material.textures[TEXTURE_SPECULAR], specularpath, TEXTURE_SPECULAR);
 			}
+
+			char emissionpath[512];
+			const char *emission_map = INIGetString(material_ini, iqm_material, "emission_map");
+			SDL_snprintf(emissionpath, sizeof(emissionpath), "%s/%s", material_dir, emission_map);
+			if(emission_map != NULL && SDL_strcmp(emission_map, ""))
+			{
+				material.textures[TEXTURE_EMISSION] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(material.textures[TEXTURE_EMISSION] != NULL)
+					Graphics_LoadTextureFromFS(material.textures[TEXTURE_EMISSION], emissionpath, TEXTURE_EMISSION);
+			}
+
+			char heightpath[512];
+			const char *height_map = INIGetString(material_ini, iqm_material, "height_map");
+			SDL_snprintf(heightpath, sizeof(heightpath), "%s/%s", material_dir, height_map);
+			if(height_map != NULL && SDL_strcmp(height_map, ""))
+			{
+				material.textures[TEXTURE_HEIGHT] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(material.textures[TEXTURE_HEIGHT] != NULL)
+					Graphics_LoadTextureFromFS(material.textures[TEXTURE_HEIGHT], heightpath, TEXTURE_HEIGHT);
+			}
 		}
 		else //redundant, material is already zeroed
 		{
@@ -522,7 +557,15 @@ bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 		mesh.material = material;
 
 		//TODO CLEANUP if false
-		bool testload = _arrayPushLastMeshes(&model->meshes, mesh);
+		if(!_arrayPushLastMeshes(&model->meshes, mesh))
+		{
+			SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - unable to copy meshes.");
+			SDL_free(vertices);
+			vertices = NULL;
+			SDL_free(indices);
+			indices = NULL;
+			return false;
+		}
 	}
 
 	model->pipeline = pipeline;
@@ -653,7 +696,15 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 			{
 				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]);
 			}
-			//TODO not ideal, but deal with the rest
+			if(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION] != NULL)
+			{
+				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION]);
+			}
+			if(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT] != NULL)
+			{
+				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT]);
+			}
+			//not ideal, i know, but loop don't work
 		}
 		uploadmesh(&model->meshes.meshes[i]);
 	}
