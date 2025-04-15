@@ -291,13 +291,6 @@ typedef struct Model
 	SDL_GPUGraphicsPipeline *pipeline;
 } Model;
 
-bool Graphics_SetMaterialTextures(Material *material,
-									Texture2D *diffuse,
-									Texture2D *normal,
-									Texture2D *specular,
-									Texture2D *emission,
-									Texture2D *height);
-
 bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 							size_t iqmsize,
 							const char *materialfile,
@@ -308,6 +301,8 @@ bool Graphics_ImportIQMFS(Model *model, const char *iqmfile,
 							SDL_GPUGraphicsPipeline *pipeline);
 
 void Graphics_UploadModel(Model *model, bool upload_textures);
+
+void Graphics_ReleaseModel(Model *model);
 
 /*******************************************************************
  ******************************************************************/

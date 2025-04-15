@@ -12,16 +12,99 @@
 #include <iqm.h>
 
 /*
- * About Assimp:
- * Assimp is huge and takes a lot of time to build.
- * It's due to usage of RTTI and other C++ stuff.
- * Assimp is kept in a demo (that will be removed later), so these are my options for official stuff:
- * > IQM: I did it before for OpenGL stuff, I just need to adapt. Don't need 3rd party tools.
- * > M3D: I have little idea how to import it, but can't be that difficult. Easy way? Official header only lib.
- * > GLTF/GLB: Too painful to do own my own, but needed. Will need cgltf. Need recursion.
- * > WAVEFRONT OBJ: C makes it difficult to parse, but it's doable. No 3rd party tools needed.
- * > OTHERS: either obsolete or niche.
+ * About 3D model support:
+ * > IQM: Official support, no dependency. External INI as material data.
+ * > M3D: Not supported. Not planned.
+ * > GLTF/GLB: Not supported. Planned (with cgltf).
+ * > WAVEFRONT OBJ: Not supported. Not planned.
+ * > FBX: Not supported. Not planned.
+ * > COLLADA: Not supported. Not planned (legacy).
  * > CUSTOM: need further study.
+ * > OTHER: either niche or legacy. Not supported. Not planned.
+ *
+ * IQM:
+ * > Pros:
+ * >> Easiest, quickest to load.
+ * >> Support skeletal animations.
+ * > Cons:
+ * >> Old design, from Quake era.
+ * >> No material besides a string.
+ * >> No blendshapes and other stuff to animate faces.
+ * I chose this because I already know how to load it. The material issue was solved
+ * (more like MacGyverism kind of solved) using the existing INI parser due to
+ * flexibility. Don't support blendshapes (used often to animate clothes and faces).
+ * It's likely I'll replace IQM in favor of another format in a future version.
+ *
+ * M3D:
+ * > Pros:
+ * >> Quick to load.
+ * >> Lightweight file.
+ * >> Support skeletal animations.
+ * >> Material included.
+ * > Cons:
+ * >> Complicated to load (even with the official header-only lib).
+ * >> Not sure about the rest.
+ * Support for this format was intended but, based on some design choices, I ended up
+ * dropping the idea.
+ *
+ * GLTF/GLB:
+ * > Pros:
+ * >> Industry standard.
+ * >> All the information needed, including embedded textures.
+ * >> Support blendshapes and more advanced animations.
+ * > Cons:
+ * >> Very complicated to load (will require cgltf and recursion to help).
+ * >> Scene graph is not compatible with Project Leiden's architecture.
+ * >> Big, with lots of unnecessary information.
+ * >> GLTF is text-based (JSON), thus inefficient to load, but GLB is binary.
+ * Despite cons, support for this format is planned. Scene graph info will be
+ * discarded upon loading and only mesh data and materials will be kept (pretty much
+ * how raylib deals with gltf). A scene graph might be developed as default in a
+ * future version, so GLB might become the official model/scene format.
+ *
+ * WAVEFRONT OBJ:
+ * > Pros:
+ * >> Despite age, still industry standard somehow.
+ * >> Straightforward in design.
+ * >> Flexible.
+ * > Cons:
+ * >> No material, requires separate file (mtl).
+ * >> No animations.
+ * >> Text based format is inefficient to load, string parsing can be dangerous.
+ * Supporting this format was intended, but the amount of work required to parse it
+ * and check all the possible variations of a given property made us drop it.
+ * Official IQM cli converter tool is able to convert OBJ to IQM easily, so another
+ * reason to drop OBJ.
+ *
+ * FBX
+ * > Pros:
+ * >> ?
+ * > Cons:
+ * >> Proprietary (yet there are open-source loaders).
+ * I've seen a lot of implementations but seems like this format is not great for use
+ * here. Also, official IQM cli converter tool is able to convert FBX to IQM.
+ *
+ * COLLADA (DAE)
+ * > Pros:
+ * >> Same as GLTF, except embedded textures (not big of a deal however)
+ * > Cons:
+ * >> No binary file.
+ * >> Is text format (dae is xml), painful and inefficient to load without right tools.
+ * >> Complicated format, with scene graph design, and lots of unneeded data.
+ * >> Legacy, replaced by GLTF.
+ * Painful to work with. Not even considered.
+ *
+ * CUSTOM FORMAT
+ * This offers greatest freedom. We can include anything that's needed and avoid bloat.
+ * However, this require further study to establish a specification and blender
+ * plugins. This might be the format that will replace IQM, if we keep the engine
+ * smaller and simpler (like raylib).
+ *
+ * OTHER FORMATS:
+ * We don't plan to support any other format. Assimp could, but there are no benefit
+ * into support niche formats or formats that could be easily imported into blender
+ * and exported as either something supported or something that the IQM cli tools
+ * support.
 */
 
 /**************************************************************************************
@@ -213,32 +296,6 @@ static void _arrayClearMeshes(MeshArray *arr)
 /**************************************************************************************
  * From the header
 ***************************************************************************************/
-bool Graphics_SetMaterialTextures(Material *material,
-									Texture2D *diffuse,
-									Texture2D *normal,
-									Texture2D *specular,
-									Texture2D *emission,
-									Texture2D *height)
-{
-	//this might look painful
-	//and it is
-	//that's why I plan to create my own model format later in the future
-	if(material == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics_LoadMaterialTextures unable to proceed without a valid material.");
-		return false;
-	}
-
-	//will assume everything inside material is already filled, except textures
-	//not all textures are needed
-	material->textures[TEXTURE_DIFFUSE] = diffuse;
-	material->textures[TEXTURE_NORMAL] = normal;
-	material->textures[TEXTURE_SPECULAR] = specular;
-	material->textures[TEXTURE_EMISSION] = emission;
-	material->textures[TEXTURE_HEIGHT] = height;
-	return true;
-}
-
 bool Graphics_ImportIQMMem(Model *model, Uint8 *iqmbuffer,
 							size_t iqmsize,
 							const char *materialfile,
@@ -522,7 +579,6 @@ static void uploadmesh(Mesh *mesh)
 		}
 	);
 
-	//TODO maybe separate two buffers, one for vertices and other for indices, maybe this helps
 	Vertex* bufferTransferData = SDL_MapGPUTransferBuffer(context.device, vbufferTransferBuffer, false);
 	SDL_memcpy(bufferTransferData, mesh->vertices.vertices, sizeof(Vertex) * mesh->vertices.count);
 	SDL_UnmapGPUTransferBuffer(context.device, vbufferTransferBuffer);
@@ -601,4 +657,32 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 		}
 		uploadmesh(&model->meshes.meshes[i]);
 	}
+}
+
+void Graphics_ReleaseModel(Model *model)
+{
+	for(Uint32 i = 0; i < model->meshes.count; i++)
+	{
+		//destroy buffers
+		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].vbuffer);
+		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].ibuffer);
+
+		//destroy textures
+		if(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION]);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT] != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT]);
+
+		//destroy arrays
+		_arrayDestroyIndices(&model->meshes.meshes[i].indices);
+		_arrayDestroyVertex(&model->meshes.meshes[i].vertices);
+	}
+	//finally, destroy meshes
+	_arrayDestroyMeshes(&model->meshes);
 }
