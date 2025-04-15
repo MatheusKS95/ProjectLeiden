@@ -12,7 +12,7 @@
 #include <getopt.h> //WARNING: this will make my code non-portable, won't work on windows (except through mingw)
 #include <SDL3/SDL.h>
 #include <graphics.h>
-//#include <audio.h>
+#include <audio.h>
 #include <fileio.h>
 #include <input.h>
 #include <ini.h>
@@ -139,21 +139,10 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	/*if(!Audio_Init())
+	if(!Audio_Init())
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to init audio module");
-	}*/
-
-	//test
-	/*Audio_LogNameCurrentDevice();
-	Music testmusic = { 0 };
-	bool testmusicbool = Audio_LoadMusicFromFS(&testmusic, "test_music/change_zephy.flac", true);
-	SDL_LogInfo(SDL_LOG_CATEGORY_TEST, "Music loading: this might have worked? %s", testmusicbool ? "yes" : "no");
-	Audio_PlayMusic(&testmusic);
-	Sound testsound = { 0 };
-	bool testsoundbool = Audio_LoadSoundFromFS(&testsound, "test_sound/wind1.wav");
-	SDL_LogInfo(SDL_LOG_CATEGORY_TEST, "Sound loading: this might have worked? %s", testsoundbool ? "yes" : "no");
-	Audio_PlaySound(&testsound);*/
+	}
 
 	//Demo_Set1_Setup();
 	//Demo_Set2_Setup();
@@ -181,18 +170,12 @@ int main(int argc, char *argv[])
 		Demo_ClearScreen();
 		//Demo_Set1_Draw();
 		//Demo_Set2_Draw();
-
-		/*if(status.exit_request)
-		{
-			SDL_LogInfo(SDL_LOG_CATEGORY_TEST, "Exiting...");
-			playing = false;
-			break;
-		}*/
 	}
-	/*Audio_StopMusic(&testmusic);
-	Audio_FreeMusic(&testmusic);
-	Audio_FreeSound(&testsound);
-	Audio_Deinit();*/
+
+	//Demo_Set1_Destroy();
+	//Demo_Set2_Destroy();
+
+	Audio_Deinit();
 	Graphics_Deinit();
 	SDL_DestroyWindow(window);
 	FileIODeinit();

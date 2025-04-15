@@ -246,3 +246,9 @@ void Demo_Set1_Draw()
 	SDL_SubmitGPUCommandBuffer(cmdbuf);
 	return;
 }
+
+void Demo_Set1_Destroy()
+{
+	Graphics_ReleaseModel(&testmodel);
+	Graphics_ReleaseSampler(sampler);
+}
