@@ -475,9 +475,22 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 		if(has_material)
 		{
 			//TODO check if fields exist at least
-			SDL_sscanf(INIGetString(material_ini, material.name, "ambient"), "%f %f %f", &material.ambient.x, &material.ambient.y, &material.ambient.z);
-			SDL_sscanf(INIGetString(material_ini, material.name, "diffuse"), "%f %f %f", &material.diffuse.x, &material.diffuse.y, &material.diffuse.z);
-			SDL_sscanf(INIGetString(material_ini, material.name, "specular"), "%f %f %f", &material.specular.x, &material.specular.y, &material.specular.z);
+			char *ambient = INIGetString(material_ini, material.name, "ambient");
+			char *diffuse = INIGetString(material_ini, material.name, "diffuse");
+			char *specular = INIGetString(material_ini, material.name, "specular");
+			if(ambient != NULL && SDL_strcmp(ambient, ""))
+			{
+				SDL_sscanf(ambient, "%f %f %f", &material.ambient.x, &material.ambient.y, &material.ambient.z);
+			}
+			if(diffuse != NULL && SDL_strcmp(diffuse, ""))
+			{
+				SDL_sscanf(diffuse, "%f %f %f", &material.diffuse.x, &material.diffuse.y, &material.diffuse.z);
+			}
+			if(specular != NULL && SDL_strcmp(specular, ""))
+			{
+				SDL_sscanf(specular, "%f %f %f", &material.specular.x, &material.specular.y, &material.specular.z);
+			}
+
 			//automatically zeroed if absent
 			material.emission = INIGetFloat(material_ini, material.name, "emission");
 			material.shininess = INIGetFloat(material_ini, material.name, "shininess");

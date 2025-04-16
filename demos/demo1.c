@@ -111,14 +111,19 @@ void Demo_Set1_Setup()
 	SDL_ReleaseGPUShader(context.device, modelvsshader.shader);
 	SDL_ReleaseGPUShader(context.device, modelfsshader.shader);
 
-	/*if(!Graphics_ImportIQMFS(&testmodel, "test_models/house/house.iqm", "test_models/house/house.material", testmodel.pipeline))
-	{
-		return;
-	}*/
-	if(!Graphics_ImportIQM(&testmodel, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material", testmodel.pipeline))
+	if(!Graphics_ImportIQM(&testmodel, "test_models/house/house.iqm", "test_models/house/house.material", testmodel.pipeline))
 	{
 		return;
 	}
+	/*if(!Graphics_ImportIQM(&testmodel, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material", testmodel.pipeline))
+	{
+		return;
+	}*/
+	//sponza is wack somehow
+	/*if(!Graphics_ImportIQM(&testmodel, "test_models/sponza/sponza.iqm", "test_models/sponza/sponza.material", testmodel.pipeline))
+	{
+		return;
+	}*/
 
 	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
