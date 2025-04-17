@@ -582,6 +582,8 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 	}
 
 	model->pipeline = pipeline;
+	model->transform = (Matrix4x4){ 0 };
+	model->transform.aa = model->transform.bb = model->transform.cc = model->transform.dd = 1.0f;
 
 	SDL_free(vertices);
 	vertices = NULL;
@@ -721,6 +723,25 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 		}
 		uploadmesh(&model->meshes.meshes[i]);
 	}
+}
+
+void Graphics_MoveModel(Model *model, Vector3 position)
+{
+	Matrix4x4 result = Matrix4x4_Translate(model->transform, position.x, position.y, position.z);
+	model->transform = result;
+}
+
+void Graphics_ScaleModel(Model *model, float scale)
+{
+	Matrix4x4 result = Matrix4x4_Scale(model->transform, (Vector3){scale, scale, scale});
+	model->transform = result;
+}
+
+void Graphics_RotateModel(Model *model, Vector3 axis,
+							float radians)
+{
+	Matrix4x4 result = Matrix4x4_Rotate(model->transform, axis, radians);
+	model->transform = result;
 }
 
 void Graphics_ReleaseModel(Model *model)

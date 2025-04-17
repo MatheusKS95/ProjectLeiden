@@ -142,6 +142,9 @@ void Demo_Set1_Setup()
 	);
 
 	Graphics_UploadModel(&testmodel, true);
+
+	Graphics_MoveModel(&testmodel, (Vector3){0.0f, 0.0f, 0.0f});
+	//Graphics_ScaleModel(&testmodel, 4.0f);
 	return;
 }
 
@@ -185,6 +188,7 @@ void Demo_Set1_Logic(InputState *state)
 	last_y = state->mouse_y;
 	Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 	state->mouse_x = state->mouse_y = 0;
+	Graphics_RotateModel(&testmodel, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
 	return;
 }
 
@@ -193,10 +197,7 @@ void Demo_Set1_Draw()
 	//Graphics_TestCameraUpdate(&cam_1);
 	Matrix4x4 viewproj;//TODO rendering whole stuff later
 	viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
-	Matrix4x4 model = { 0 };
-	model.aa = model.bb = model.cc = model.dd = 1.0f;
-	//model = Matrix4x4_Scale(model, (Vector3){0.01f, 0.01f, 0.01f});
-	Matrix4x4 mvp = Matrix4x4_Mul(model, viewproj);
+	Matrix4x4 mvp = Matrix4x4_Mul(testmodel.transform, viewproj);
 
 	SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
 	if (cmdbuf == NULL)

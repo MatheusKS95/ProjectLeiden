@@ -289,6 +289,7 @@ typedef struct Model
 {
 	MeshArray meshes;
 	SDL_GPUGraphicsPipeline *pipeline;
+	Matrix4x4 transform;
 } Model;
 
 bool Graphics_ImportIQM(Model *model, const char *iqmfile,
@@ -296,6 +297,13 @@ bool Graphics_ImportIQM(Model *model, const char *iqmfile,
 							SDL_GPUGraphicsPipeline *pipeline);
 
 void Graphics_UploadModel(Model *model, bool upload_textures);
+
+void Graphics_MoveModel(Model *model, Vector3 position);
+
+void Graphics_ScaleModel(Model *model, float scale);
+
+void Graphics_RotateModel(Model *model, Vector3 axis,
+							float radians);
 
 void Graphics_ReleaseModel(Model *model);
 
