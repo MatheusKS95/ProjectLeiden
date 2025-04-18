@@ -22,7 +22,7 @@ void Demo_ClearScreen()
 	{
 		SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
 		colorTargetInfo.texture = swapchainTexture;
-		colorTargetInfo.clear_color = (SDL_FColor){ 1.0f, 0.4f, 0.6f, 1.0f };
+		colorTargetInfo.clear_color = (SDL_FColor){ 1.0f, 0.6f, 0.2f, 1.0f };
 		colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
 		colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
 

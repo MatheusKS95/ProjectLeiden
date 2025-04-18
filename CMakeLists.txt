@@ -47,6 +47,7 @@ add_subdirectory(audio)
 add_subdirectory(input)
 add_subdirectory(linmath)
 add_subdirectory(demos)
+add_subdirectory(leiden)
 
 add_executable(ProjectLeiden main.c)
 
@@ -61,3 +62,4 @@ target_link_libraries(ProjectLeiden PRIVATE audio)
 target_link_libraries(ProjectLeiden PRIVATE input)
 target_link_libraries(ProjectLeiden PRIVATE linmath)
 target_link_libraries(ProjectLeiden PRIVATE demos)
+target_link_libraries(ProjectLeiden PRIVATE leiden)
