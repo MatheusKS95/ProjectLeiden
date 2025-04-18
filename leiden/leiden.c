@@ -1,5 +1,7 @@
 #include <leiden.h>
 
+//TODO a lot of stuff
+//settings file could be at root (relative to asset path)
 bool Leiden_Init(LeidenInitDesc *initdesc)
 {
 	if(!SDL_Init(SDL_INIT_VIDEO))
@@ -17,7 +19,7 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 	const int linked = SDL_GetVersion();
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Using SDL version %d.%d.%d", SDL_VERSIONNUM_MAJOR(linked), SDL_VERSIONNUM_MINOR(linked), SDL_VERSIONNUM_MICRO(linked));
 
-	if(!FileIOInit(initdesc->argv, initdesc->asset_path, NULL, "Schaefer", "ProjectLeiden"))
+	if(!FileIOInit(initdesc->argv, initdesc->asset_path, NULL, initdesc->org_name, initdesc->app_name))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Content not found. Stopping.");
 		SDL_Quit();
@@ -47,7 +49,6 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 
 	INISave(ini, "usersettings.ini");
 
-	//TODO Create window
 	bool fullscreen = (INIGetFloat(ini, "graphics", "fullscreen") == 0.0f) ? false : true;
 	int width = (int)INIGetFloat(ini, "graphics", "screen_width");
 	int height = (int)INIGetFloat(ini, "graphics", "screen_heigth");
@@ -55,11 +56,11 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 	SDL_Window *window;
 	if(fullscreen)
 	{
-		window = SDL_CreateWindow("Project Leiden", width, height, SDL_WINDOW_FULLSCREEN);
+		window = SDL_CreateWindow(initdesc->app_name, width, height, SDL_WINDOW_FULLSCREEN);
 	}
 	else
 	{
-		window = SDL_CreateWindow("Project Leiden", width, height, 0);
+		window = SDL_CreateWindow(initdesc->app_name, width, height, 0);
 	}
 
 	if (window == NULL)

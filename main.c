@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		//Demo_Set2_Draw();
 	}
 
-	Demo_Set1_Destroy();
+	//Demo_Set1_Destroy();
 	//Demo_Set2_Destroy();
 
 	Leiden_Deinit();
