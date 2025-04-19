@@ -10,7 +10,7 @@ static float last_x, last_y;
 static float mouse_x, mouse_y;
 static bool first_mouse;
 static Camera cam_1;
-Model testmodel = { 0 };
+static Model testmodel = { 0 };
 static SDL_GPUTexture* texturedepth;
 static Sampler *sampler;
 
@@ -36,80 +36,7 @@ void Demo_Set1_Setup()
 		SDL_Log("Failed to load FS shader.");
 		return;
 	}
-	/*SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo =
-	{
-		.target_info =
-		{
-			.num_color_targets = 1,
-			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
-				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
-			}},
-			.has_depth_stencil_target = true,
-			.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM
-		},
-		.depth_stencil_state = (SDL_GPUDepthStencilState){
-			.enable_depth_test = true,
-			.enable_depth_write = true,
-			.enable_stencil_test = false,
-			.compare_op = SDL_GPU_COMPAREOP_LESS,
-			.write_mask = 0xFF
-		},
-		.rasterizer_state = (SDL_GPURasterizerState){
-			.cull_mode = SDL_GPU_CULLMODE_NONE,
-			.fill_mode = SDL_GPU_FILLMODE_FILL,
-			.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE
-		},
-		.vertex_input_state = (SDL_GPUVertexInputState){
-			.num_vertex_buffers = 1,
-			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
-				.slot = 0,
-				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
-				.instance_step_rate = 0,
-				.pitch = sizeof(Vertex)
-			}},
-			.num_vertex_attributes = 5,
-			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
-				//position
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-				.location = 0,
-				.offset = 0
-			}, {
-				//uv
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-				.location = 1,
-				.offset = (sizeof(float) * 3)
-			}, {
-				//normal
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-				.location = 2,
-				.offset = (sizeof(float) * 3) + (sizeof(float) * 2)
-			}, {
-				//tangent
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4,
-				.location = 3,
-				.offset = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 3)
-			}, {
-				//color
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4,
-				.location = 4,
-				.offset = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 3) + (sizeof(float) * 4)
-			}}
-		},
-		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = modelvsshader.shader,
-		.fragment_shader = modelfsshader.shader
-	};
-	testmodel.pipeline = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	if(testmodel.pipeline == NULL)
-		return;
 
-	SDL_ReleaseGPUShader(context.device, modelvsshader.shader);
-	SDL_ReleaseGPUShader(context.device, modelfsshader.shader);*/
 	testmodel.pipeline = Graphics_CreatePipeline(&modelvsshader, &modelfsshader, PIPELINETYPE_3D, true);
 
 	if(!Graphics_ImportIQM(&testmodel, "test_models/house/house.iqm", "test_models/house/house.material", testmodel.pipeline))

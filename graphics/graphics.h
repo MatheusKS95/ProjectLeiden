@@ -326,15 +326,23 @@ void Graphics_ReleaseModel(Model *model);
  * RENDERER - TODO
  ******************************************************************/
 
-typedef enum
+typedef struct Renderer
 {
-	PIPELINE_TEST0 = 0, //test
-	PIPELINE_CUSTOM, //if gamedev wants a custom shading, not impl.
-	NONE //will fail
-} PipelineTypeOld;
+	SDL_GPUCommandBuffer *cmdbuf;
+	SDL_GPUTexture *swapchain_texture;
+	SDL_GPURenderPass *render_pass;
+	Color clear_color;
+	SDL_GPUTexture *texture_depth;
+} Renderer;
 
-void Graphics_DrawModel(Camera *camera, Model *model,
-						PipelineTypeOld ptype);
+void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
+
+void Graphics_BeginDrawing(Renderer *renderer);
+
+void Graphics_EndDrawing(Renderer *renderer);
+
+void Graphics_DrawModel(Model *model, Renderer *renderer,
+						Matrix4x4 mvp, Sampler *sampler);
 
 /*******************************************************************
  ******************************************************************/
