@@ -36,7 +36,7 @@ void Demo_Set1_Setup()
 		SDL_Log("Failed to load FS shader.");
 		return;
 	}
-	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo =
+	/*SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo =
 	{
 		.target_info =
 		{
@@ -109,7 +109,8 @@ void Demo_Set1_Setup()
 		return;
 
 	SDL_ReleaseGPUShader(context.device, modelvsshader.shader);
-	SDL_ReleaseGPUShader(context.device, modelfsshader.shader);
+	SDL_ReleaseGPUShader(context.device, modelfsshader.shader);*/
+	testmodel.pipeline = Graphics_CreatePipeline(&modelvsshader, &modelfsshader, PIPELINETYPE_3D, true);
 
 	if(!Graphics_ImportIQM(&testmodel, "test_models/house/house.iqm", "test_models/house/house.material", testmodel.pipeline))
 	{

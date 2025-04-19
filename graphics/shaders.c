@@ -70,3 +70,101 @@ bool Graphics_LoadShaderFromFS(Shader *shader,
 										samplerCount, uniformBufferCount, storageBufferCount, storageTextureCount);
 	return result;
 }
+
+Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
+									PipelineType type,
+									bool release_shader)
+{
+	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = { 0 };
+	if(type == PIPELINETYPE_3D)
+	{
+		pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo)
+		{
+			.target_info =
+			{
+				.num_color_targets = 1,
+				.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
+					.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
+				}},
+				.has_depth_stencil_target = true,
+				.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM
+			},
+			.depth_stencil_state = (SDL_GPUDepthStencilState){
+				.enable_depth_test = true,
+				.enable_depth_write = true,
+				.enable_stencil_test = false,
+				.compare_op = SDL_GPU_COMPAREOP_LESS,
+				.write_mask = 0xFF
+			},
+			.rasterizer_state = (SDL_GPURasterizerState){
+				.cull_mode = SDL_GPU_CULLMODE_NONE,
+				.fill_mode = SDL_GPU_FILLMODE_FILL,
+				.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE
+			},
+			.vertex_input_state = (SDL_GPUVertexInputState){
+				.num_vertex_buffers = 1,
+				.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
+					.slot = 0,
+					.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
+					.instance_step_rate = 0,
+					.pitch = sizeof(Vertex)
+				}},
+				.num_vertex_attributes = 5,
+				.vertex_attributes = (SDL_GPUVertexAttribute[]){{
+					//position
+					.buffer_slot = 0,
+					.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
+					.location = 0,
+					.offset = 0
+				}, {
+					//uv
+					.buffer_slot = 0,
+					.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
+					.location = 1,
+					.offset = (sizeof(float) * 3)
+				}, {
+					//normal
+					.buffer_slot = 0,
+					.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
+					.location = 2,
+					.offset = (sizeof(float) * 3) + (sizeof(float) * 2)
+				}, {
+					//tangent
+					.buffer_slot = 0,
+					.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4,
+					.location = 3,
+					.offset = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 3)
+				}, {
+					//color
+					.buffer_slot = 0,
+					.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4,
+					.location = 4,
+					.offset = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 3) + (sizeof(float) * 4)
+				}}
+			},
+			.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+			.vertex_shader = vs->shader,
+			.fragment_shader = fs->shader
+		};
+	}
+	//TODO other kind of pipelines (framebuffer/render to texture next)
+	else
+	{
+		return NULL;
+	}
+
+	Pipeline pipeline = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
+	if(pipeline == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to generate pipeline.");
+		return NULL;
+	}
+
+	if(release_shader)
+	{
+		SDL_ReleaseGPUShader(context.device, vs->shader);
+		SDL_ReleaseGPUShader(context.device, fs->shader);
+	}
+
+	return pipeline;
+}

@@ -145,6 +145,14 @@ typedef struct Shader
 	SDL_GPUShader *shader;
 } Shader;
 
+typedef enum PipelineType
+{
+	PIPELINETYPE_3D = 0, //generic, to render a 3D object
+	PIPELINETYPE_RENDERTOTEXTURE //generic, to render a plane
+} PipelineType;
+
+typedef SDL_GPUGraphicsPipeline* Pipeline;
+
 bool Graphics_LoadShaderFromMem(Shader *shader,
 								uint8_t *buffer, size_t size,
 								const char *entrypoint,
@@ -162,6 +170,10 @@ bool Graphics_LoadShaderFromFS(Shader *shader,
 								Uint32 uniformBufferCount,
 								Uint32 storageBufferCount,
 								Uint32 storageTextureCount);
+
+Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
+									PipelineType type,
+									bool release_shader);
 
 /*******************************************************************
  ******************************************************************/
@@ -288,13 +300,13 @@ typedef struct MeshArray
 typedef struct Model
 {
 	MeshArray meshes;
-	SDL_GPUGraphicsPipeline *pipeline;
+	Pipeline pipeline;
 	Matrix4x4 transform;
 } Model;
 
 bool Graphics_ImportIQM(Model *model, const char *iqmfile,
 							const char *materialfile,
-							SDL_GPUGraphicsPipeline *pipeline);
+							Pipeline pipeline);
 
 void Graphics_UploadModel(Model *model, bool upload_textures);
 
@@ -319,10 +331,10 @@ typedef enum
 	PIPELINE_TEST0 = 0, //test
 	PIPELINE_CUSTOM, //if gamedev wants a custom shading, not impl.
 	NONE //will fail
-} PipelineType;
+} PipelineTypeOld;
 
 void Graphics_DrawModel(Camera *camera, Model *model,
-						PipelineType ptype);
+						PipelineTypeOld ptype);
 
 /*******************************************************************
  ******************************************************************/

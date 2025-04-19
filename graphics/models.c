@@ -299,7 +299,7 @@ static void _arrayClearMeshes(MeshArray *arr)
 static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 									size_t iqmsize,
 									const char *materialfile,
-									SDL_GPUGraphicsPipeline *pipeline)
+									Pipeline pipeline)
 {
 	if(model == NULL || iqmbuffer == NULL || iqmsize <= 0)
 	{
@@ -595,7 +595,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 
 bool Graphics_ImportIQM(Model *model, const char *iqmfile,
 							const char *materialfile,
-							SDL_GPUGraphicsPipeline *pipeline)
+							Pipeline pipeline)
 {
 	size_t iqmfilesize;
 	Uint8 *modelfile = FileIOReadBytes(iqmfile, &iqmfilesize);

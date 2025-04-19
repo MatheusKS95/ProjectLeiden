@@ -10,7 +10,7 @@
 #include <SDL3/SDL.h>
 
 void Graphics_DrawModel(Camera *camera, Model *model,
-						PipelineType ptype)
+						PipelineTypeOld ptype)
 {
 	return;
 }
