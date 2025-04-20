@@ -5,7 +5,6 @@
 #include <getopt.h> //WARNING: this will make my code non-portable, won't work on windows (except through mingw)
 #include <SDL3/SDL.h>
 #include <leiden.h>
-#include <demos.h>
 
 int main(int argc, char *argv[])
 {
@@ -86,18 +85,19 @@ int main(int argc, char *argv[])
 		SDL_Log("Failed to load FS shader.");
 		return -1;
 	}
-	//TODO model don't release it, but i forgot to make something to destroy this
+	//TODO we don't release it, i forgot to make something to destroy this
+	//I still need to think about a way to improve pipelines
 	Pipeline pipeline1 = Graphics_CreatePipeline(&modelvsshader, &modelfsshader, PIPELINETYPE_3D, true);
 
 	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
-	if(!Graphics_ImportIQM(&model1, "test_models/house/house.iqm", "test_models/house/house.material", pipeline1))
+	if(!Graphics_ImportIQM(&model1, "test_models/house/house.iqm", "test_models/house/house.material"))
 	{
 		//todo cleanup this shit
 		return -1;
 	}
 
-	if(!Graphics_ImportIQM(&model2, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material", pipeline1))
+	if(!Graphics_ImportIQM(&model2, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material"))
 	{
 		//todo cleanup this shit
 		return -1;
@@ -192,8 +192,8 @@ int main(int argc, char *argv[])
 		 * RENDERING STUFF ******
 		 ***********************/
 		Graphics_BeginDrawing(&renderer);
-		Graphics_DrawModel(&model1, &renderer, mvp1, sampler);
-		Graphics_DrawModel(&model2, &renderer, mvp2, sampler);
+		Graphics_DrawModel(&model1, &renderer, pipeline1, mvp1, sampler);
+		Graphics_DrawModel(&model2, &renderer, pipeline1, mvp2, sampler);
 		Graphics_EndDrawing(&renderer);
 		//TODO: see raylib cheatsheet, that's the todo list
 		/************************************/

@@ -300,13 +300,11 @@ typedef struct MeshArray
 typedef struct Model
 {
 	MeshArray meshes;
-	Pipeline pipeline;
 	Matrix4x4 transform;
 } Model;
 
 bool Graphics_ImportIQM(Model *model, const char *iqmfile,
-							const char *materialfile,
-							Pipeline pipeline);
+							const char *materialfile);
 
 void Graphics_UploadModel(Model *model, bool upload_textures);
 
@@ -342,7 +340,8 @@ void Graphics_BeginDrawing(Renderer *renderer);
 void Graphics_EndDrawing(Renderer *renderer);
 
 void Graphics_DrawModel(Model *model, Renderer *renderer,
-						Matrix4x4 mvp, Sampler *sampler);
+						Pipeline pipeline, Matrix4x4 mvp,
+						Sampler *sampler);
 
 /*******************************************************************
  ******************************************************************/

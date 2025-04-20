@@ -87,7 +87,8 @@ void Graphics_EndDrawing(Renderer *renderer)
 }
 
 void Graphics_DrawModel(Model *model, Renderer *renderer,
-						Matrix4x4 mvp, Sampler *sampler)
+						Pipeline pipeline, Matrix4x4 mvp,
+						Sampler *sampler)
 {
 	if(model == NULL || renderer == NULL)
 	{
@@ -96,7 +97,7 @@ void Graphics_DrawModel(Model *model, Renderer *renderer,
 
 	for(int i = 0; i < model->meshes.count; ++i)
 	{
-		SDL_BindGPUGraphicsPipeline(renderer->render_pass, model->pipeline);
+		SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipeline);
 		SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ model->meshes.meshes[i].vbuffer, 0 }, 1);
 		SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ model->meshes.meshes[i].ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 		SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE]->texture, sampler }, 1);
