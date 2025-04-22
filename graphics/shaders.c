@@ -140,6 +140,7 @@ Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
 					.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4,
 					.location = 4,
 					.offset = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 3) + (sizeof(float) * 4)
+				//TODO there are more stuff to load (probably)
 				}}
 			},
 			.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,

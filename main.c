@@ -1,8 +1,30 @@
 //i am going raylib route, plus some macgyver crap i will regret later
 //https://www.youtube.com/watch?v=yOEe1uzurKo
 
+/*
+ * CURRENTLY RUNS ON
+ * > GNU/Linux: developed on it, duh. Vulkan only.
+ * > GhostBSD: no change needed, as long it's not Nvidia (driver issues). Vulkan only.
+ * > Windows (MinGW-W64): no change needed. Guess what? Vulkan only.
+ *
+ * NEED TO CHECK
+ * > FreeBSD: GhostBSD is based on it, so probably runs without modifications. It'll be Vulkan only.
+ * > Windows (MSVC): didn't work with CMake directly, gonna try generate builds separately first,
+ *   but getopt will get in the way. If I manage to get it working, let's see if it works as DX12.
+ *
+ * WON'T RUN, NO MATTER HOW
+ * > MacOS: no access to Mac, Apple don't support SPIR-V. Probably require a lot of work to make
+ *   it run. SDL_shadercross could help, but it's temperamental and might give issues.
+ * > iOS: same as MacOS. Probably even more headache.
+ * > Android: people reported headache when working with SDL GPU on Android. PhysFS might also be
+ *   a problem.
+ * > Web: SDL GPU doesn't have a web backend yet (WebGPU is WIP and will be for a long time).
+ *   PhysFS also might be an issue.
+*/
+
+
 #include <stdio.h>
-#include <getopt.h> //WARNING: this will make my code non-portable, won't work on windows (except through mingw)
+#include <getopt.h> //WARNING: this will make my code non-portable, won't work on windows (except through mingw - checked)
 #include <SDL3/SDL.h>
 #include <leiden.h>
 
@@ -192,8 +214,8 @@ int main(int argc, char *argv[])
 		 * RENDERING STUFF ******
 		 ***********************/
 		Graphics_BeginDrawing(&renderer);
-		Graphics_DrawModel(&model1, &renderer, pipeline1, mvp1, sampler);
-		Graphics_DrawModel(&model2, &renderer, pipeline1, mvp2, sampler);
+		Graphics_DrawModelT1(&model1, &renderer, pipeline1, mvp1, sampler);
+		Graphics_DrawModelT1(&model2, &renderer, pipeline1, mvp2, sampler);
 		Graphics_EndDrawing(&renderer);
 		//TODO: see raylib cheatsheet, that's the todo list
 		/************************************/

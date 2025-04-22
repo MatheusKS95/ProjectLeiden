@@ -148,7 +148,7 @@ typedef struct Shader
 typedef enum PipelineType
 {
 	PIPELINETYPE_3D = 0, //generic, to render a 3D object
-	PIPELINETYPE_RENDERTOTEXTURE //generic, to render a plane
+	PIPELINETYPE_RENDERTOTEXTURE //generic, to be used for framebuffers
 } PipelineType;
 
 typedef SDL_GPUGraphicsPipeline* Pipeline;
@@ -333,15 +333,30 @@ typedef struct Renderer
 	SDL_GPUTexture *texture_depth;
 } Renderer;
 
+typedef struct PointLightArray
+{
+	size_t count;
+	size_t capacity;
+	Pointlight *pointlights;
+} PointLightArray;
+
+void Graphics_CreatePointlightArray(PointLightArray *array);
+
+bool Graphics_LightArrayAddPointlight(PointLightArray *array,
+										Pointlight pointlight);
+
+void Graphics_ClearLightArray(PointLightArray *array);
+
 void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
 
 void Graphics_BeginDrawing(Renderer *renderer);
 
 void Graphics_EndDrawing(Renderer *renderer);
 
-void Graphics_DrawModel(Model *model, Renderer *renderer,
-						Pipeline pipeline, Matrix4x4 mvp,
-						Sampler *sampler);
+//test
+void Graphics_DrawModelT1(Model *model, Renderer *renderer,
+							Pipeline pipeline, Matrix4x4 mvp,
+							Sampler *sampler);
 
 /*******************************************************************
  ******************************************************************/
