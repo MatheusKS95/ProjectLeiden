@@ -74,7 +74,7 @@ void Graphics_TestCameraFreecam(Camera *camera, float x_offset,
 
 typedef struct Pointlight
 {
-	Vector3 rel_position;
+	Vector3 position;
 	Vector3 colour;
 	//vec3 intensity;
 
@@ -355,6 +355,10 @@ void Graphics_EndDrawing(Renderer *renderer);
 
 //test
 void Graphics_DrawModelT1(Model *model, Renderer *renderer,
+							Pipeline pipeline, Matrix4x4 mvp,
+							Sampler *sampler);
+
+void Graphics_DrawModelT2(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler);
 

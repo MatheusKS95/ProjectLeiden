@@ -194,4 +194,66 @@ void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 	}
 }
 
+void Graphics_DrawModelT2(Model *model, Renderer *renderer,
+							Pipeline pipeline, Matrix4x4 mvp,
+							Sampler *sampler)
+{
+	struct MaterialBlock
+	{
+		bool has_diffusemap;
+		bool has_normalmap;
+		bool has_specularmap;
+		bool has_emissionmap;
+		bool has_heightmap;
+		Vector3 diffuse;
+		Vector3 specular;
+		Vector3 ambient;
+		float shininess;
+		float emission;
+	};
+
+	if(model == NULL || renderer == NULL)
+	{
+		return;
+	}
+
+	for(int i = 0; i < model->meshes.count; ++i)
+	{
+		struct MaterialBlock block = { 0 };
+		if(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE] == NULL) block.has_diffusemap = false;
+		else block.has_diffusemap = true;
+
+		if(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL] == NULL) block.has_normalmap = false;
+		else block.has_normalmap = true;
+
+		if(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR] == NULL) block.has_specularmap = false;
+		else block.has_specularmap = true;
+
+		if(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION] == NULL) block.has_emissionmap = false;
+		else block.has_emissionmap = true;
+
+		if(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT] == NULL) block.has_heightmap = false;
+		else block.has_heightmap = true;
+
+		block.ambient = model->meshes.meshes[i].material.ambient;
+		block.diffuse = model->meshes.meshes[i].material.diffuse;
+		block.specular = model->meshes.meshes[i].material.specular;
+		block.shininess = model->meshes.meshes[i].material.shininess;
+		block.emission = model->meshes.meshes[i].material.emission;
+
+		SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipeline);
+		SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ model->meshes.meshes[i].vbuffer, 0 }, 1);
+		SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ model->meshes.meshes[i].ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+		if(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE] != NULL)
+			SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE]->texture, sampler }, 1);
+		//SDL_BindGPUFragmentSamplers(renderer->render_pass, 1, &(SDL_GPUTextureSamplerBinding){ model->meshes.meshes[i].material.textures[TEXTURE_NORMAL]->texture, sampler }, 1);
+		//SDL_BindGPUFragmentSamplers(renderer->render_pass, 2, &(SDL_GPUTextureSamplerBinding){ model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]->texture, sampler }, 1);
+		//SDL_BindGPUFragmentSamplers(renderer->render_pass, 3, &(SDL_GPUTextureSamplerBinding){ model->meshes.meshes[i].material.textures[TEXTURE_EMISSION]->texture, sampler }, 1);
+		//SDL_BindGPUFragmentSamplers(renderer->render_pass, 4, &(SDL_GPUTextureSamplerBinding){ model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT]->texture, sampler }, 1);
+		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &mvp, sizeof(mvp));
+		SDL_PushGPUFragmentUniformData(renderer->cmdbuf, 0, &block, sizeof(block));
+		SDL_DrawGPUIndexedPrimitives(renderer->render_pass, model->meshes.meshes[i].indices.count, 1, 0, 0, 0);
+	}
+}
+
 //will work on a new drawmodel that takes the light array into the rendering to the shaders

@@ -16,7 +16,7 @@ bool Graphics_NewPointlight(Pointlight *l, Vector3 position,
 	{
 		return false;
 	}
-	l->rel_position = position;
+	l->position = position;
 	l->colour = colour;
 
 	l->constant = constant;

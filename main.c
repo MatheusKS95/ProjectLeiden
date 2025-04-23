@@ -95,6 +95,7 @@ int main(int argc, char *argv[])
 	first_mouse = true;
 	//need to bring lookat, or a camera update thing
 	Graphics_InitCameraBasic(&cam_1, (Vector3){1.0f, 1.0f, 8.0f});
+
 	Shader modelvsshader = { 0 };
 	if(!Graphics_LoadShaderFromFS(&modelvsshader, "shaders/demoset2.vert.spv", "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
 	{
@@ -107,6 +108,20 @@ int main(int argc, char *argv[])
 		SDL_Log("Failed to load FS shader.");
 		return -1;
 	}
+
+	/*Shader modelvsshader = { 0 };
+	if(!Graphics_LoadShaderFromFS(&modelvsshader, "shaders/materialtest.vert.spv", "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
+	{
+		SDL_Log("Failed to load VS shader.");
+		return -1;
+	}
+	Shader modelfsshader = { 0 };
+	if(!Graphics_LoadShaderFromFS(&modelfsshader, "shaders/materialtest.frag.spv", "main", SHADERSTAGE_FRAGMENT, 1, 1, 0, 0))
+	{
+		SDL_Log("Failed to load FS shader.");
+		return -1;
+	}*/
+
 	//TODO we don't release it, i forgot to make something to destroy this
 	//I still need to think about a way to improve pipelines
 	Pipeline pipeline1 = Graphics_CreatePipeline(&modelvsshader, &modelfsshader, PIPELINETYPE_3D, true);
@@ -224,6 +239,7 @@ int main(int argc, char *argv[])
 	//i forgor more things to kill
 	//valgrind is going to peg me
 	Graphics_ReleaseModel(&model1); //at least this destroy textures
+	Graphics_ReleaseModel(&model2);
 	Graphics_ReleaseSampler(sampler);
 	//TODO release pipeline
 
