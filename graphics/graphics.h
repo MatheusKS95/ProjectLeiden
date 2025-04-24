@@ -269,24 +269,19 @@ typedef struct IndexArray
 	Uint32 *indices;
 } IndexArray;
 
-typedef struct Material
-{
-	Vector3 diffuse;
-	Vector3 specular;
-	Vector3 ambient;
-	float shininess;
-	float emission;
-	Texture2D *textures[TEXTURE_DEFAULT];
-	char name[64];
-} Material;
-
 typedef struct Mesh
 {
 	VertexArray vertices;
 	IndexArray indices;
 	SDL_GPUBuffer *vbuffer;
 	SDL_GPUBuffer *ibuffer;
-	Material material;
+
+	//material
+	Texture2D *diffuse_map;
+	Texture2D *normal_map;
+	Texture2D *specular_map;
+	Texture2D *emission_map;
+	Texture2D *height_map; //aka bump map
 	char meshname[64];
 } Mesh;
 
@@ -355,10 +350,6 @@ void Graphics_EndDrawing(Renderer *renderer);
 
 //test
 void Graphics_DrawModelT1(Model *model, Renderer *renderer,
-							Pipeline pipeline, Matrix4x4 mvp,
-							Sampler *sampler);
-
-void Graphics_DrawModelT2(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler);
 
