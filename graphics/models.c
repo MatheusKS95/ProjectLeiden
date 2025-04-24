@@ -469,31 +469,8 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
 		//IQM doesn't load any material or texture, you need to provide it
-		Material material = { 0 };
-		SDL_snprintf(material.name, 64, "%s", iqm_material);
 		if(has_material)
 		{
-			//TODO check if fields exist at least
-			char *ambient = INIGetString(material_ini, material.name, "ambient");
-			char *diffuse = INIGetString(material_ini, material.name, "diffuse");
-			char *specular = INIGetString(material_ini, material.name, "specular");
-			if(ambient != NULL && SDL_strcmp(ambient, ""))
-			{
-				SDL_sscanf(ambient, "%f %f %f", &material.ambient.x, &material.ambient.y, &material.ambient.z);
-			}
-			if(diffuse != NULL && SDL_strcmp(diffuse, ""))
-			{
-				SDL_sscanf(diffuse, "%f %f %f", &material.diffuse.x, &material.diffuse.y, &material.diffuse.z);
-			}
-			if(specular != NULL && SDL_strcmp(specular, ""))
-			{
-				SDL_sscanf(specular, "%f %f %f", &material.specular.x, &material.specular.y, &material.specular.z);
-			}
-
-			//automatically zeroed if absent
-			material.emission = INIGetFloat(material_ini, material.name, "emission");
-			material.shininess = INIGetFloat(material_ini, material.name, "shininess");
-
 			char material_dir[256];
 			SDL_strlcpy(material_dir, materialfile, sizeof(material_dir));
 			char* lastslash = strrchr(material_dir, '/');
@@ -509,9 +486,9 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 			SDL_snprintf(diffusepath, sizeof(diffusepath), "%s/%s", material_dir, diff_map);
 			if(diff_map != NULL && SDL_strcmp(diff_map, ""))
 			{
-				material.textures[TEXTURE_DIFFUSE] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(material.textures[TEXTURE_DIFFUSE] != NULL)
-					Graphics_LoadTextureFromFS(material.textures[TEXTURE_DIFFUSE], diffusepath, TEXTURE_DIFFUSE);
+				mesh.diffuse_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(mesh.diffuse_map != NULL)
+					Graphics_LoadTextureFromFS(mesh.diffuse_map, diffusepath, TEXTURE_DIFFUSE);
 			}
 
 			char normalpath[512];
@@ -519,9 +496,9 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 			SDL_snprintf(normalpath, sizeof(normalpath), "%s/%s", material_dir, norm_map);
 			if(norm_map != NULL && SDL_strcmp(norm_map, ""))
 			{
-				material.textures[TEXTURE_NORMAL] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(material.textures[TEXTURE_NORMAL] != NULL)
-					Graphics_LoadTextureFromFS(material.textures[TEXTURE_NORMAL], normalpath, TEXTURE_NORMAL);
+				mesh.normal_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(mesh.normal_map != NULL)
+					Graphics_LoadTextureFromFS(mesh.normal_map, normalpath, TEXTURE_NORMAL);
 			}
 
 			char specularpath[512];
@@ -529,9 +506,9 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 			SDL_snprintf(specularpath, sizeof(specularpath), "%s/%s", material_dir, spec_map);
 			if(spec_map != NULL && SDL_strcmp(spec_map, ""))
 			{
-				material.textures[TEXTURE_SPECULAR] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(material.textures[TEXTURE_SPECULAR] != NULL)
-					Graphics_LoadTextureFromFS(material.textures[TEXTURE_SPECULAR], specularpath, TEXTURE_SPECULAR);
+				mesh.specular_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(mesh.specular_map != NULL)
+					Graphics_LoadTextureFromFS(mesh.specular_map, specularpath, TEXTURE_SPECULAR);
 			}
 
 			char emissionpath[512];
@@ -539,9 +516,9 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 			SDL_snprintf(emissionpath, sizeof(emissionpath), "%s/%s", material_dir, emission_map);
 			if(emission_map != NULL && SDL_strcmp(emission_map, ""))
 			{
-				material.textures[TEXTURE_EMISSION] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(material.textures[TEXTURE_EMISSION] != NULL)
-					Graphics_LoadTextureFromFS(material.textures[TEXTURE_EMISSION], emissionpath, TEXTURE_EMISSION);
+				mesh.emission_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(mesh.emission_map != NULL)
+					Graphics_LoadTextureFromFS(mesh.emission_map, emissionpath, TEXTURE_EMISSION);
 			}
 
 			char heightpath[512];
@@ -549,24 +526,19 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 			SDL_snprintf(heightpath, sizeof(heightpath), "%s/%s", material_dir, height_map);
 			if(height_map != NULL && SDL_strcmp(height_map, ""))
 			{
-				material.textures[TEXTURE_HEIGHT] = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(material.textures[TEXTURE_HEIGHT] != NULL)
-					Graphics_LoadTextureFromFS(material.textures[TEXTURE_HEIGHT], heightpath, TEXTURE_HEIGHT);
+				mesh.height_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
+				if(mesh.height_map != NULL)
+					Graphics_LoadTextureFromFS(mesh.height_map, heightpath, TEXTURE_HEIGHT);
 			}
 		}
-		else //redundant, material is already zeroed
+		else
 		{
-			material.ambient = (Vector3){ 0 };
-			material.diffuse = (Vector3){ 0 };
-			material.specular = (Vector3){ 0 };
-			material.emission = material.shininess = 0.0f;
-			material.textures[TEXTURE_EMISSION] = NULL;
-			material.textures[TEXTURE_DIFFUSE] = NULL;
-			material.textures[TEXTURE_HEIGHT] = NULL;
-			material.textures[TEXTURE_NORMAL] = NULL;
-			material.textures[TEXTURE_SPECULAR] = NULL;
+			mesh.diffuse_map = NULL;
+			mesh.normal_map = NULL;
+			mesh.specular_map = NULL;
+			mesh.emission_map = NULL;
+			mesh.height_map = NULL;
 		}
-		mesh.material = material;
 
 		//TODO CLEANUP if false
 		if(!_arrayPushLastMeshes(&model->meshes, mesh))
@@ -696,27 +668,26 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 	{
 		if(upload_textures)
 		{
-			if(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE] != NULL)
+			if(model->meshes.meshes[i].diffuse_map != NULL)
 			{
-				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE]);
+				Graphics_UploadTexture(model->meshes.meshes[i].diffuse_map);
 			}
-			if(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL] != NULL)
+			if(model->meshes.meshes[i].normal_map != NULL)
 			{
-				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL]);
+				Graphics_UploadTexture(model->meshes.meshes[i].normal_map);
 			}
-			if(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR] != NULL)
+			if(model->meshes.meshes[i].specular_map != NULL)
 			{
-				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]);
+				Graphics_UploadTexture(model->meshes.meshes[i].specular_map);
 			}
-			if(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION] != NULL)
+			if(model->meshes.meshes[i].emission_map != NULL)
 			{
-				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION]);
+				Graphics_UploadTexture(model->meshes.meshes[i].emission_map);
 			}
-			if(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT] != NULL)
+			if(model->meshes.meshes[i].height_map != NULL)
 			{
-				Graphics_UploadTexture(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT]);
+				Graphics_UploadTexture(model->meshes.meshes[i].height_map);
 			}
-			//not ideal, i know, but loop don't work
 		}
 		uploadmesh(&model->meshes.meshes[i]);
 	}
@@ -750,16 +721,16 @@ void Graphics_ReleaseModel(Model *model)
 		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].ibuffer);
 
 		//destroy textures
-		if(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE] != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_DIFFUSE]);
-		if(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL] != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_NORMAL]);
-		if(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR] != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_SPECULAR]);
-		if(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION] != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_EMISSION]);
-		if(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT] != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].material.textures[TEXTURE_HEIGHT]);
+		if(model->meshes.meshes[i].diffuse_map != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].diffuse_map);
+		if(model->meshes.meshes[i].normal_map != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].normal_map);
+		if(model->meshes.meshes[i].specular_map != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].specular_map);
+		if(model->meshes.meshes[i].emission_map != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].emission_map);
+		if(model->meshes.meshes[i].height_map != NULL)
+			Graphics_ReleaseTexture(model->meshes.meshes[i].height_map);
 
 		//destroy arrays
 		_arrayDestroyIndices(&model->meshes.meshes[i].indices);
