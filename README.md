@@ -1,3 +1,6 @@
+## NOTICE
+I'll **not** accept pull requests, due to licensing issues and due to transient nature of this repo.
+
 # Project Leiden
 WIP game engine focused on driving stuff. Future platform for some games I'm planning to work with. This is a personal project, intended for personal use. Hopefully this also helps someone to learn something.
 
