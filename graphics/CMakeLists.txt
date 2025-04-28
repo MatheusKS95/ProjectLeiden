@@ -1,6 +1,3 @@
-# This is only meant to be included as a subdirectory in another project.
-# It assumes that targets 'SDL3' exist.
-
 add_library(graphics STATIC
 	implementations.c
 	graphics.c
