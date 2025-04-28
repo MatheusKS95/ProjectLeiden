@@ -22,6 +22,7 @@
  *   PhysFS also might be an issue.
 */
 
+//this file is temporary until the API is close to completion
 
 #include <stdio.h>
 #include <getopt.h> //WARNING: this will make my code non-portable, won't work on windows (except through mingw - checked)
@@ -237,7 +238,7 @@ int main(int argc, char *argv[])
 	}
 
 	//i forgor more things to kill
-	//valgrind is going to peg me
+	//valgrind is going to scream
 	Graphics_ReleaseModel(&model1); //at least this destroy textures
 	Graphics_ReleaseModel(&model2);
 	Graphics_ReleaseSampler(sampler);

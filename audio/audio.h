@@ -1,10 +1,24 @@
-/**
- * @file megaboomblaster.h
- * @brief Main megaboomblaster's header
+/*
+ * Copyright (C) 2025 Matheus Klein Schaefer
  *
- * This header have declarations for OpenAL-specific stuff.
- * Controls all audio and music, except audio file loading.
- * TODO: allow to select device
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>. 
+ */
+
+/**
+ * @file audio.h
+ * @brief Main audio's header
+ *
+ * This header have declarations for audio stuff.
  *
  * @author
  * - Matheus Klein Schaefer (email here)
@@ -16,9 +30,6 @@
 #include <stdbool.h>
 #include <SDL3/SDL.h>
 #include <miniaudio.h>
-
-//TODO FIXME, separate implementations between music.c,
-//sounds.c and megaboomblaster.c
 
 //BASIC
 typedef struct AudioContext
