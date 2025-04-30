@@ -372,5 +372,38 @@ void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 /*******************************************************************
  ******************************************************************/
 
+/*******************************************************************
+ * RENDERER - TEST - WIP (implementations on renderer.c)
+ ******************************************************************/
+
+//generic renderer is way too limited and modern graphics APIs are
+//way too rigid (if compared to OpenGL), so I think I'll work with
+//specific, purpose-built pipelines
+
+//For cel shading
+typedef struct AnimePipeline
+{
+	Pipeline norm;
+	Pipeline outline;
+	Pipeline toon;
+	Sampler *sampler;
+} AnimePipeline;
+
+//for retro 3D (like PS1, N64, Saturn)
+typedef struct FifthGenPipeline
+{
+	Pipeline fifthgen;
+	Sampler *sampler;
+} FifthGenPipeline;
+
+//TODO functions for setting things up - creating renderer and
+//stuff is still the same
+//TODO anime pipeline requires rendering to a texture
+//TODO think... if I need yet another type of pipeline?
+//TODO think... lights, lots of lights (anime renderer will need
+//light arrays) - need storage buffer but idk how to use them yet
+
+/*******************************************************************
+ ******************************************************************/
 
 #endif
