@@ -233,7 +233,6 @@ int main(int argc, char *argv[])
 		Graphics_DrawModelT1(&model1, &renderer, pipeline1, mvp1, sampler);
 		Graphics_DrawModelT1(&model2, &renderer, pipeline1, mvp2, sampler);
 		Graphics_EndDrawing(&renderer);
-		//TODO: see raylib cheatsheet, that's the todo list
 		/************************************/
 	}
 
