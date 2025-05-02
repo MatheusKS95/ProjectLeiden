@@ -25,4 +25,3 @@ void main()
 	VColor = in_vcolor;
 	gl_Position = mvp * vec4(in_pos, 1.0);
 }
-
