@@ -584,6 +584,7 @@ bool Graphics_ImportIQM(Model *model, const char *iqmfile,
 {
 	size_t iqmfilesize;
 	Uint8 *modelfile = FileIOReadBytes(iqmfile, &iqmfilesize);
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Graphics: Info: Starting to load %s", iqmfile);
 	return _import_iqm_buffer(model, modelfile, iqmfilesize, materialfile);
 }
 

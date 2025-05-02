@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
 	Camera cam_1;
 	Model model1 = { 0 };
 	Model model2 = { 0 };
+	Model model3 = { 0 };
 	Sampler *sampler;
 
 	deltatime = lastframe = 0.0f;
@@ -141,14 +142,23 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	if(!Graphics_ImportIQM(&model3, "test_models/golf/golf.iqm", "test_models/golf/golf.material"))
+	{
+		//todo cleanup this shit
+		return -1;
+	}
+
 	Graphics_UploadModel(&model1, true);
 	Graphics_UploadModel(&model2, true);
+	Graphics_UploadModel(&model3, true);
 
 	Graphics_MoveModel(&model1, (Vector3){0.0f, 0.0f, 0.0f});
 
 	Graphics_RotateModel(&model2, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90));
 	Graphics_MoveModel(&model2, (Vector3){1.0f, 0.0f, 4.0f});
 	//Graphics_ScaleModel(&model2, 2.0f);
+
+	Graphics_MoveModel(&model3, (Vector3){5.0f, 0.0f, 1.0f});
 
 	InputState state = { 0 };
 
@@ -224,6 +234,7 @@ int main(int argc, char *argv[])
 		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
 		Matrix4x4 mvp1 = Matrix4x4_Mul(model1.transform, viewproj);
 		Matrix4x4 mvp2 = Matrix4x4_Mul(model2.transform, viewproj);
+		Matrix4x4 mvp3 = Matrix4x4_Mul(model3.transform, viewproj);
 		/************************************/
 
 		/************************
@@ -232,6 +243,7 @@ int main(int argc, char *argv[])
 		Graphics_BeginDrawing(&renderer);
 		Graphics_DrawModelT1(&model1, &renderer, pipeline1, mvp1, sampler);
 		Graphics_DrawModelT1(&model2, &renderer, pipeline1, mvp2, sampler);
+		Graphics_DrawModelT1(&model3, &renderer, pipeline1, mvp3, sampler);
 		Graphics_EndDrawing(&renderer);
 		/************************************/
 	}
@@ -240,6 +252,7 @@ int main(int argc, char *argv[])
 	//valgrind is going to scream
 	Graphics_ReleaseModel(&model1); //at least this destroy textures
 	Graphics_ReleaseModel(&model2);
+	Graphics_ReleaseModel(&model3);
 	Graphics_ReleaseSampler(sampler);
 	//TODO release pipeline
 
