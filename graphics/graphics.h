@@ -332,17 +332,8 @@ void Graphics_ReleaseModel(Model *model);
  ******************************************************************/
 
 /*******************************************************************
- * RENDERER - TODO
+ * SCENE - TODO
  ******************************************************************/
-
-typedef struct Renderer
-{
-	SDL_GPUCommandBuffer *cmdbuf;
-	SDL_GPUTexture *swapchain_texture;
-	SDL_GPURenderPass *render_pass;
-	Color clear_color;
-	SDL_GPUTexture *texture_depth;
-} Renderer;
 
 typedef struct PointLightArray
 {
@@ -351,34 +342,18 @@ typedef struct PointLightArray
 	Pointlight *pointlights;
 } PointLightArray;
 
+//TODO replace these functions
 void Graphics_CreatePointlightArray(PointLightArray *array);
-
 bool Graphics_LightArrayAddPointlight(PointLightArray *array,
 										Pointlight pointlight);
-
 void Graphics_ClearLightArray(PointLightArray *array);
 
-void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
-
-void Graphics_BeginDrawing(Renderer *renderer);
-
-void Graphics_EndDrawing(Renderer *renderer);
-
-//test
-void Graphics_DrawModelT1(Model *model, Renderer *renderer,
-							Pipeline pipeline, Matrix4x4 mvp,
-							Sampler *sampler);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * RENDERER - TEST - WIP (implementations on renderer.c)
- ******************************************************************/
-
-//generic renderer is way too limited and modern graphics APIs are
-//way too rigid (if compared to OpenGL), so I think I'll work with
-//specific, purpose-built pipelines
+typedef struct ModelArray
+{
+	size_t count;
+	size_t capacity;
+	Model *models;
+} ModelArray;
 
 //For cel shading
 typedef struct AnimePipeline
@@ -396,12 +371,50 @@ typedef struct FifthGenPipeline
 	Sampler *sampler;
 } FifthGenPipeline;
 
-//TODO functions for setting things up - creating renderer and
-//stuff is still the same
-//TODO anime pipeline requires rendering to a texture
-//TODO think... if I need yet another type of pipeline?
-//TODO think... lights, lots of lights (anime renderer will need
-//light arrays) - need storage buffer but idk how to use them yet
+typedef enum PipelineRenderingType
+{
+	PIPELINE_ANIME = 0,
+	PIPELINE_5THGEN
+} PipelineRenderingType;
+
+typedef struct GraphicsScene
+{
+	PointLightArray plightarray; //not used by
+	ModelArray modelarray;
+	PipelineRenderingType type;
+	union
+	{
+		AnimePipeline anime;
+		FifthGenPipeline fifthgen;
+	};
+} GraphicsScene;
+
+/*******************************************************************
+ ******************************************************************/
+
+/*******************************************************************
+ * RENDERER - REWORK
+ ******************************************************************/
+
+typedef struct Renderer
+{
+	SDL_GPUCommandBuffer *cmdbuf;
+	SDL_GPUTexture *swapchain_texture;
+	SDL_GPURenderPass *render_pass;
+	Color clear_color;
+	SDL_GPUTexture *texture_depth;
+} Renderer;
+
+void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
+
+void Graphics_BeginDrawing(Renderer *renderer);
+
+void Graphics_EndDrawing(Renderer *renderer);
+
+//test
+void Graphics_DrawModelT1(Model *model, Renderer *renderer,
+							Pipeline pipeline, Matrix4x4 mvp,
+							Sampler *sampler);
 
 /*******************************************************************
  ******************************************************************/
