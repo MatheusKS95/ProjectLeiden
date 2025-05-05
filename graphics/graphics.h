@@ -389,16 +389,26 @@ typedef enum PipelineRenderingType
 //also part of a later all-encopassing Scene.
 typedef struct GraphicsScene
 {
+	//status regarding if it's on GPU (true = uploaded to GPU)
 	bool uploaded;
-	PointLightArray plightarray; //not used by fifth gen pipeline
+
+	//light arrays (before upload) and light buffers (after upload)
+	//none used by the fifth-gen pipeline
+	PointLightArray plightarray; //memory array
+	SDL_GPUBuffer *plightbuffer; //buffer for uploading
+
+	//model array (own uploading)
 	ModelArray modelarray;
+
+	//rendering style TODO rename
 	PipelineRenderingType type;
 	union
 	{
 		AnimePipeline anime;
 		FifthGenPipeline fifthgen;
 	};
-	//TODO add other things like other light sources, buffers for lights, skyboxes...
+	//TODO add other things like other light sources
+	//buffers for lights, skyboxes...
 } GraphicsScene;
 
 bool Graphics_CreateScene(GraphicsScene *scene,
@@ -410,7 +420,7 @@ bool Graphics_RemoveModelFromScene(GraphicsScene *scene,
 									size_t index,
 									Model *model);
 
-//bool Graphics_ClearModelsFromScene()
+bool Graphics_ClearModelsFromScene(GraphicsScene *scene);
 
 bool Graphics_AddPointlightToScene(GraphicsScene *scene,
 									Pointlight *pointlight);
@@ -419,7 +429,9 @@ bool Graphics_RemovePointlightFromScene(GraphicsScene *scene,
 										size_t index,
 										Pointlight *pointlight);
 
-//bool Graphics_ClearPointlightsFromScene()
+bool Graphics_ClearPointlightsFromScene(GraphicsScene *scene);
+
+void Graphics_UploadScene(GraphicsScene *scene);
 
 /*******************************************************************
  ******************************************************************/

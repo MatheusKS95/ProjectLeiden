@@ -204,7 +204,24 @@ bool Graphics_RemoveModelFromScene(GraphicsScene *scene,
 	return result;
 }
 
-//bool Graphics_ClearModelsFromScene() holding the place
+bool Graphics_ClearModelsFromScene(GraphicsScene *scene)
+{
+	if(scene == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't clear models from scene - invalid scene.");
+		return false;
+	}
+
+	bool result = true;
+	for(int i = 0; i < scene->modelarray.count; i++)
+	{
+		Model *model = NULL;
+		if(!Graphics_RemoveModelFromScene(scene, i, model))
+			result = false;
+	}
+	_arrayClearModel(&scene->modelarray);
+	return result;
+}
 
 bool Graphics_AddPointlightToScene(GraphicsScene *scene,
 								   Pointlight *pointlight)
@@ -236,4 +253,62 @@ bool Graphics_RemovePointlightFromScene(GraphicsScene *scene,
 	return _arrayPopAtPointlight(&scene->plightarray, index, pointlight);
 }
 
-//bool Graphics_ClearPointlightsFromScene() holding the place
+bool Graphics_ClearPointlightsFromScene(GraphicsScene *scene)
+{
+	if(scene == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't clear point lights from scene - invalid scene.");
+		return false;
+	}
+
+	bool result = true;
+	for(int i = 0; i < scene->plightarray.count; i++)
+	{
+		Pointlight *light = NULL;
+		if(!Graphics_RemovePointlightFromScene(scene, i, light))
+			result = false;
+	}
+	_arrayClearPointlight(&scene->plightarray);
+	return result;
+}
+
+void _upload_pointlights(GraphicsScene *scene)
+{
+	//TODO
+	if(scene == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't upload lights - invalid scene.");
+		return;
+	}
+	SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't upload pointlights because it's not fully implemented yet.");
+
+	//TODO need to check appropriate buffer for lighting
+	/*scene->plightbuffer = SDL_CreateGPUBuffer(
+		context.device,
+		&(SDL_GPUBufferCreateInfo) {
+			.usage = SDL_GPU_BUFFERUSAGE_INDIRECT,
+			.size = sizeof(Mesh) * mesh->vertices.count
+		}
+	);*/
+	return;
+}
+
+void Graphics_UploadScene(GraphicsScene *scene)
+{
+	if(scene == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't upload scene - invalid scene.");
+		return;
+	}
+
+	//first, let's upload all the models (and their textures)
+	for(size_t i = 0; i < scene->modelarray.count; i++)
+	{
+		Graphics_UploadModel(&scene->modelarray.models[i], true);
+	}
+
+	//now, let's upload all the lights... TODO
+	//TODO create static function to deal with pointlight uploading
+
+	scene->uploaded = true;
+}
