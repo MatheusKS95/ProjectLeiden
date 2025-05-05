@@ -389,6 +389,7 @@ typedef enum PipelineRenderingType
 //also part of a later all-encopassing Scene.
 typedef struct GraphicsScene
 {
+	bool uploaded;
 	PointLightArray plightarray; //not used by fifth gen pipeline
 	ModelArray modelarray;
 	PipelineRenderingType type;
@@ -397,10 +398,28 @@ typedef struct GraphicsScene
 		AnimePipeline anime;
 		FifthGenPipeline fifthgen;
 	};
+	//TODO add other things like other light sources, buffers for lights, skyboxes...
 } GraphicsScene;
 
 bool Graphics_CreateScene(GraphicsScene *scene,
 							PipelineRenderingType type);
+
+bool Graphics_AddModelToScene(GraphicsScene *scene, Model *model);
+
+bool Graphics_RemoveModelFromScene(GraphicsScene *scene,
+									size_t index,
+									Model *model);
+
+//bool Graphics_ClearModelsFromScene()
+
+bool Graphics_AddPointlightToScene(GraphicsScene *scene,
+									Pointlight *pointlight);
+
+bool Graphics_RemovePointlightFromScene(GraphicsScene *scene,
+										size_t index,
+										Pointlight *pointlight);
+
+//bool Graphics_ClearPointlightsFromScene()
 
 /*******************************************************************
  ******************************************************************/

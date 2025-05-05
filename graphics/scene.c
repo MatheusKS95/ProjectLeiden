@@ -163,8 +163,77 @@ bool Graphics_CreateScene(GraphicsScene *scene,
 	}
 	_arrayInitModel(&scene->modelarray);
 	_arrayInitPointlight(&scene->plightarray);
+	scene->uploaded = false;
 	scene->type = type;
 
 	//TODO create pipelines according to type
 	return true;
 }
+
+bool Graphics_AddModelToScene(GraphicsScene *scene, Model *model)
+{
+	if(scene == NULL || model == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't add model to scene.");
+		return false;
+	}
+	//TODO if scene was already uploaded, upload new model too
+	bool result = false;
+	result = _arrayPushLastModel(&scene->modelarray, *model);
+
+	if(scene->uploaded)
+		Graphics_UploadModel(model, true); //todo make a way to check if you want to upload textures
+		//however i need to re-think textures first
+
+	return result;
+}
+
+bool Graphics_RemoveModelFromScene(GraphicsScene *scene,
+									size_t index,
+									Model *model)
+{
+	if(scene == NULL || model == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't remove model from scene.");
+		return false;
+	}
+
+	bool result = false;
+	result = _arrayPopAtModel(&scene->modelarray, index, model);
+	Graphics_ReleaseModel(model);
+	return result;
+}
+
+//bool Graphics_ClearModelsFromScene() holding the place
+
+bool Graphics_AddPointlightToScene(GraphicsScene *scene,
+								   Pointlight *pointlight)
+{
+	if(scene == NULL || pointlight == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't add point light to scene.");
+		return false;
+	}
+	if(scene->type == PIPELINE_5THGEN)
+	{
+		SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "Graphics: Warning: 5th generation graphics didn't have lighting. Any light added won't be used.");
+		//just a warning, function goes as normal
+	}
+	//TODO if scene was already uploaded, need to re-create the buffer
+	return _arrayPushLastPointlight(&scene->plightarray, *pointlight);
+}
+
+bool Graphics_RemovePointlightFromScene(GraphicsScene *scene,
+										size_t index,
+										Pointlight *pointlight)
+{
+	if(scene == NULL || pointlight == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't remove pointlight from scene.");
+		return false;
+	}
+	//TODO if scene was already uploaded, need to re-create the buffer
+	return _arrayPopAtPointlight(&scene->plightarray, index, pointlight);
+}
+
+//bool Graphics_ClearPointlightsFromScene() holding the place
