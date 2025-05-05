@@ -87,26 +87,84 @@ static void _arrayClearPointlight(PointLightArray *arr)
 	_arrayInitPointlight(arr);
 }
 
+static bool _arrayRealocModel(ModelArray *arr, size_t new_size)
+{
+	if(arr->models != NULL)
+	{
+		Model *aux = (Model*)SDL_realloc(arr->models, sizeof(Model) * new_size);
+		if(aux != NULL)
+		{
+			arr->models = aux;
+			arr->capacity = new_size;
+			return true;
+		}
+	}
+	return false;
+}
+
+static void _arrayInitModel(ModelArray *arr)
+{
+	arr->capacity = 1;
+	arr->count = 0;
+	arr->models = (Model*)SDL_calloc(arr->capacity, sizeof(Model));
+}
+
+static bool _arrayPushLastModel(ModelArray *arr, Model value)
+{
+	if(arr->capacity == arr->count)
+	{
+		if(!_arrayRealocModel(arr, arr->capacity + 1))
+		{
+			return false;
+		}
+	}
+	arr->count++;
+	arr->models[arr->count - 1] = value;
+	return true;
+}
+
+static bool _arrayPopAtModel(ModelArray *arr, unsigned int index, Model *value)
+{
+	if(arr->count == 0)
+	{
+		return false;
+	}
+	*value = arr->models[index];
+	SDL_memmove(&arr->models[index], &arr->models[index + 1], sizeof(Model) * ((arr->count - 1) - index));
+	arr->count--;
+	_arrayRealocModel(arr, arr->capacity - 1);
+	//TODO or FIXME, but I need somewhere to destroy the model when done with the scene
+	return true;
+}
+
+static void _arrayDestroyModel(ModelArray *arr)
+{
+	//TODO delete models individually using the appropriate function!
+	SDL_free(arr->models);
+	arr->models = NULL;
+}
+
+static void _arrayClearModel(ModelArray *arr)
+{
+	//TODO delete models individually using the appropriate function!
+	_arrayDestroyModel(arr);
+	_arrayInitModel(arr);
+}
+
 //END OF ARRAY RELATED STUFF
 
-void Graphics_CreatePointlightArray(PointLightArray *array)
+bool Graphics_CreateScene(GraphicsScene *scene,
+							PipelineRenderingType type)
 {
-	if(array == NULL) return;
+	if(scene == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: scene structure required to initialize it.");
+		return false;
+	}
+	_arrayInitModel(&scene->modelarray);
+	_arrayInitPointlight(&scene->plightarray);
+	scene->type = type;
 
-	_arrayInitPointlight(array);
-}
-
-bool Graphics_LightArrayAddPointlight(PointLightArray *array,
-										Pointlight pointlight)
-{
-	if(array == NULL) return false;
-
-	return _arrayPushLastPointlight(array, pointlight);
-}
-
-void Graphics_ClearLightArray(PointLightArray *array)
-{
-	if(array == NULL) return;
-
-	_arrayClearPointlight(array);
+	//TODO create pipelines according to type
+	return true;
 }

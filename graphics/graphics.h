@@ -149,6 +149,17 @@ void Graphics_DestroySpotlight(Spotlight *l);
  * SHADERS
  ******************************************************************/
 
+/*
+ * Ultimate goal: drop all of this and either:
+ * 1) Compile shader at runtime and keep SPIR-V in memory (doesn't
+ *    need to keep track of generated SPIR-V and always up to date,
+ *    but it's slower).
+ * 2) First run, build SPIR-V and store in the userfolder.
+ *    If it's in the userfolder, use them. Otherwise, re-generate
+ *    them (might need to keep track of latest shader version and
+ *    cleanup older builds).
+*/
+
 typedef enum ShaderStage
 {
 	SHADERSTAGE_NONE = 0,
@@ -342,12 +353,6 @@ typedef struct PointLightArray
 	Pointlight *pointlights;
 } PointLightArray;
 
-//TODO replace these functions
-void Graphics_CreatePointlightArray(PointLightArray *array);
-bool Graphics_LightArrayAddPointlight(PointLightArray *array,
-										Pointlight pointlight);
-void Graphics_ClearLightArray(PointLightArray *array);
-
 typedef struct ModelArray
 {
 	size_t count;
@@ -355,7 +360,8 @@ typedef struct ModelArray
 	Model *models;
 } ModelArray;
 
-//For cel shading
+//For cel shading (aka toon shader, anime shader)
+//more advanced, three (or more) passes needed
 typedef struct AnimePipeline
 {
 	Pipeline norm;
@@ -365,6 +371,7 @@ typedef struct AnimePipeline
 } AnimePipeline;
 
 //for retro 3D (like PS1, N64, Saturn)
+//super basic, one pass shader
 typedef struct FifthGenPipeline
 {
 	Pipeline fifthgen;
@@ -377,9 +384,12 @@ typedef enum PipelineRenderingType
 	PIPELINE_5THGEN
 } PipelineRenderingType;
 
+//NOTICE: GraphicsScene is the Graphics part of a bigger scene
+//structure. There will be an AudioScene and a PhysicsScene later,
+//also part of a later all-encopassing Scene.
 typedef struct GraphicsScene
 {
-	PointLightArray plightarray; //not used by
+	PointLightArray plightarray; //not used by fifth gen pipeline
 	ModelArray modelarray;
 	PipelineRenderingType type;
 	union
@@ -388,6 +398,9 @@ typedef struct GraphicsScene
 		FifthGenPipeline fifthgen;
 	};
 } GraphicsScene;
+
+bool Graphics_CreateScene(GraphicsScene *scene,
+							PipelineRenderingType type);
 
 /*******************************************************************
  ******************************************************************/
@@ -411,7 +424,7 @@ void Graphics_BeginDrawing(Renderer *renderer);
 
 void Graphics_EndDrawing(Renderer *renderer);
 
-//test
+//test, will be removed when scene renderer is done
 void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler);
