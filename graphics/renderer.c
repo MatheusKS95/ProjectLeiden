@@ -102,8 +102,23 @@ void Graphics_EndDrawing(Renderer *renderer)
 	SDL_SubmitGPUCommandBuffer(renderer->cmdbuf);
 }
 
-//test, incomplete rendering (still need to send a bunch of things to shader such as lights)
-//final function will look like a lot different
+//TODO
+//instead of drawmodel, what about drawmesh?
+//less friendly, but easier to use custom buffers, uniforms, samplers and like
+
+/*struct studyrendering
+{
+	Mesh *mesh;
+	Renderer *renderer;
+	Pipeline pipeline;
+	Sampler *sampler;
+	void *vertex_ubo;
+	size_t vubo_size;
+	void *fragment_ubo;
+	size_t fubo_size;
+	also any kind of storage buffers if needed
+};*/
+
 void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler)
@@ -123,6 +138,3 @@ void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 		SDL_DrawGPUIndexedPrimitives(renderer->render_pass, model->meshes.meshes[i].indices.count, 1, 0, 0, 0);
 	}
 }
-
-//will work on a new drawmodel that takes the light array into the rendering to the shaders (it's more difficult than it seems)
-//i'll need to use a buffer to send the lighting info

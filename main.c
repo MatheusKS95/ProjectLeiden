@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	//need to bring lookat, or a camera update thing
 	Graphics_InitCameraBasic(&cam_1, (Vector3){1.0f, 1.0f, 8.0f});
 
-	Shader modelvsshader = { 0 };
+	/*Shader modelvsshader = { 0 };
 	if(!Graphics_LoadShaderFromFS(&modelvsshader, "shaders/demoset2.vert.spv", "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
 	{
 		SDL_Log("Failed to load VS shader.");
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 	{
 		SDL_Log("Failed to load FS shader.");
 		return -1;
-	}
+	}*/
 
 	/*Shader modelvsshader = { 0 };
 	if(!Graphics_LoadShaderFromFS(&modelvsshader, "shaders/materialtest.vert.spv", "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
@@ -126,11 +126,11 @@ int main(int argc, char *argv[])
 
 	//TODO we don't release it, i forgot to make something to destroy this
 	//I still need to think about a way to improve pipelines
-	Pipeline pipeline1 = Graphics_CreatePipeline(&modelvsshader, &modelfsshader, PIPELINETYPE_3D, true);
+	//Pipeline pipeline1 = Graphics_CreatePipeline(&modelvsshader, &modelfsshader, PIPELINETYPE_3D, true);
 
-	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
+	//sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
-	if(!Graphics_ImportIQM(&model1, "test_models/house/house.iqm", "test_models/house/house.material"))
+	/*if(!Graphics_ImportIQM(&model1, "test_models/house/house.iqm", "test_models/house/house.material"))
 	{
 		//todo cleanup this shit
 		return -1;
@@ -150,15 +150,15 @@ int main(int argc, char *argv[])
 
 	Graphics_UploadModel(&model1, true);
 	Graphics_UploadModel(&model2, true);
-	Graphics_UploadModel(&model3, true);
+	Graphics_UploadModel(&model3, true);*/
 
-	Graphics_MoveModel(&model1, (Vector3){0.0f, 0.0f, 0.0f});
+	/*Graphics_MoveModel(&model1, (Vector3){0.0f, 0.0f, 0.0f});
 
 	Graphics_RotateModel(&model2, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90));
 	Graphics_MoveModel(&model2, (Vector3){1.0f, 0.0f, 4.0f});
 	//Graphics_ScaleModel(&model2, 2.0f);
 
-	Graphics_MoveModel(&model3, (Vector3){5.0f, 0.0f, 1.0f});
+	Graphics_MoveModel(&model3, (Vector3){5.0f, 0.0f, 1.0f});*/
 
 	InputState state = { 0 };
 
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 	bool playing = true;
 
 	Renderer renderer = { 0 };
-	Graphics_CreateRenderer(&renderer, (Color){0.0f, 0.0f, 0.0f, 0.0f});
+	Graphics_CreateRenderer(&renderer, (Color){1.0f, 0.0f, 0.0f, 0.0f});
 
 	while(playing)
 	{
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 		state.mouse_x = state.mouse_y = 0;
 
 		//https://www.youtube.com/watch?v=PGNiXGX2nLU
-		Graphics_RotateModel(&model1, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
+		//Graphics_RotateModel(&model1, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
 
 		Matrix4x4 viewproj;
 		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
@@ -240,20 +240,21 @@ int main(int argc, char *argv[])
 		/************************
 		 * RENDERING STUFF ******
 		 ***********************/
+		//REWORK REQUIRED, drawmodel, as is, will be dropped in favor of drawmesh (level will become lower)
 		Graphics_BeginDrawing(&renderer);
-		Graphics_DrawModelT1(&model1, &renderer, pipeline1, mvp1, sampler);
-		Graphics_DrawModelT1(&model2, &renderer, pipeline1, mvp2, sampler);
-		Graphics_DrawModelT1(&model3, &renderer, pipeline1, mvp3, sampler);
+		//Graphics_DrawModelT1(&model1, &renderer, pipeline1, mvp1, sampler);
+		//Graphics_DrawModelT1(&model2, &renderer, pipeline1, mvp2, sampler);
+		//Graphics_DrawModelT1(&model3, &renderer, pipeline1, mvp3, sampler);
 		Graphics_EndDrawing(&renderer);
 		/************************************/
 	}
 
 	//i forgor more things to kill
 	//valgrind is going to scream
-	Graphics_ReleaseModel(&model1); //at least this destroy textures
-	Graphics_ReleaseModel(&model2);
-	Graphics_ReleaseModel(&model3);
-	Graphics_ReleaseSampler(sampler);
+	//Graphics_ReleaseModel(&model1); //at least this destroy textures
+	//Graphics_ReleaseModel(&model2);
+	//Graphics_ReleaseModel(&model3);
+	//Graphics_ReleaseSampler(sampler);
 	//TODO release pipeline
 
 	Leiden_Deinit();
