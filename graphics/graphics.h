@@ -149,6 +149,17 @@ void Graphics_DestroySpotlight(Spotlight *l);
  * SHADERS
  ******************************************************************/
 
+/*
+ * Ultimate goal: drop all of this and either:
+ * 1) Compile shader at runtime and keep SPIR-V in memory (doesn't
+ *    need to keep track of generated SPIR-V and always up to date,
+ *    but it's slower).
+ * 2) First run, build SPIR-V and store in the userfolder.
+ *    If it's in the userfolder, use them. Otherwise, re-generate
+ *    them (might need to keep track of latest shader version and
+ *    cleanup older builds).
+*/
+
 typedef enum ShaderStage
 {
 	SHADERSTAGE_NONE = 0,
@@ -332,7 +343,104 @@ void Graphics_ReleaseModel(Model *model);
  ******************************************************************/
 
 /*******************************************************************
- * RENDERER - TODO
+ * SCENE - TODO
+ ******************************************************************/
+
+typedef struct PointLightArray
+{
+	size_t count;
+	size_t capacity;
+	Pointlight *pointlights;
+} PointLightArray;
+
+typedef struct ModelArray
+{
+	size_t count;
+	size_t capacity;
+	Model *models;
+} ModelArray;
+
+//For cel shading (aka toon shader, anime shader)
+//more advanced, three (or more) passes needed
+typedef struct AnimePipeline
+{
+	Pipeline norm;
+	Pipeline outline;
+	Pipeline toon;
+	Sampler *sampler;
+} AnimePipeline;
+
+//for retro 3D (like PS1, N64, Saturn)
+//super basic, one pass shader
+typedef struct FifthGenPipeline
+{
+	Pipeline fifthgen;
+	Sampler *sampler;
+} FifthGenPipeline;
+
+typedef enum PipelineRenderingType
+{
+	PIPELINE_ANIME = 0,
+	PIPELINE_5THGEN
+} PipelineRenderingType;
+
+//NOTICE: GraphicsScene is the Graphics part of a bigger scene
+//structure. There will be an AudioScene and a PhysicsScene later,
+//also part of a later all-encopassing Scene.
+typedef struct GraphicsScene
+{
+	//status regarding if it's on GPU (true = uploaded to GPU)
+	bool models_uploaded;
+	bool plights_uploaded;
+
+	//light arrays (before upload) and light buffers (after upload)
+	//none used by the fifth-gen pipeline
+	PointLightArray plightarray; //memory array
+	SDL_GPUBuffer *plightbuffer; //buffer for uploading
+
+	//model array (own uploading)
+	ModelArray modelarray;
+
+	//rendering style TODO rename
+	PipelineRenderingType type;
+	union
+	{
+		AnimePipeline anime;
+		FifthGenPipeline fifthgen;
+	};
+	//TODO add other things like other light sources
+	//buffers for lights, skyboxes...
+} GraphicsScene;
+
+bool Graphics_CreateScene(GraphicsScene *scene,
+							PipelineRenderingType type);
+
+bool Graphics_AddModelToScene(GraphicsScene *scene, Model *model);
+
+bool Graphics_RemoveModelFromScene(GraphicsScene *scene,
+									size_t index,
+									Model *model);
+
+bool Graphics_ClearModelsFromScene(GraphicsScene *scene);
+
+void Graphics_UploadModelsFromScene(GraphicsScene *scene);
+
+bool Graphics_AddPointlightToScene(GraphicsScene *scene,
+									Pointlight *pointlight);
+
+bool Graphics_RemovePointlightFromScene(GraphicsScene *scene,
+										size_t index,
+										Pointlight *pointlight);
+
+bool Graphics_ClearPointlightsFromScene(GraphicsScene *scene);
+
+void Graphics_UploadPointlightsFromScene(GraphicsScene *scene);
+
+/*******************************************************************
+ ******************************************************************/
+
+/*******************************************************************
+ * RENDERER - REWORK
  ******************************************************************/
 
 typedef struct Renderer
@@ -344,64 +452,16 @@ typedef struct Renderer
 	SDL_GPUTexture *texture_depth;
 } Renderer;
 
-typedef struct PointLightArray
-{
-	size_t count;
-	size_t capacity;
-	Pointlight *pointlights;
-} PointLightArray;
-
-void Graphics_CreatePointlightArray(PointLightArray *array);
-
-bool Graphics_LightArrayAddPointlight(PointLightArray *array,
-										Pointlight pointlight);
-
-void Graphics_ClearLightArray(PointLightArray *array);
-
 void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
 
 void Graphics_BeginDrawing(Renderer *renderer);
 
 void Graphics_EndDrawing(Renderer *renderer);
 
-//test
+//test, will be removed when scene renderer is done
 void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * RENDERER - TEST - WIP (implementations on renderer.c)
- ******************************************************************/
-
-//generic renderer is way too limited and modern graphics APIs are
-//way too rigid (if compared to OpenGL), so I think I'll work with
-//specific, purpose-built pipelines
-
-//For cel shading
-typedef struct AnimePipeline
-{
-	Pipeline norm;
-	Pipeline outline;
-	Pipeline toon;
-	Sampler *sampler;
-} AnimePipeline;
-
-//for retro 3D (like PS1, N64, Saturn)
-typedef struct FifthGenPipeline
-{
-	Pipeline fifthgen;
-	Sampler *sampler;
-} FifthGenPipeline;
-
-//TODO functions for setting things up - creating renderer and
-//stuff is still the same
-//TODO anime pipeline requires rendering to a texture
-//TODO think... if I need yet another type of pipeline?
-//TODO think... lights, lots of lights (anime renderer will need
-//light arrays) - need storage buffer but idk how to use them yet
 
 /*******************************************************************
  ******************************************************************/
