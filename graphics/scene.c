@@ -153,6 +153,16 @@ static void _arrayClearModel(ModelArray *arr)
 
 //END OF ARRAY RELATED STUFF
 
+static void _createstylepipelines_anime(GraphicsScene *scene)
+{
+	return;
+}
+
+static void _createstylepipelines_5thgen(GraphicsScene *scene)
+{
+	return;
+}
+
 bool Graphics_CreateScene(GraphicsScene *scene,
 							PipelineRenderingType type)
 {
@@ -163,10 +173,18 @@ bool Graphics_CreateScene(GraphicsScene *scene,
 	}
 	_arrayInitModel(&scene->modelarray);
 	_arrayInitPointlight(&scene->plightarray);
-	scene->uploaded = false;
+	scene->models_uploaded = false;
+	scene->plights_uploaded = false;
 	scene->type = type;
 
 	//TODO create pipelines according to type
+	switch(scene->type)
+	{
+		case PIPELINE_5THGEN: break; //TODO
+		case PIPELINE_ANIME: break; //TODO
+		default: break; //TODO, probably 5th gen
+	}
+
 	return true;
 }
 
@@ -181,7 +199,7 @@ bool Graphics_AddModelToScene(GraphicsScene *scene, Model *model)
 	bool result = false;
 	result = _arrayPushLastModel(&scene->modelarray, *model);
 
-	if(scene->uploaded)
+	if(scene->models_uploaded)
 		Graphics_UploadModel(model, true); //todo make a way to check if you want to upload textures
 		//however i need to re-think textures first
 
@@ -221,6 +239,23 @@ bool Graphics_ClearModelsFromScene(GraphicsScene *scene)
 	}
 	_arrayClearModel(&scene->modelarray);
 	return result;
+}
+
+void Graphics_UploadModelsFromScene(GraphicsScene *scene)
+{
+	if(scene == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't upload scene - invalid scene.");
+		return;
+	}
+
+	//first, let's upload all the models (and their textures)
+	for(size_t i = 0; i < scene->modelarray.count; i++)
+	{
+		Graphics_UploadModel(&scene->modelarray.models[i], true);
+	}
+
+	scene->models_uploaded = true;
 }
 
 bool Graphics_AddPointlightToScene(GraphicsScene *scene,
@@ -272,7 +307,7 @@ bool Graphics_ClearPointlightsFromScene(GraphicsScene *scene)
 	return result;
 }
 
-void _upload_pointlights(GraphicsScene *scene)
+void Graphics_UploadPointlightsFromScene(GraphicsScene *scene)
 {
 	//TODO
 	if(scene == NULL)
@@ -282,33 +317,53 @@ void _upload_pointlights(GraphicsScene *scene)
 	}
 	SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't upload pointlights because it's not fully implemented yet.");
 
+	if(scene->plights_uploaded)
+	{
+		//first let's release the old buffer, lights are updated more often than meshes
+		//but only if they were already uploaded
+		SDL_ReleaseGPUBuffer(context.device, scene->plightbuffer);
+	}
+
 	//TODO need to check appropriate buffer for lighting
-	/*scene->plightbuffer = SDL_CreateGPUBuffer(
+	scene->plightbuffer = SDL_CreateGPUBuffer(
 		context.device,
 		&(SDL_GPUBufferCreateInfo) {
-			.usage = SDL_GPU_BUFFERUSAGE_INDIRECT,
-			.size = sizeof(Mesh) * mesh->vertices.count
+			.usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
+			.size = sizeof(Pointlight) * scene->plightarray.count
 		}
-	);*/
+	);
+	SDL_GPUTransferBuffer* plightbuffer_transferbuffer = SDL_CreateGPUTransferBuffer(
+		context.device,
+		&(SDL_GPUTransferBufferCreateInfo) {
+			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+			.size = (sizeof(Pointlight) * scene->plightarray.count)
+		}
+	);
+	Pointlight* bufferTransferData = SDL_MapGPUTransferBuffer(context.device, plightbuffer_transferbuffer, false);
+	SDL_memcpy(bufferTransferData, scene->plightarray.pointlights, sizeof(Pointlight) * scene->plightarray.count);
+	SDL_UnmapGPUTransferBuffer(context.device, plightbuffer_transferbuffer);
+
+	SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdbuf);
+
+	SDL_UploadToGPUBuffer(
+		copyPass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = plightbuffer_transferbuffer,
+			.offset = 0
+		},
+		&(SDL_GPUBufferRegion) {
+			.buffer = scene->plightbuffer,
+			.offset = 0,
+			.size = sizeof(Pointlight) * scene->plightarray.count
+		},
+		false
+	);
+
+	SDL_EndGPUCopyPass(copyPass);
+	SDL_ReleaseGPUTransferBuffer(context.device, plightbuffer_transferbuffer);
+	SDL_SubmitGPUCommandBuffer(cmdbuf);
+
+	scene->plights_uploaded = true;
 	return;
-}
-
-void Graphics_UploadScene(GraphicsScene *scene)
-{
-	if(scene == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't upload scene - invalid scene.");
-		return;
-	}
-
-	//first, let's upload all the models (and their textures)
-	for(size_t i = 0; i < scene->modelarray.count; i++)
-	{
-		Graphics_UploadModel(&scene->modelarray.models[i], true);
-	}
-
-	//now, let's upload all the lights... TODO
-	//TODO create static function to deal with pointlight uploading
-
-	scene->uploaded = true;
 }

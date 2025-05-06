@@ -390,7 +390,8 @@ typedef enum PipelineRenderingType
 typedef struct GraphicsScene
 {
 	//status regarding if it's on GPU (true = uploaded to GPU)
-	bool uploaded;
+	bool models_uploaded;
+	bool plights_uploaded;
 
 	//light arrays (before upload) and light buffers (after upload)
 	//none used by the fifth-gen pipeline
@@ -422,6 +423,8 @@ bool Graphics_RemoveModelFromScene(GraphicsScene *scene,
 
 bool Graphics_ClearModelsFromScene(GraphicsScene *scene);
 
+void Graphics_UploadModelsFromScene(GraphicsScene *scene);
+
 bool Graphics_AddPointlightToScene(GraphicsScene *scene,
 									Pointlight *pointlight);
 
@@ -431,7 +434,7 @@ bool Graphics_RemovePointlightFromScene(GraphicsScene *scene,
 
 bool Graphics_ClearPointlightsFromScene(GraphicsScene *scene);
 
-void Graphics_UploadScene(GraphicsScene *scene);
+void Graphics_UploadPointlightsFromScene(GraphicsScene *scene);
 
 /*******************************************************************
  ******************************************************************/
