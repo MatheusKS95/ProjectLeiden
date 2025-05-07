@@ -34,6 +34,7 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 
 	const int linked = SDL_GetVersion();
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Using SDL version %d.%d.%d", SDL_VERSIONNUM_MAJOR(linked), SDL_VERSIONNUM_MINOR(linked), SDL_VERSIONNUM_MICRO(linked));
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Running on %s", SDL_GetPlatform());
 
 	if(!FileIOInit(initdesc->argv, initdesc->asset_path, NULL, initdesc->org_name, initdesc->app_name))
 	{
