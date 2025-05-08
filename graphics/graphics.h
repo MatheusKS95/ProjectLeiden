@@ -343,7 +343,7 @@ void Graphics_ReleaseModel(Model *model);
  ******************************************************************/
 
 /*******************************************************************
- * SCENE - TODO
+ * SCENE - DROP THIS
  ******************************************************************/
 
 typedef struct PointLightArray
@@ -452,6 +452,47 @@ typedef struct Renderer
 	SDL_GPUTexture *texture_depth;
 } Renderer;
 
+typedef SDL_GPUBuffer StorageBuffer;
+
+//it's freaking huge
+typedef struct RenderingStageDesc
+{
+	Pipeline pipeline;
+	Sampler *sampler;
+
+	//vertex
+	void *vertex_ubo;
+	size_t vertex_ubo_size;
+	StorageBuffer **vert_storage_buffers;
+	size_t vert_storage_buffers_count;
+	//you need to extract the texture from inside Texture2D, TODO
+	SDL_GPUTexture **vert_storage_textures;
+	size_t vert_storage_textures_count;
+
+	//fragment
+	void *fragment_ubo;
+	size_t fragment_ubo_size;
+	StorageBuffer **frag_storage_buffers;
+	size_t frag_storage_buffers_count;
+	//you need to extract the texture from inside Texture2D, TODO
+	SDL_GPUTexture **frag_storage_textures;
+	size_t frag_storage_textures_count;
+
+	//texture overrides (will be rendered instead of the ones
+	//in the mesh) - keep null if unneeded
+	//fragment shader only
+	Texture2D *diffuse_map_or;
+	Texture2D *normal_map_or;
+	Texture2D *specular_map_or;
+	Texture2D *emission_map_or;
+	Texture2D *height_map_or;
+} RenderingStageDesc;
+
+bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
+									void *data, size_t size);
+
+void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
+
 void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
 
 void Graphics_BeginDrawing(Renderer *renderer);
@@ -462,6 +503,12 @@ void Graphics_EndDrawing(Renderer *renderer);
 void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler);
+
+void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
+						RenderingStageDesc *desc);
+
+void Graphics_DrawModel(Model *model, Renderer *renderer,
+						RenderingStageDesc *desc);
 
 /*******************************************************************
  ******************************************************************/

@@ -25,6 +25,8 @@
 #include <graphics.h>
 #include <SDL3/SDL.h>
 
+//will be removed
+
 //ARRAY RELATED STUFF
 static bool _arrayRealocPointlight(PointLightArray *arr, size_t new_size)
 {
