@@ -216,17 +216,12 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 	SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
 	SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 
-	//pushing stuff to vertex step
-	if(desc->vertex_ubo_size > 0 && desc->vertex_ubo != NULL)
-		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, desc->vertex_ubo, desc->vertex_ubo_size);
+	//bind vert storages
 	if(desc->vert_storage_buffers != NULL && desc->vert_storage_buffers_count > 0)
 		SDL_BindGPUVertexStorageBuffers(renderer->render_pass, 0, desc->vert_storage_buffers, desc->vert_storage_buffers_count);
 	if(desc->vert_storage_textures == NULL && desc->vert_storage_textures_count > 0)
 		SDL_BindGPUVertexStorageTextures(renderer->render_pass, 0, desc->vert_storage_textures, desc->vert_storage_textures_count);
-
-	//pushing stuff to fragment step
-	if(desc->fragment_ubo_size > 0 && desc->fragment_ubo != NULL)
-		SDL_PushGPUFragmentUniformData(renderer->cmdbuf, 0, desc->fragment_ubo, desc->fragment_ubo_size);
+	//bind frag storages
 	if(desc->frag_storage_buffers != NULL && desc->frag_storage_buffers_count > 0)
 		SDL_BindGPUFragmentStorageBuffers(renderer->render_pass, 0, desc->frag_storage_buffers, desc->frag_storage_buffers_count);
 	if(desc->frag_storage_textures == NULL && desc->frag_storage_textures_count > 0)
@@ -258,6 +253,12 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 		SDL_BindGPUFragmentSamplers(renderer->render_pass, 4, &(SDL_GPUTextureSamplerBinding){ desc->height_map_or->texture, desc->sampler }, 1);
 	else if(mesh->height_map != NULL)
 		SDL_BindGPUFragmentSamplers(renderer->render_pass, 4, &(SDL_GPUTextureSamplerBinding){ mesh->height_map->texture, desc->sampler }, 1);
+
+	//push ubos
+	if(desc->vertex_ubo_size > 0 && desc->vertex_ubo != NULL)
+		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, desc->vertex_ubo, desc->vertex_ubo_size);
+	if(desc->fragment_ubo_size > 0 && desc->fragment_ubo != NULL)
+		SDL_PushGPUFragmentUniformData(renderer->cmdbuf, 0, desc->fragment_ubo, desc->fragment_ubo_size);
 
 	//finally
 	SDL_DrawGPUIndexedPrimitives(renderer->render_pass, mesh->indices.count, 1, 0, 0, 0);
