@@ -21,7 +21,6 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 ## About the submodules
 - **audio**: the troublesome module, it's intended to manage spatial sound and music. Uses miniaudio.h. It's still barebones with only a few test functions done. Might get re-implemented soon.
 - **data**: helper structures intended for later use. As of now, only hashtable implemented.
-- **demos**: initially intended to test stuff. It's now obsolete and will be removed.
 - **filesystem**: manages filesystem access, also includes an INI parser. Uses miniphysfs behind the scenes.
 - **graphics**: the most worked on module, deal with the rendering. Uses SDL GPU as the graphics API (used OpenGL in the past). The goal is to make generic graphics functionalities, but the plan is to focus on NPR (anime-style and cartoon-ish style) and retro-style graphics (PS1 and PS2 kind of graphics). It has no PBR support nor scene graphs/trees. The goal is simplicity.
 - **input**: manages input. Still barebones, keyboard and some mouse works fine. The goal is to support gamepads and, if possible, steering wheels.
