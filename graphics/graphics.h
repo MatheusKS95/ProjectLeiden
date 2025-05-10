@@ -27,13 +27,24 @@
 
 typedef struct GraphicsContext
 {
+	//WINDOW
 	unsigned int width;
 	unsigned int height;
 	SDL_Window *window;
+
+	//GPU DEVICE
 	SDL_GPUDevice *device;
 } GraphicsContext;
 
 extern GraphicsContext context;
+
+typedef struct GeneralPipelines
+{
+	SDL_GPUGraphicsPipeline *skybox;
+	//TODO more
+} GeneralPipelines;
+
+extern GeneralPipelines pipelines;
 
 bool Graphics_Init();
 
@@ -150,14 +161,11 @@ void Graphics_DestroySpotlight(Spotlight *l);
  ******************************************************************/
 
 /*
- * Ultimate goal: drop all of this and either:
- * 1) Compile shader at runtime and keep SPIR-V in memory (doesn't
- *    need to keep track of generated SPIR-V and always up to date,
- *    but it's slower).
- * 2) First run, build SPIR-V and store in the userfolder.
- *    If it's in the userfolder, use them. Otherwise, re-generate
- *    them (might need to keep track of latest shader version and
- *    cleanup older builds).
+ * TODO
+ * Remove Graphics_CreatePipeline as generic function and use
+ * specific purpose-built pipelines wherever needed. Should not be
+ * directly used. Don't like the shaders? Either change the
+ * provided SPIR-Vs or modify the engine.
 */
 
 typedef enum ShaderStage
@@ -167,6 +175,7 @@ typedef enum ShaderStage
 	SHADERSTAGE_FRAGMENT
 } ShaderStage;
 
+//also change this
 typedef struct Shader
 {
 	SDL_GPUShader *shader;
@@ -202,6 +211,9 @@ Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
 									PipelineType type,
 									bool release_shader);
 
+bool Graphics_CreatePipelineSkybox(const char *path_vs,
+										const char *path_fs);
+
 /*******************************************************************
  ******************************************************************/
 
@@ -209,7 +221,7 @@ Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
  * 2D TEXTURES
  ******************************************************************/
 /*
- * Notice: Project Leiden doesn't support PBR at this moment
+ * Notice: Project Leiden doesn't support PBR
 */
 
 typedef enum SamplerFilter
@@ -259,6 +271,19 @@ bool Graphics_LoadTextureFromFS(Texture2D *texture,
 void Graphics_ReleaseTexture(Texture2D *texture);
 
 void Graphics_UploadTexture(Texture2D *texture);
+
+/*******************************************************************
+ ******************************************************************/
+
+/*******************************************************************
+ * SKYBOXES
+ ******************************************************************/
+
+typedef struct Skybox
+{
+	SDL_GPUTexture *texture;
+	Sampler *sampler;
+} Skybox;
 
 /*******************************************************************
  ******************************************************************/

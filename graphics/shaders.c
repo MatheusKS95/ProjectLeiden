@@ -25,6 +25,8 @@
 #include <fileio.h>
 #include <graphics.h>
 
+GeneralPipelines pipelines;
+
 bool Graphics_LoadShaderFromMem(Shader *shader,
 								uint8_t *buffer, size_t size,
 								const char *entrypoint,
@@ -184,4 +186,58 @@ Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
 	}
 
 	return pipeline;
+}
+
+bool Graphics_CreatePipelineSkybox(const char *path_vs,
+										const char *path_fs)
+{
+	Shader modelvsshader = { 0 };
+	if(!Graphics_LoadShaderFromFS(&modelvsshader, path_vs, "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
+	{
+		SDL_Log("Failed to load skybox vertex shader.");
+		return false;
+	}
+	Shader modelfsshader = { 0 };
+	if(!Graphics_LoadShaderFromFS(&modelfsshader, path_fs, "main", SHADERSTAGE_FRAGMENT, 1, 0, 0, 0))
+	{
+		SDL_Log("Failed to load skybox fragment shader.");
+		return false;
+	}
+
+	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = { 0 };
+	pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo)
+	{
+		.target_info =
+		{
+			.num_color_targets = 1,
+			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
+				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
+			}}
+		},
+		.vertex_input_state = (SDL_GPUVertexInputState){
+			.num_vertex_buffers = 1,
+			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
+				.slot = 0,
+				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
+				.instance_step_rate = 0,
+				.pitch = sizeof(Vector3)
+			}},
+			.num_vertex_attributes = 1,
+			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
+				//position
+				.buffer_slot = 0,
+				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
+				.location = 0,
+				.offset = 0
+			}}
+		},
+		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+		.vertex_shader = modelvsshader.shader,
+		.fragment_shader = modelfsshader.shader
+	};
+	pipelines.skybox = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
+	SDL_ReleaseGPUShader(context.device, modelvsshader.shader);
+	SDL_ReleaseGPUShader(context.device, modelfsshader.shader);
+
+	return true;
 }

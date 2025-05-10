@@ -69,7 +69,7 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 	bool fullscreen = (INIGetFloat(ini, "graphics", "fullscreen") == 0.0f) ? false : true;
 	int width = (int)INIGetFloat(ini, "graphics", "screen_width");
 	int height = (int)INIGetFloat(ini, "graphics", "screen_heigth");
-	INIDestroy(&ini);
+
 	SDL_Window *window;
 	if(fullscreen)
 	{
@@ -94,6 +94,10 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 		SDL_Quit();
 		return 0;
 	}
+
+	//Graphics_CreatePipelineSkybox()
+
+	INIDestroy(&ini);
 
 	if(!Audio_Init())
 	{

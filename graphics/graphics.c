@@ -18,6 +18,7 @@
 #include <fileio.h>
 
 GraphicsContext context;
+extern GeneralPipelines pipelines;
 
 bool Graphics_Init()
 {
@@ -36,6 +37,8 @@ bool Graphics_Init()
 		SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Failed to claim window");
 		return false;
 	}
+
+	pipelines = (GeneralPipelines){ 0 };
 
 	return true;
 }
