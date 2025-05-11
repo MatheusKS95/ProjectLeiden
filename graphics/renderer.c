@@ -148,6 +148,7 @@ void Graphics_BeginDrawing(Renderer *renderer)
 	depthStencilTargetInfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
 
 	renderer->render_pass = SDL_BeginGPURenderPass(renderer->cmdbuf, &colorTargetInfo, 1, &depthStencilTargetInfo);
+	//renderer->render_pass = SDL_BeginGPURenderPass(renderer->cmdbuf, &colorTargetInfo, 1, NULL);
 }
 
 void Graphics_EndDrawing(Renderer *renderer)
@@ -277,4 +278,20 @@ void Graphics_DrawModel(Model *model, Renderer *renderer,
 	{
 		Graphics_DrawMesh(&model->meshes.meshes[i], renderer, desc);
 	}
+}
+
+void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
+							Matrix4x4 viewproj)
+{
+	if(skybox == NULL || renderer == NULL)
+	{
+		return;
+	}
+
+	SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipelines.skybox);
+	SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
+	SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+	SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
+	SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &viewproj, sizeof(viewproj));
+	SDL_DrawGPUIndexedPrimitives(renderer->render_pass, 36, 1, 0, 0, 0);
 }

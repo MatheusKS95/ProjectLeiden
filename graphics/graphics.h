@@ -544,7 +544,8 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 void Graphics_DrawModel(Model *model, Renderer *renderer,
 						RenderingStageDesc *desc);
 
-//void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer);
+void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
+							Matrix4x4 viewproj);
 
 /*******************************************************************
  ******************************************************************/

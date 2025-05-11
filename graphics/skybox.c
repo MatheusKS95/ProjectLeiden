@@ -105,8 +105,10 @@ bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
 	);
 
 	const char* imagenames[] = {
-			path_up, path_down, path_left,
-			path_right, path_front, path_back,
+		path_right, path_left, path_up,
+		path_down, path_front, path_back
+			//path_right, path_front, path_left,
+			//path_up, path_down, path_back,
 	};
 
 	for(int i = 0; i < SDL_arraysize(imagenames); i++)
@@ -213,6 +215,7 @@ void Graphics_UploadSkybox(Skybox *skybox)
 
 	//skybox textures
 	const Uint32 imagesize = skybox->surface[0]->w * skybox->surface[0]->h * 4;
+	const Uint32 side_size = skybox->surface[0]->w;
 	SDL_GPUTransferBuffer* texture_transferbuffer = SDL_CreateGPUTransferBuffer(
 		context.device,
 		&(SDL_GPUTransferBufferCreateInfo) {
@@ -237,6 +240,51 @@ void Graphics_UploadSkybox(Skybox *skybox)
 	SDL_GPUCopyPass* copypass = SDL_BeginGPUCopyPass(cmdbuf);
 
 	//TODO do the upload here
+	SDL_UploadToGPUBuffer(
+		copypass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = buffer_transferbuffer,
+			.offset = 0
+		},
+		&(SDL_GPUBufferRegion) {
+			.buffer = skybox->vertex_buffer,
+			.offset = 0,
+			.size = sizeof(Vector3) * 24
+		},
+		false
+	);
+
+	SDL_UploadToGPUBuffer(
+		copypass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = buffer_transferbuffer,
+			.offset = sizeof(Vector3) * 24
+		},
+		&(SDL_GPUBufferRegion) {
+			.buffer = skybox->index_buffer,
+			.offset = 0,
+			.size = sizeof(Uint32) * 36
+		},
+		false
+	);
+
+	for (int i = 0; i < 6; i += 1) {
+		SDL_UploadToGPUTexture(
+			copypass,
+			&(SDL_GPUTextureTransferInfo) {
+				.transfer_buffer = texture_transferbuffer,
+				.offset = imagesize * i
+			},
+			&(SDL_GPUTextureRegion) {
+				.texture = skybox->gputexture,
+				.layer = i,
+				.w = side_size,
+				.h = side_size,
+				.d = 1,
+			},
+			false
+		);
+	}
 
 	SDL_EndGPUCopyPass(copypass);
 	SDL_ReleaseGPUTransferBuffer(context.device, buffer_transferbuffer);

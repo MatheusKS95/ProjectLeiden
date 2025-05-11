@@ -95,7 +95,15 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 		return 0;
 	}
 
-	//Graphics_CreatePipelineSkybox()
+	//Start creating all the required pipelines
+	if(!Graphics_CreatePipelineSkybox(INIGetString(ini, "shaders", "skybox_vert"), INIGetString(ini, "shaders", "skybox_frag")))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to generate skybox pipeline...");
+		SDL_DestroyWindow(window);
+		FileIODeinit();
+		SDL_Quit();
+		return 0;
+	}
 
 	INIDestroy(&ini);
 

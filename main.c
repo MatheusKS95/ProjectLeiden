@@ -145,10 +145,21 @@ int main(int argc, char *argv[])
 	Graphics_MoveModel(&model1, (Vector3){0.0f, 0.0f, 0.0f});
 
 	Graphics_RotateModel(&model2, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90));
-	Graphics_MoveModel(&model2, (Vector3){1.0f, 0.0f, 4.0f});
+	Graphics_MoveModel(&model2, (Vector3){1.0f, 0.0f, 2.0f});
 	//Graphics_ScaleModel(&model2, 2.0f);
 
 	Graphics_MoveModel(&model3, (Vector3){5.0f, 0.0f, 1.0f});
+
+	//skybox test
+	Skybox skybox = { 0 };
+	if(!Graphics_LoadSkyboxFS(&skybox, "skybox/test1/top.jpg", "skybox/test1/bottom.jpg",
+								"skybox/test1/left.jpg", "skybox/test1/right.jpg",
+								"skybox/test1/front.jpg", "skybox/test1/back.jpg"))
+	{
+		//todo cleanup this
+		return -1;
+	}
+	Graphics_UploadSkybox(&skybox);
 
 	InputState state = { 0 };
 
@@ -229,6 +240,16 @@ int main(int argc, char *argv[])
 		Matrix4x4 mvp1 = Matrix4x4_Mul(model1.transform, viewproj);
 		Matrix4x4 mvp2 = Matrix4x4_Mul(model2.transform, viewproj);
 		Matrix4x4 mvp3 = Matrix4x4_Mul(model3.transform, viewproj);
+
+		//FIXME
+		Matrix4x4 camview = cam_1.view;
+		camview.ad = camview.bd = camview.cd = camview.dd = 0.0f;
+		camview.da = camview.db = camview.dc = 0.0f;
+		Matrix4x4 skyboxviewproj;
+		skyboxviewproj = Matrix4x4_Mul(camview, cam_1.projection);
+		//skyboxviewproj.ad = skyboxviewproj.bd = skyboxviewproj.cd = skyboxviewproj.dd = 0.0f;
+		//skyboxviewproj.da = skyboxviewproj.db = skyboxviewproj.dc = 0.0f;
+		//skyboxviewproj.ad = skyboxviewproj.bd = skyboxviewproj.cd = 1.0f;
 		/************************************/
 
 		/************************
@@ -253,6 +274,7 @@ int main(int argc, char *argv[])
 		//desc_m3.diffuse_map_or = &car_alttext; didn't work
 
 		Graphics_BeginDrawing(&renderer);
+			Graphics_DrawSkybox(&skybox, &renderer, skyboxviewproj);
 			Graphics_DrawModel(&model1, &renderer, &desc_m1);
 			Graphics_DrawModel(&model2, &renderer, &desc_m2);
 			Graphics_DrawModel(&model3, &renderer, &desc_m3);

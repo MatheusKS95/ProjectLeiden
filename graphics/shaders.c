@@ -212,6 +212,13 @@ bool Graphics_CreatePipelineSkybox(const char *path_vs,
 				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
 			}}
 		},
+		.depth_stencil_state = (SDL_GPUDepthStencilState) {
+			.enable_depth_test = true,
+			.enable_depth_write = true,
+			.enable_stencil_test = false,
+			.compare_op = SDL_GPU_COMPAREOP_NEVER,
+			.write_mask = 0xFF
+		},
 		.vertex_input_state = (SDL_GPUVertexInputState){
 			.num_vertex_buffers = 1,
 			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
