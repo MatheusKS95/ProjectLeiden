@@ -25,8 +25,6 @@
 #include <fileio.h>
 #include <graphics.h>
 
-GeneralPipelines pipelines;
-
 bool Graphics_LoadShaderFromMem(Shader *shader,
 								uint8_t *buffer, size_t size,
 								const char *entrypoint,

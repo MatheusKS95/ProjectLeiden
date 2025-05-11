@@ -281,9 +281,21 @@ void Graphics_UploadTexture(Texture2D *texture);
 
 typedef struct Skybox
 {
-	SDL_GPUTexture *texture;
+	SDL_Surface *surface[6];
+	SDL_GPUTexture *gputexture;
 	Sampler *sampler;
+	SDL_GPUBuffer* vertex_buffer;
+	SDL_GPUBuffer* index_buffer;
 } Skybox;
+
+bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
+							const char *path_down,
+							const char *path_left,
+							const char *path_right,
+							const char *path_front,
+							const char *path_back);
+
+void Graphics_UploadSkybox(Skybox *skybox);
 
 /*******************************************************************
  ******************************************************************/
@@ -368,7 +380,7 @@ void Graphics_ReleaseModel(Model *model);
  ******************************************************************/
 
 /*******************************************************************
- * SCENE - DROP THIS
+ * SCENE - DELETE THIS
  ******************************************************************/
 
 typedef struct PointLightArray
@@ -409,9 +421,6 @@ typedef enum PipelineRenderingType
 	PIPELINE_5THGEN
 } PipelineRenderingType;
 
-//NOTICE: GraphicsScene is the Graphics part of a bigger scene
-//structure. There will be an AudioScene and a PhysicsScene later,
-//also part of a later all-encopassing Scene.
 typedef struct GraphicsScene
 {
 	//status regarding if it's on GPU (true = uploaded to GPU)
@@ -534,6 +543,8 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 
 void Graphics_DrawModel(Model *model, Renderer *renderer,
 						RenderingStageDesc *desc);
+
+//void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer);
 
 /*******************************************************************
  ******************************************************************/

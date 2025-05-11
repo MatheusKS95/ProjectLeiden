@@ -18,7 +18,7 @@
 #include <fileio.h>
 
 GraphicsContext context;
-extern GeneralPipelines pipelines;
+GeneralPipelines pipelines;
 
 bool Graphics_Init()
 {
