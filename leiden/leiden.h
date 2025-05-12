@@ -41,4 +41,6 @@ bool Leiden_Init(LeidenInitDesc *initdesc);
 
 void Leiden_Deinit();
 
+//-------------------------------------------------------------------
+
 #endif
