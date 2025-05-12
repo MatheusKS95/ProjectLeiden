@@ -281,17 +281,22 @@ void Graphics_DrawModel(Model *model, Renderer *renderer,
 }
 
 void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
-							Matrix4x4 viewproj)
+							Camera *camera)
 {
 	if(skybox == NULL || renderer == NULL)
 	{
 		return;
 	}
+	Matrix4x4 cam_view = camera->view;
+	cam_view.ad = cam_view.bd = cam_view.cd = cam_view.dd = 0.0f;
+	cam_view.da = cam_view.db = cam_view.dc = 0.0f;
+	Matrix4x4 skyboxviewproj;
+	skyboxviewproj = Matrix4x4_Mul(cam_view, camera->projection);
 
 	SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipelines.skybox);
 	SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
 	SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 	SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
-	SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &viewproj, sizeof(viewproj));
+	SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
 	SDL_DrawGPUIndexedPrimitives(renderer->render_pass, 36, 1, 0, 0, 0);
 }
