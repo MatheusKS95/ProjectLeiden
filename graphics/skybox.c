@@ -104,11 +104,13 @@ bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
 				}
 	);
 
-	const char* imagenames[] = {
+	/*const char* imagenames[] = {
 		path_right, path_left, path_up,
-		path_down, path_front, path_back
-			//path_right, path_front, path_left,
-			//path_up, path_down, path_back,
+		path_down, path_back, path_front
+	};*/
+	const char* imagenames[] = {
+		path_front, path_back, path_up,
+		path_down, path_right, path_left
 	};
 
 	for(int i = 0; i < SDL_arraysize(imagenames); i++)
