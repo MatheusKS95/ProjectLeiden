@@ -380,100 +380,6 @@ void Graphics_ReleaseModel(Model *model);
  ******************************************************************/
 
 /*******************************************************************
- * SCENE - DELETE THIS
- ******************************************************************/
-
-typedef struct PointLightArray
-{
-	size_t count;
-	size_t capacity;
-	Pointlight *pointlights;
-} PointLightArray;
-
-typedef struct ModelArray
-{
-	size_t count;
-	size_t capacity;
-	Model *models;
-} ModelArray;
-
-//For cel shading (aka toon shader, anime shader)
-//more advanced, three (or more) passes needed
-typedef struct AnimePipeline
-{
-	Pipeline norm;
-	Pipeline outline;
-	Pipeline toon;
-	Sampler *sampler;
-} AnimePipeline;
-
-//for retro 3D (like PS1, N64, Saturn)
-//super basic, one pass shader
-typedef struct FifthGenPipeline
-{
-	Pipeline fifthgen;
-	Sampler *sampler;
-} FifthGenPipeline;
-
-typedef enum PipelineRenderingType
-{
-	PIPELINE_ANIME = 0,
-	PIPELINE_5THGEN
-} PipelineRenderingType;
-
-typedef struct GraphicsScene
-{
-	//status regarding if it's on GPU (true = uploaded to GPU)
-	bool models_uploaded;
-	bool plights_uploaded;
-
-	//light arrays (before upload) and light buffers (after upload)
-	//none used by the fifth-gen pipeline
-	PointLightArray plightarray; //memory array
-	SDL_GPUBuffer *plightbuffer; //buffer for uploading
-
-	//model array (own uploading)
-	ModelArray modelarray;
-
-	//rendering style TODO rename
-	PipelineRenderingType type;
-	union
-	{
-		AnimePipeline anime;
-		FifthGenPipeline fifthgen;
-	};
-	//TODO add other things like other light sources
-	//buffers for lights, skyboxes...
-} GraphicsScene;
-
-bool Graphics_CreateScene(GraphicsScene *scene,
-							PipelineRenderingType type);
-
-bool Graphics_AddModelToScene(GraphicsScene *scene, Model *model);
-
-bool Graphics_RemoveModelFromScene(GraphicsScene *scene,
-									size_t index,
-									Model *model);
-
-bool Graphics_ClearModelsFromScene(GraphicsScene *scene);
-
-void Graphics_UploadModelsFromScene(GraphicsScene *scene);
-
-bool Graphics_AddPointlightToScene(GraphicsScene *scene,
-									Pointlight *pointlight);
-
-bool Graphics_RemovePointlightFromScene(GraphicsScene *scene,
-										size_t index,
-										Pointlight *pointlight);
-
-bool Graphics_ClearPointlightsFromScene(GraphicsScene *scene);
-
-void Graphics_UploadPointlightsFromScene(GraphicsScene *scene);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
  * RENDERER - REWORK
  ******************************************************************/
 
@@ -488,40 +394,6 @@ typedef struct Renderer
 
 typedef SDL_GPUBuffer StorageBuffer;
 
-//it's freaking huge
-typedef struct RenderingStageDesc
-{
-	Pipeline pipeline;
-	Sampler *sampler;
-
-	//vertex
-	void *vertex_ubo;
-	size_t vertex_ubo_size;
-	StorageBuffer **vert_storage_buffers;
-	size_t vert_storage_buffers_count;
-	//you need to extract the texture from inside Texture2D, TODO
-	SDL_GPUTexture **vert_storage_textures;
-	size_t vert_storage_textures_count;
-
-	//fragment
-	void *fragment_ubo;
-	size_t fragment_ubo_size;
-	StorageBuffer **frag_storage_buffers;
-	size_t frag_storage_buffers_count;
-	//you need to extract the texture from inside Texture2D, TODO
-	SDL_GPUTexture **frag_storage_textures;
-	size_t frag_storage_textures_count;
-
-	//texture overrides (will be rendered instead of the ones
-	//in the mesh) - keep null if unneeded
-	//fragment shader only
-	Texture2D *diffuse_map_or;
-	Texture2D *normal_map_or;
-	Texture2D *specular_map_or;
-	Texture2D *emission_map_or;
-	Texture2D *height_map_or;
-} RenderingStageDesc;
-
 bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);
 
@@ -534,7 +406,7 @@ void Graphics_BeginDrawing(Renderer *renderer);
 void Graphics_EndDrawing(Renderer *renderer);
 
 //test, will be removed when scene renderer is done
-void Graphics_DrawModelT1(Model *model, Renderer *renderer,
+/*void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler);
 
@@ -542,7 +414,7 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 						RenderingStageDesc *desc);
 
 void Graphics_DrawModel(Model *model, Renderer *renderer,
-						RenderingStageDesc *desc);
+						RenderingStageDesc *desc);*/
 
 void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 							Camera *camera);

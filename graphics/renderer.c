@@ -164,24 +164,7 @@ void Graphics_EndDrawing(Renderer *renderer)
 	SDL_SubmitGPUCommandBuffer(renderer->cmdbuf);
 }
 
-//TODO
-//instead of drawmodel, what about drawmesh?
-//less friendly, but easier to use custom buffers, uniforms, samplers and like
-
-/*struct studyrendering
-{
-	Mesh *mesh;
-	Renderer *renderer;
-	Pipeline pipeline;
-	Sampler *sampler;
-	void *vertex_ubo;
-	size_t vubo_size;
-	void *fragment_ubo;
-	size_t fubo_size;
-	also any kind of storage buffers if needed
-};*/
-
-void Graphics_DrawModelT1(Model *model, Renderer *renderer,
+/*void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler)
 {
@@ -199,9 +182,9 @@ void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &mvp, sizeof(mvp));
 		SDL_DrawGPUIndexedPrimitives(renderer->render_pass, model->meshes.meshes[i].indices.count, 1, 0, 0, 0);
 	}
-}
+}*/
 
-void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
+/*void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 						RenderingStageDesc *desc)
 {
 	if(mesh == NULL || renderer == NULL || desc == NULL)
@@ -263,9 +246,9 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 
 	//finally
 	SDL_DrawGPUIndexedPrimitives(renderer->render_pass, mesh->indices.count, 1, 0, 0, 0);
-}
+}*/
 
-void Graphics_DrawModel(Model *model, Renderer *renderer,
+/*void Graphics_DrawModel(Model *model, Renderer *renderer,
 						RenderingStageDesc *desc)
 {
 	if(model == NULL || renderer == NULL || desc == NULL)
@@ -278,7 +261,7 @@ void Graphics_DrawModel(Model *model, Renderer *renderer,
 	{
 		Graphics_DrawMesh(&model->meshes.meshes[i], renderer, desc);
 	}
-}
+}*/
 
 void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 							Camera *camera)
