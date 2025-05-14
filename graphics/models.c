@@ -315,21 +315,12 @@ static void _arrayClearMeshes(MeshArray *arr)
  * From the header
 ***************************************************************************************/
 static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
-									size_t iqmsize,
-									const char *materialfile)
+									size_t iqmsize)
 {
 	if(model == NULL || iqmbuffer == NULL || iqmsize <= 0)
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Invalid model structure or invalid file.");
 		return false;
-	}
-
-	bool has_material = false;
-	INIstruct *material_ini = ININew();
-	if(materialfile != NULL)
-	{
-		if(INILoad(material_ini, materialfile))
-			has_material = true;
 	}
 
 	struct iqmheader header;
@@ -486,77 +477,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 		}
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
-		//IQM doesn't load any material or texture, you need to provide it
-		/*if(has_material)
-		{
-			char material_dir[256];
-			SDL_strlcpy(material_dir, materialfile, sizeof(material_dir));
-			char* lastslash = strrchr(material_dir, '/');
-			if (lastslash != NULL) {
-				*lastslash = '\0';
-			} else {
-				// Não foi encontrado um caractere de barra (possivelmente um caminho relativo)
-				material_dir[0] = '\0';
-			}
-
-			char diffusepath[512];
-			const char *diff_map = INIGetString(material_ini, iqm_material, "diffuse_map");
-			SDL_snprintf(diffusepath, sizeof(diffusepath), "%s/%s", material_dir, diff_map);
-			if(diff_map != NULL && SDL_strcmp(diff_map, ""))
-			{
-				mesh.diffuse_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(mesh.diffuse_map != NULL)
-					Graphics_LoadTextureFromFS(mesh.diffuse_map, diffusepath, TEXTURE_DIFFUSE);
-			}
-
-			char normalpath[512];
-			const char *norm_map = INIGetString(material_ini, iqm_material, "normal_map");
-			SDL_snprintf(normalpath, sizeof(normalpath), "%s/%s", material_dir, norm_map);
-			if(norm_map != NULL && SDL_strcmp(norm_map, ""))
-			{
-				mesh.normal_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(mesh.normal_map != NULL)
-					Graphics_LoadTextureFromFS(mesh.normal_map, normalpath, TEXTURE_NORMAL);
-			}
-
-			char specularpath[512];
-			const char *spec_map = INIGetString(material_ini, iqm_material, "specular_map");
-			SDL_snprintf(specularpath, sizeof(specularpath), "%s/%s", material_dir, spec_map);
-			if(spec_map != NULL && SDL_strcmp(spec_map, ""))
-			{
-				mesh.specular_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(mesh.specular_map != NULL)
-					Graphics_LoadTextureFromFS(mesh.specular_map, specularpath, TEXTURE_SPECULAR);
-			}
-
-			char emissionpath[512];
-			const char *emission_map = INIGetString(material_ini, iqm_material, "emission_map");
-			SDL_snprintf(emissionpath, sizeof(emissionpath), "%s/%s", material_dir, emission_map);
-			if(emission_map != NULL && SDL_strcmp(emission_map, ""))
-			{
-				mesh.emission_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(mesh.emission_map != NULL)
-					Graphics_LoadTextureFromFS(mesh.emission_map, emissionpath, TEXTURE_EMISSION);
-			}
-
-			char heightpath[512];
-			const char *height_map = INIGetString(material_ini, iqm_material, "height_map");
-			SDL_snprintf(heightpath, sizeof(heightpath), "%s/%s", material_dir, height_map);
-			if(height_map != NULL && SDL_strcmp(height_map, ""))
-			{
-				mesh.height_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-				if(mesh.height_map != NULL)
-					Graphics_LoadTextureFromFS(mesh.height_map, heightpath, TEXTURE_HEIGHT);
-			}
-		}
-		else
-		{
-			mesh.diffuse_map = NULL;
-			mesh.normal_map = NULL;
-			mesh.specular_map = NULL;
-			mesh.emission_map = NULL;
-			mesh.height_map = NULL;
-		}*/
+		//IQM doesn't load any material or texture, you need to provide it somewhere later
 
 		//TODO CLEANUP if false
 		if(!_arrayPushLastMeshes(&model->meshes, mesh))
@@ -581,13 +502,12 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 	return true;
 }
 
-bool Graphics_ImportIQM(Model *model, const char *iqmfile,
-							const char *materialfile)
+bool Graphics_ImportIQM(Model *model, const char *iqmfile)
 {
 	size_t iqmfilesize;
 	Uint8 *modelfile = FileIOReadBytes(iqmfile, &iqmfilesize);
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Graphics: Info: Starting to load %s", iqmfile);
-	return _import_iqm_buffer(model, modelfile, iqmfilesize, materialfile);
+	return _import_iqm_buffer(model, modelfile, iqmfilesize);
 }
 
 static void uploadmesh(Mesh *mesh)
@@ -685,29 +605,7 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 
 	for(Uint32 i = 0; i < model->meshes.count; i++)
 	{
-		/*if(upload_textures)
-		{
-			if(model->meshes.meshes[i].diffuse_map != NULL)
-			{
-				Graphics_UploadTexture(model->meshes.meshes[i].diffuse_map);
-			}
-			if(model->meshes.meshes[i].normal_map != NULL)
-			{
-				Graphics_UploadTexture(model->meshes.meshes[i].normal_map);
-			}
-			if(model->meshes.meshes[i].specular_map != NULL)
-			{
-				Graphics_UploadTexture(model->meshes.meshes[i].specular_map);
-			}
-			if(model->meshes.meshes[i].emission_map != NULL)
-			{
-				Graphics_UploadTexture(model->meshes.meshes[i].emission_map);
-			}
-			if(model->meshes.meshes[i].height_map != NULL)
-			{
-				Graphics_UploadTexture(model->meshes.meshes[i].height_map);
-			}
-		}*/
+		Graphics_UploadMaterials(&model->materials);
 		uploadmesh(&model->meshes.meshes[i]);
 	}
 }
@@ -739,17 +637,7 @@ void Graphics_ReleaseModel(Model *model)
 		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].vbuffer);
 		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].ibuffer);
 
-		//destroy textures
-		/*if(model->meshes.meshes[i].diffuse_map != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].diffuse_map);
-		if(model->meshes.meshes[i].normal_map != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].normal_map);
-		if(model->meshes.meshes[i].specular_map != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].specular_map);
-		if(model->meshes.meshes[i].emission_map != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].emission_map);
-		if(model->meshes.meshes[i].height_map != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].height_map);*/
+		Graphics_ReleaseMaterials(&model->materials);
 
 		//destroy arrays
 		_arrayDestroyIndices(&model->meshes.meshes[i].indices);

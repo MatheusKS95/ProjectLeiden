@@ -367,8 +367,12 @@ void Graphics_UploadSkybox(Skybox *skybox);
 
 /* MATERIALS */
 
-bool Graphics_LoadMaterialsFromINI(MaterialArray *matarray,
-									const char *path);
+//TODO
+/*bool Graphics_LoadMaterialsFromINI(MaterialArray *matarray,
+									const char *path);*/
+
+bool Graphics_LoadModelMaterials(Model *model,
+									const char *material_path);
 
 Material* Graphics_GetMaterialByName(MaterialArray *matarray,
 										const char *name);
@@ -383,8 +387,7 @@ void Graphics_ReleaseMaterials(MaterialArray *materials);
 
 /* MODELS */
 
-bool Graphics_ImportIQM(Model *model, const char *iqmfile,
-							const char *materialfile);
+bool Graphics_ImportIQM(Model *model, const char *iqmfile);
 
 void Graphics_UploadModel(Model *model, bool upload_textures);
 
