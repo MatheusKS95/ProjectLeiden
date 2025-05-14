@@ -8,6 +8,7 @@ add_library(graphics STATIC
 	renderer.c
 	shaders.c
 	skybox.c
+	materials.c
 )
 
 target_include_directories(graphics PUBLIC .)

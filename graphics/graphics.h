@@ -22,8 +22,18 @@
 #include <hashtable.h>
 
 /*******************************************************************
- * GENERAL GRAPHICAL STUFF
+ * TYPEDEFS ********************************************************
  ******************************************************************/
+
+typedef SDL_GPUGraphicsPipeline* Pipeline;
+typedef SDL_GPUSampler Sampler;
+typedef SDL_GPUBuffer StorageBuffer;
+
+/*******************************************************************
+ * STRUCTURES AND ENUMS ********************************************
+ ******************************************************************/
+
+/* GENERAL USE */
 
 typedef struct GraphicsContext
 {
@@ -36,30 +46,13 @@ typedef struct GraphicsContext
 	SDL_GPUDevice *device;
 } GraphicsContext;
 
-extern GraphicsContext context;
-
 typedef struct GeneralPipelines
 {
 	SDL_GPUGraphicsPipeline *skybox;
 	//TODO more
 } GeneralPipelines;
 
-extern GeneralPipelines pipelines;
-
-bool Graphics_Init();
-
-void Graphics_Deinit();
-
-void Graphics_SetContext(SDL_Window *window,
-							unsigned int width,
-							unsigned int height);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * CAMERA
- ******************************************************************/
+/* CAMERA */
 
 typedef struct Camera
 {
@@ -81,23 +74,7 @@ typedef struct Camera
 	Matrix4x4 projection;
 } Camera;
 
-void Graphics_InitCameraBasic(Camera *camera, Vector3 position);
-
-void Graphics_InitCameraFull(Camera *camera, Vector3 position,
-								Vector3 up, float yaw, float pitch,
-								float roll, float zoom);
-
-void Graphics_UpdateCameraPosition(Camera *camera, Vector3 position);
-
-void Graphics_TestCameraFreecam(Camera *camera, float x_offset,
-								float y_offset, bool constraint);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * LIGHTS
- ******************************************************************/
+/* LIGHTS */
 
 typedef struct Pointlight
 {
@@ -134,39 +111,8 @@ typedef struct Dirlight
 	//vec3 intensity;
 } Dirlight;
 
-bool Graphics_NewPointlight(Pointlight *l, Vector3 position,
-							Vector3 colour, float constant,
-							float linear, float quadratic);
-
-void Graphics_DestroyPointlight(Pointlight *l);
-
-bool Graphics_NewDirlight(Dirlight *l, Vector3 direction,
-							Vector3 colour);
-
-void Graphics_DestroyDirlight(Dirlight *l);
-
-bool Graphics_NewSpotlight(Spotlight *l, Vector3 position,
-							Vector3 rotation, Vector3 colour,
-							float constant, float linear,
-							float quadratic, float inctf,
-							float otctf);
-
-void Graphics_DestroySpotlight(Spotlight *l);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * SHADERS
- ******************************************************************/
-
-/*
- * TODO
- * Remove Graphics_CreatePipeline as generic function and use
- * specific purpose-built pipelines wherever needed. Should not be
- * directly used. Don't like the shaders? Either change the
- * provided SPIR-Vs or modify the engine.
-*/
+/* SHADERS AND PIPELINES */
+//TODO FIXME requires rework
 
 typedef enum ShaderStage
 {
@@ -175,7 +121,7 @@ typedef enum ShaderStage
 	SHADERSTAGE_FRAGMENT
 } ShaderStage;
 
-//also change this
+//FIXME change to typedef only
 typedef struct Shader
 {
 	SDL_GPUShader *shader;
@@ -187,42 +133,7 @@ typedef enum PipelineType
 	PIPELINETYPE_RENDERTOTEXTURE //generic, to be used for framebuffers
 } PipelineType;
 
-typedef SDL_GPUGraphicsPipeline* Pipeline;
-
-bool Graphics_LoadShaderFromMem(Shader *shader,
-								uint8_t *buffer, size_t size,
-								const char *entrypoint,
-								ShaderStage stage,
-								Uint32 samplerCount,
-								Uint32 uniformBufferCount,
-								Uint32 storageBufferCount,
-								Uint32 storageTextureCount);
-
-bool Graphics_LoadShaderFromFS(Shader *shader,
-								const char *path,
-								const char *entrypoint,
-								ShaderStage stage,
-								Uint32 samplerCount,
-								Uint32 uniformBufferCount,
-								Uint32 storageBufferCount,
-								Uint32 storageTextureCount);
-
-Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
-									PipelineType type,
-									bool release_shader);
-
-bool Graphics_CreatePipelineSkybox(const char *path_vs,
-										const char *path_fs);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * 2D TEXTURES
- ******************************************************************/
-/*
- * Notice: Project Leiden doesn't support PBR
-*/
+/* 2D TEXTURES */
 
 typedef enum SamplerFilter
 {
@@ -247,8 +158,6 @@ typedef enum TextureType
 	TEXTURE_DEFAULT //unused, placeholder
 } TextureType;
 
-typedef SDL_GPUSampler Sampler;
-
 typedef struct Texture2D
 {
 	SDL_GPUTexture *texture;
@@ -256,29 +165,7 @@ typedef struct Texture2D
 	SDL_Surface *surface;
 } Texture2D;
 
-Sampler* Graphics_GenerateSampler(SamplerFilter filter, SamplerMode mode);
-
-void Graphics_ReleaseSampler(Sampler *sampler);
-
-bool Graphics_LoadTextureFromMem(Texture2D *texture,
-									uint8_t *buffer, size_t size,
-									TextureType type);
-
-bool Graphics_LoadTextureFromFS(Texture2D *texture,
-								const char *path,
-								TextureType type);
-
-void Graphics_ReleaseTexture(Texture2D *texture);
-
-void Graphics_UploadTexture(Texture2D *texture);
-
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * SKYBOXES
- ******************************************************************/
-
+/* SKYBOXES */
 typedef struct Skybox
 {
 	SDL_Surface *surface[6];
@@ -288,21 +175,25 @@ typedef struct Skybox
 	SDL_GPUBuffer* index_buffer;
 } Skybox;
 
-bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
-							const char *path_down,
-							const char *path_left,
-							const char *path_right,
-							const char *path_front,
-							const char *path_back);
+/* MATERIAL */
 
-void Graphics_UploadSkybox(Skybox *skybox);
+typedef struct Material
+{
+	Texture2D *diffuse_map;
+	Texture2D *normal_map;
+	Texture2D *specular_map;
+	Texture2D *emission_map;
+	char material_name[64];
+} Material;
 
-/*******************************************************************
- ******************************************************************/
+typedef struct MaterialArray
+{
+	size_t count;
+	size_t capacity;
+	Material *materials;
+} MaterialArray;
 
-/*******************************************************************
- * MODELS
- ******************************************************************/
+/* MODELS */
 
 typedef struct Color
 {
@@ -339,13 +230,8 @@ typedef struct Mesh
 	IndexArray indices;
 	SDL_GPUBuffer *vbuffer;
 	SDL_GPUBuffer *ibuffer;
+	char material_name[64];
 
-	//material
-	Texture2D *diffuse_map;
-	Texture2D *normal_map;
-	Texture2D *specular_map;
-	Texture2D *emission_map;
-	Texture2D *height_map; //aka bump map
 	char meshname[64];
 } Mesh;
 
@@ -359,8 +245,143 @@ typedef struct MeshArray
 typedef struct Model
 {
 	MeshArray meshes;
+	MaterialArray materials;
 	Matrix4x4 transform;
 } Model;
+
+/* RENDERER */
+
+typedef struct Renderer
+{
+	SDL_GPUCommandBuffer *cmdbuf;
+	SDL_GPUTexture *swapchain_texture;
+	SDL_GPURenderPass *render_pass;
+	Color clear_color;
+	SDL_GPUTexture *texture_depth;
+} Renderer;
+
+/*******************************************************************
+ * FUNCTIONS *******************************************************
+ ******************************************************************/
+
+/* GENERAL USE */
+
+bool Graphics_Init();
+
+void Graphics_Deinit();
+
+void Graphics_SetContext(SDL_Window *window,
+							unsigned int width,
+							unsigned int height);
+
+/* CAMERA */
+
+void Graphics_InitCameraBasic(Camera *camera, Vector3 position);
+
+void Graphics_InitCameraFull(Camera *camera, Vector3 position,
+								Vector3 up, float yaw, float pitch,
+								float roll, float zoom);
+
+void Graphics_UpdateCameraPosition(Camera *camera, Vector3 position);
+
+void Graphics_TestCameraFreecam(Camera *camera, float x_offset,
+								float y_offset, bool constraint);
+
+/* LIGHTS */
+
+bool Graphics_NewPointlight(Pointlight *l, Vector3 position,
+							Vector3 colour, float constant,
+							float linear, float quadratic);
+
+void Graphics_DestroyPointlight(Pointlight *l);
+
+bool Graphics_NewDirlight(Dirlight *l, Vector3 direction,
+							Vector3 colour);
+
+void Graphics_DestroyDirlight(Dirlight *l);
+
+bool Graphics_NewSpotlight(Spotlight *l, Vector3 position,
+							Vector3 rotation, Vector3 colour,
+							float constant, float linear,
+							float quadratic, float inctf,
+							float otctf);
+
+void Graphics_DestroySpotlight(Spotlight *l);
+
+/* SHADERS AND PIPELINES */
+
+bool Graphics_LoadShaderFromMem(Shader *shader,
+								uint8_t *buffer, size_t size,
+								const char *entrypoint,
+								ShaderStage stage,
+								Uint32 samplerCount,
+								Uint32 uniformBufferCount,
+								Uint32 storageBufferCount,
+								Uint32 storageTextureCount);
+
+bool Graphics_LoadShaderFromFS(Shader *shader,
+								const char *path,
+								const char *entrypoint,
+								ShaderStage stage,
+								Uint32 samplerCount,
+								Uint32 uniformBufferCount,
+								Uint32 storageBufferCount,
+								Uint32 storageTextureCount);
+
+Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
+									PipelineType type,
+									bool release_shader);
+
+bool Graphics_CreatePipelineSkybox(const char *path_vs,
+										const char *path_fs);
+
+/* 2D TEXTURES */
+
+Sampler* Graphics_GenerateSampler(SamplerFilter filter, SamplerMode mode);
+
+void Graphics_ReleaseSampler(Sampler *sampler);
+
+bool Graphics_LoadTextureFromMem(Texture2D *texture,
+									uint8_t *buffer, size_t size,
+									TextureType type);
+
+bool Graphics_LoadTextureFromFS(Texture2D *texture,
+								const char *path,
+								TextureType type);
+
+void Graphics_ReleaseTexture(Texture2D *texture);
+
+void Graphics_UploadTexture(Texture2D *texture);
+
+/* SKYBOXES */
+
+bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
+							const char *path_down,
+							const char *path_left,
+							const char *path_right,
+							const char *path_front,
+							const char *path_back);
+
+void Graphics_UploadSkybox(Skybox *skybox);
+//TODO FIXME create unload/destroy skybox
+
+/* MATERIALS */
+
+bool Graphics_LoadMaterialsFromINI(MaterialArray *matarray,
+									const char *path);
+
+Material* Graphics_GetMaterialByName(MaterialArray *matarray,
+										const char *name);
+
+void Graphics_UploadMaterial(Material *material);
+
+void Graphics_UploadMaterials(MaterialArray *materials);
+
+void Graphics_ReleaseMaterial(Material *material);
+
+void Graphics_ReleaseMaterials(MaterialArray *materials);
+
+/* MODELS */
 
 bool Graphics_ImportIQM(Model *model, const char *iqmfile,
 							const char *materialfile);
@@ -376,23 +397,7 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 
 void Graphics_ReleaseModel(Model *model);
 
-/*******************************************************************
- ******************************************************************/
-
-/*******************************************************************
- * RENDERER - REWORK
- ******************************************************************/
-
-typedef struct Renderer
-{
-	SDL_GPUCommandBuffer *cmdbuf;
-	SDL_GPUTexture *swapchain_texture;
-	SDL_GPURenderPass *render_pass;
-	Color clear_color;
-	SDL_GPUTexture *texture_depth;
-} Renderer;
-
-typedef SDL_GPUBuffer StorageBuffer;
+/* RENDERER */
 
 bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);
@@ -420,6 +425,18 @@ void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 							Camera *camera);
 
 /*******************************************************************
+ * GLOBALS *********************************************************
  ******************************************************************/
+
+extern GraphicsContext context;
+extern GeneralPipelines pipelines;
+
+/*
+ * TODO
+ * Remove Graphics_CreatePipeline as generic function and use
+ * specific purpose-built pipelines wherever needed. Should not be
+ * directly used. Don't like the shaders? Either change the
+ * provided SPIR-Vs or modify the engine.
+*/
 
 #endif

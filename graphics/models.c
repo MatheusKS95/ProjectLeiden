@@ -27,6 +27,8 @@
 #include <ini.h>
 #include <iqm.h>
 
+//FIXME a lot of stuff was disabled due to incoming changes to material and rendering
+
 /*
  * About 3D model support:
  * > IQM: Official support, no dependency. External INI as material data.
@@ -485,7 +487,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
 		//IQM doesn't load any material or texture, you need to provide it
-		if(has_material)
+		/*if(has_material)
 		{
 			char material_dir[256];
 			SDL_strlcpy(material_dir, materialfile, sizeof(material_dir));
@@ -554,7 +556,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 			mesh.specular_map = NULL;
 			mesh.emission_map = NULL;
 			mesh.height_map = NULL;
-		}
+		}*/
 
 		//TODO CLEANUP if false
 		if(!_arrayPushLastMeshes(&model->meshes, mesh))
@@ -683,7 +685,7 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 
 	for(Uint32 i = 0; i < model->meshes.count; i++)
 	{
-		if(upload_textures)
+		/*if(upload_textures)
 		{
 			if(model->meshes.meshes[i].diffuse_map != NULL)
 			{
@@ -705,7 +707,7 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 			{
 				Graphics_UploadTexture(model->meshes.meshes[i].height_map);
 			}
-		}
+		}*/
 		uploadmesh(&model->meshes.meshes[i]);
 	}
 }
@@ -738,7 +740,7 @@ void Graphics_ReleaseModel(Model *model)
 		SDL_ReleaseGPUBuffer(context.device, model->meshes.meshes[i].ibuffer);
 
 		//destroy textures
-		if(model->meshes.meshes[i].diffuse_map != NULL)
+		/*if(model->meshes.meshes[i].diffuse_map != NULL)
 			Graphics_ReleaseTexture(model->meshes.meshes[i].diffuse_map);
 		if(model->meshes.meshes[i].normal_map != NULL)
 			Graphics_ReleaseTexture(model->meshes.meshes[i].normal_map);
@@ -747,7 +749,7 @@ void Graphics_ReleaseModel(Model *model)
 		if(model->meshes.meshes[i].emission_map != NULL)
 			Graphics_ReleaseTexture(model->meshes.meshes[i].emission_map);
 		if(model->meshes.meshes[i].height_map != NULL)
-			Graphics_ReleaseTexture(model->meshes.meshes[i].height_map);
+			Graphics_ReleaseTexture(model->meshes.meshes[i].height_map);*/
 
 		//destroy arrays
 		_arrayDestroyIndices(&model->meshes.meshes[i].indices);
