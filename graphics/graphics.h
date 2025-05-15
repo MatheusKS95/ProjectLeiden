@@ -165,6 +165,14 @@ typedef struct Texture2D
 	SDL_Surface *surface;
 } Texture2D;
 
+typedef struct DefaultTextures
+{
+	Texture2D default_diffuse;
+	Texture2D default_normal;
+	Texture2D default_spec;
+	Texture2D default_emission;
+} DefaultTextures;
+
 /* SKYBOXES */
 typedef struct Skybox
 {
@@ -337,7 +345,8 @@ bool Graphics_CreatePipelineSkybox(const char *path_vs,
 
 /* 2D TEXTURES */
 
-Sampler* Graphics_GenerateSampler(SamplerFilter filter, SamplerMode mode);
+Sampler* Graphics_GenerateSampler(SamplerFilter filter,
+									SamplerMode mode);
 
 void Graphics_ReleaseSampler(Sampler *sampler);
 
@@ -352,6 +361,13 @@ bool Graphics_LoadTextureFromFS(Texture2D *texture,
 void Graphics_ReleaseTexture(Texture2D *texture);
 
 void Graphics_UploadTexture(Texture2D *texture);
+
+bool Graphics_SetupDefaultTextures(const char *path_d,
+									const char *path_n,
+									const char *path_s,
+									const char *path_e);
+
+void Graphics_ReleaseDefaultTextures();
 
 /* SKYBOXES */
 
@@ -433,6 +449,7 @@ void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 
 extern GraphicsContext context;
 extern GeneralPipelines pipelines;
+extern DefaultTextures default_textures;
 
 /*
  * TODO

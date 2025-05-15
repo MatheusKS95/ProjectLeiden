@@ -19,6 +19,7 @@
 
 GraphicsContext context;
 GeneralPipelines pipelines;
+DefaultTextures default_textures;
 
 bool Graphics_Init()
 {

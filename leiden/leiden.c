@@ -105,6 +105,19 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 		return 0;
 	}
 
+	//create default textures
+	if(!Graphics_SetupDefaultTextures(INIGetString(ini, "default_textures", "default_diffuse"),
+										INIGetString(ini, "default_textures", "default_normal"),
+										INIGetString(ini, "default_textures", "default_specular"),
+										INIGetString(ini, "default_textures", "default_emission")))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load default textures...");
+		SDL_DestroyWindow(window);
+		FileIODeinit();
+		SDL_Quit();
+		return 0;
+	}
+
 	INIDestroy(&ini);
 
 	if(!Audio_Init())
@@ -117,6 +130,8 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 void Leiden_Deinit()
 {
 	Audio_Deinit();
+	//TODO destroy default pipelines
+	Graphics_ReleaseDefaultTextures();
 	Graphics_Deinit();
 	SDL_DestroyWindow(context.window);
 	FileIODeinit();
