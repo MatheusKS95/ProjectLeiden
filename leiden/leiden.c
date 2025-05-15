@@ -105,6 +105,15 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 		return 0;
 	}
 
+	if(!Graphics_CreatePipelineSimple(INIGetString(ini, "shaders", "simple_vert"), INIGetString(ini, "shaders", "simple_frag")))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to generate simple pipeline...");
+		SDL_DestroyWindow(window);
+		FileIODeinit();
+		SDL_Quit();
+		return 0;
+	}
+
 	//create default textures
 	if(!Graphics_SetupDefaultTextures(INIGetString(ini, "default_textures", "default_diffuse"),
 										INIGetString(ini, "default_textures", "default_normal"),

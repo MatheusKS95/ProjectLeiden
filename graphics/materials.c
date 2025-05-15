@@ -152,7 +152,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		SDL_snprintf(material.material_name, 64, "%s", iqm_material);
 		const char *diff_map = INIGetString(material_ini, iqm_material, "diffuse_map");
 		SDL_snprintf(diffusepath, sizeof(diffusepath), "%s/%s", material_dir, diff_map);
-		if(diff_map != NULL && SDL_strcmp(diff_map, "") == 0)
+		if(diff_map != NULL && SDL_strcmp(diff_map, "") != 0)
 		{
 			material.diffuse_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.diffuse_map != NULL)
@@ -162,7 +162,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		char normalpath[512];
 		const char *norm_map = INIGetString(material_ini, iqm_material, "normal_map");
 		SDL_snprintf(normalpath, sizeof(normalpath), "%s/%s", material_dir, norm_map);
-		if(norm_map != NULL && SDL_strcmp(norm_map, "") == 0)
+		if(norm_map != NULL && SDL_strcmp(norm_map, "") != 0)
 		{
 			material.normal_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.normal_map != NULL)
@@ -172,7 +172,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		char specularpath[512];
 		const char *spec_map = INIGetString(material_ini, iqm_material, "specular_map");
 		SDL_snprintf(specularpath, sizeof(specularpath), "%s/%s", material_dir, spec_map);
-		if(spec_map != NULL && SDL_strcmp(spec_map, "") == 0)
+		if(spec_map != NULL && SDL_strcmp(spec_map, "") != 0)
 		{
 			material.specular_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.specular_map != NULL)
@@ -182,7 +182,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		char emissionpath[512];
 		const char *emission_map = INIGetString(material_ini, iqm_material, "emission_map");
 		SDL_snprintf(emissionpath, sizeof(emissionpath), "%s/%s", material_dir, emission_map);
-		if(emission_map != NULL && SDL_strcmp(emission_map, "") == 0)
+		if(emission_map != NULL && SDL_strcmp(emission_map, "") != 0)
 		{
 			material.emission_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.emission_map != NULL)

@@ -49,6 +49,7 @@ typedef struct GraphicsContext
 typedef struct GeneralPipelines
 {
 	SDL_GPUGraphicsPipeline *skybox;
+	SDL_GPUGraphicsPipeline *simple;
 	//TODO more
 } GeneralPipelines;
 
@@ -343,6 +344,9 @@ Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
 bool Graphics_CreatePipelineSkybox(const char *path_vs,
 										const char *path_fs);
 
+bool Graphics_CreatePipelineSimple(const char *path_vs,
+									const char *path_fs);
+
 /* 2D TEXTURES */
 
 Sampler* Graphics_GenerateSampler(SamplerFilter filter,
@@ -439,6 +443,9 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 
 void Graphics_DrawModel(Model *model, Renderer *renderer,
 						RenderingStageDesc *desc);*/
+
+void Graphics_DrawModelSimple(Model *model, Renderer *renderer,
+								Sampler *sampler, Matrix4x4 mvp);
 
 void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 							Camera *camera);

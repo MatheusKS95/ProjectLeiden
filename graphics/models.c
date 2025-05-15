@@ -478,6 +478,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 		SDL_snprintf(mesh.meshname, 64, "%s", iqm_mesh_name);
 
 		//IQM doesn't load any material or texture, you need to provide it somewhere later
+		SDL_snprintf(mesh.material_name, 64, "%s", iqm_material);
 
 		//TODO CLEANUP if false
 		if(!_arrayPushLastMeshes(&model->meshes, mesh))
@@ -603,9 +604,11 @@ void Graphics_UploadModel(Model *model, bool upload_textures)
 		return;
 	}
 
+	if(upload_textures && model->materials.count > 0)
+		Graphics_UploadMaterials(&model->materials);
+
 	for(Uint32 i = 0; i < model->meshes.count; i++)
 	{
-		Graphics_UploadMaterials(&model->materials);
 		uploadmesh(&model->meshes.meshes[i]);
 	}
 }

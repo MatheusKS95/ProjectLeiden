@@ -263,6 +263,37 @@ void Graphics_EndDrawing(Renderer *renderer)
 	}
 }*/
 
+void Graphics_DrawModelSimple(Model *model, Renderer *renderer,
+								Sampler *sampler, Matrix4x4 mvp)
+{
+	if(model == NULL || renderer == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render model.");
+		return;
+	}
+
+	for(size_t i = 0; i < model->meshes.count; i++)
+	{
+		Mesh *mesh = &model->meshes.meshes[i];
+		//binding graphics pipeline
+		SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipelines.simple);
+
+		//binding vertex and index buffers
+		SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
+		SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+
+		//texture samplers
+		Material *material = Graphics_GetMaterialByName(&model->materials, mesh->material_name);
+		if(material == NULL) continue;
+		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
+		SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ diffuse->texture, sampler }, 1);
+
+		//UBO
+		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &mvp, sizeof(mvp));
+		SDL_DrawGPUIndexedPrimitives(renderer->render_pass, mesh->indices.count, 1, 0, 0, 0);
+	}
+}
+
 void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 							Camera *camera)
 {

@@ -105,6 +105,13 @@ int main(int argc, char *argv[])
 	}
 	Graphics_UploadSkybox(&skybox);
 
+	Model house = { 0 };
+	Graphics_ImportIQM(&house, "test_models/house/house.iqm");
+	Graphics_LoadModelMaterials(&house, "test_models/house/house.material");
+	Graphics_UploadModel(&house, true);
+	Graphics_MoveModel(&house, (Vector3){0.0f, 0.0f, 0.0f});
+	Sampler *sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
+
 	InputState state = { 0 };
 
 	SDL_Event event;
@@ -172,18 +179,24 @@ int main(int argc, char *argv[])
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
 
+		Matrix4x4 viewproj;
+		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
+		Matrix4x4 mvp1 = Matrix4x4_Mul(house.transform, viewproj);
+
 		/************************
 		 * RENDERING STUFF ******
 		 ***********************/
 		Graphics_BeginDrawing(&renderer);
-			Graphics_DrawSkybox(&skybox, &renderer, &cam_1); //need to be first, FIXME later
+			Graphics_DrawSkybox(&skybox, &renderer, &cam_1);
+			Graphics_DrawModelSimple(&house, &renderer, sampler, mvp1);
 		Graphics_EndDrawing(&renderer);
 		/************************************/
 	}
 
 	//i forgor more things to kill
 	//valgrind is going to scream
-
+	Graphics_ReleaseModel(&house);
+	Graphics_ReleaseSampler(sampler);
 	Leiden_Deinit();
 
 	return 0;
