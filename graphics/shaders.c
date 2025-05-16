@@ -87,6 +87,7 @@ bool Graphics_LoadShaderFromFS(Shader *shader,
 	return result;
 }
 
+//TODO need to remove this later
 Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
 									PipelineType type,
 									bool release_shader)

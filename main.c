@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 	mouse_y = last_y;
 	first_mouse = true;
 	//need to bring lookat, or a camera update thing
-	Graphics_InitCameraBasic(&cam_1, (Vector3){0.0f, 0.0f, 0.0f});
+	Graphics_InitCameraBasic(&cam_1, (Vector3){0.0f, 0.5f, 0.0f});
 
 	//skybox test
 	Skybox skybox = { 0 };
@@ -109,7 +109,15 @@ int main(int argc, char *argv[])
 	Graphics_ImportIQM(&house, "test_models/house/house.iqm");
 	Graphics_LoadModelMaterials(&house, "test_models/house/house.material");
 	Graphics_UploadModel(&house, true);
-	Graphics_MoveModel(&house, (Vector3){0.0f, 0.0f, 0.0f});
+	Graphics_MoveModel(&house, (Vector3){2.0f, 0.0f, 2.0f});
+
+	Model vroid_test = { 0 };
+	Graphics_ImportIQM(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.iqm");
+	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.material");
+	Graphics_UploadModel(&vroid_test, true);
+	Graphics_RotateModel(&vroid_test, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90));
+	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 0.0f});
+
 	Sampler *sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
 	InputState state = { 0 };
@@ -178,10 +186,14 @@ int main(int argc, char *argv[])
 		last_y = state.mouse_y;
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
+		//FIXME check why if not on origin it rotates around origin
+		Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
 
 		Matrix4x4 viewproj;
 		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
+
 		Matrix4x4 mvp1 = Matrix4x4_Mul(house.transform, viewproj);
+		Matrix4x4 mvp2 = Matrix4x4_Mul(vroid_test.transform, viewproj);
 
 		/************************
 		 * RENDERING STUFF ******
@@ -189,6 +201,7 @@ int main(int argc, char *argv[])
 		Graphics_BeginDrawing(&renderer);
 			Graphics_DrawSkybox(&skybox, &renderer, &cam_1);
 			Graphics_DrawModelSimple(&house, &renderer, sampler, mvp1);
+			Graphics_DrawModelSimple(&vroid_test, &renderer, sampler, mvp2);
 		Graphics_EndDrawing(&renderer);
 		/************************************/
 	}
@@ -196,6 +209,7 @@ int main(int argc, char *argv[])
 	//i forgor more things to kill
 	//valgrind is going to scream
 	Graphics_ReleaseModel(&house);
+	Graphics_ReleaseModel(&vroid_test);
 	Graphics_ReleaseSampler(sampler);
 	Leiden_Deinit();
 

@@ -164,6 +164,7 @@ void Graphics_EndDrawing(Renderer *renderer)
 	SDL_SubmitGPUCommandBuffer(renderer->cmdbuf);
 }
 
+//i will remove this later
 /*void Graphics_DrawModelT1(Model *model, Renderer *renderer,
 							Pipeline pipeline, Matrix4x4 mvp,
 							Sampler *sampler)
@@ -184,6 +185,7 @@ void Graphics_EndDrawing(Renderer *renderer)
 	}
 }*/
 
+//i will remove this later
 /*void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 						RenderingStageDesc *desc)
 {
@@ -248,6 +250,7 @@ void Graphics_EndDrawing(Renderer *renderer)
 	SDL_DrawGPUIndexedPrimitives(renderer->render_pass, mesh->indices.count, 1, 0, 0, 0);
 }*/
 
+//i will remove this later
 /*void Graphics_DrawModel(Model *model, Renderer *renderer,
 						RenderingStageDesc *desc)
 {
