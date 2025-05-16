@@ -84,10 +84,6 @@ int main(int argc, char *argv[])
 	float mouse_x, mouse_y;
 	bool first_mouse;
 	Camera cam_1;
-	Model model1 = { 0 };
-	Model model2 = { 0 };
-	Model model3 = { 0 };
-	Sampler *sampler;
 
 	deltatime = lastframe = 0.0f;
 	last_x = context.width / 2.0f;
@@ -96,70 +92,33 @@ int main(int argc, char *argv[])
 	mouse_y = last_y;
 	first_mouse = true;
 	//need to bring lookat, or a camera update thing
-	Graphics_InitCameraBasic(&cam_1, (Vector3){1.0f, 1.0f, 8.0f});
-
-	Shader modelvsshader = { 0 };
-	if(!Graphics_LoadShaderFromFS(&modelvsshader, "shaders/5thgen/playstation.vert.spv", "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
-	{
-		SDL_Log("Failed to load VS shader.");
-		return -1;
-	}
-	Shader modelfsshader = { 0 };
-	//DANGER
-	//if somehow a model fails to load a texture, this will explode
-	//workaround is to force all textures to load and use
-	if(!Graphics_LoadShaderFromFS(&modelfsshader, "shaders/5thgen/playstation.frag.spv", "main", SHADERSTAGE_FRAGMENT, 1, 0, 0, 0))
-	{
-		SDL_Log("Failed to load FS shader.");
-		return -1;
-	}
-
-	//TODO we don't release it, i forgot to make something to destroy this
-	//I still need to think about a way to improve pipelines
-	Pipeline pspipeline = Graphics_CreatePipeline(&modelvsshader, &modelfsshader, PIPELINETYPE_3D, true);
-
-	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
-
-	if(!Graphics_ImportIQM(&model1, "test_models/house/house.iqm", "test_models/house/house.material"))
-	{
-		//todo cleanup this shit
-		return -1;
-	}
-
-	if(!Graphics_ImportIQM(&model2, "test_models/avatarsampleb_teste/avatarsampleb.iqm", "test_models/avatarsampleb_teste/avatarsampleb.material"))
-	{
-		//todo cleanup this shit
-		return -1;
-	}
-
-	if(!Graphics_ImportIQM(&model3, "test_models/golf/golf.iqm", "test_models/golf/golf.material"))
-	{
-		//todo cleanup this shit
-		return -1;
-	}
-
-	Graphics_UploadModel(&model1, true);
-	Graphics_UploadModel(&model2, true);
-	Graphics_UploadModel(&model3, true);
-
-	Graphics_MoveModel(&model1, (Vector3){0.0f, 0.0f, 0.0f});
-
-	Graphics_RotateModel(&model2, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90));
-	Graphics_MoveModel(&model2, (Vector3){1.0f, 0.0f, 2.0f});
-	//Graphics_ScaleModel(&model2, 2.0f);
-
-	Graphics_MoveModel(&model3, (Vector3){5.0f, 0.0f, 1.0f});
+	Graphics_InitCameraBasic(&cam_1, (Vector3){0.0f, 0.5f, 0.0f});
 
 	//skybox test
 	Skybox skybox = { 0 };
-	if(!Graphics_LoadSkyboxFS(&skybox, "skybox/test1/top.jpg", "skybox/test1/bottom.jpg",
-								"skybox/test1/left.jpg", "skybox/test1/right.jpg",
-								"skybox/test1/front.jpg", "skybox/test1/back.jpg"))
+	if(!Graphics_LoadSkyboxFS(&skybox, "skybox/exosystem/top.jpg", "skybox/exosystem/bottom.jpg",
+								"skybox/exosystem/left.jpg", "skybox/exosystem/right.jpg",
+								"skybox/exosystem/front.jpg", "skybox/exosystem/back.jpg"))
 	{
 		//todo cleanup this
 		return -1;
 	}
 	Graphics_UploadSkybox(&skybox);
+
+	Model house = { 0 };
+	Graphics_ImportIQM(&house, "test_models/house/house.iqm");
+	Graphics_LoadModelMaterials(&house, "test_models/house/house.material");
+	Graphics_UploadModel(&house, true);
+	Graphics_MoveModel(&house, (Vector3){2.0f, 0.0f, 2.0f});
+
+	Model vroid_test = { 0 };
+	Graphics_ImportIQM(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.iqm");
+	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.material");
+	Graphics_UploadModel(&vroid_test, true);
+	Graphics_RotateModel(&vroid_test, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90));
+	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 0.0f});
+
+	Sampler *sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
 	InputState state = { 0 };
 
@@ -167,11 +126,7 @@ int main(int argc, char *argv[])
 	bool playing = true;
 
 	Renderer renderer = { 0 };
-	Graphics_CreateRenderer(&renderer, (Color){0.1f, 0.1f, 0.1f, 1.0f});
-
-	Texture2D car_alttext = { 0 };
-	//should check if true
-	Graphics_LoadTextureFromFS(&car_alttext, "test_models/golf/blue.png", TEXTURE_DIFFUSE);
+	Graphics_CreateRenderer(&renderer, (Color){0.0f, 0.0f, 0.0f, 1.0f});
 
 	while(playing)
 	{
@@ -231,57 +186,31 @@ int main(int argc, char *argv[])
 		last_y = state.mouse_y;
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
-
-		//https://www.youtube.com/watch?v=PGNiXGX2nLU
-		Graphics_RotateModel(&model1, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
+		//FIXME check why if not on origin it rotates around origin
+		Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
 
 		Matrix4x4 viewproj;
 		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
-		Matrix4x4 mvp1 = Matrix4x4_Mul(model1.transform, viewproj);
-		Matrix4x4 mvp2 = Matrix4x4_Mul(model2.transform, viewproj);
-		Matrix4x4 mvp3 = Matrix4x4_Mul(model3.transform, viewproj);
+
+		Matrix4x4 mvp1 = Matrix4x4_Mul(house.transform, viewproj);
+		Matrix4x4 mvp2 = Matrix4x4_Mul(vroid_test.transform, viewproj);
 
 		/************************
 		 * RENDERING STUFF ******
 		 ***********************/
-
-		RenderingStageDesc desc_m1 = { 0 };
-		desc_m1.pipeline = pspipeline;
-		desc_m1.sampler = sampler;
-		desc_m1.vertex_ubo = &mvp1;
-		desc_m1.vertex_ubo_size = sizeof(mvp1);
-		RenderingStageDesc desc_m2 = { 0 };
-		desc_m2.pipeline = pspipeline;
-		desc_m2.sampler = sampler;
-		desc_m2.vertex_ubo = &mvp2;
-		desc_m2.vertex_ubo_size = sizeof(mvp2);
-		RenderingStageDesc desc_m3 = { 0 };
-		desc_m3.pipeline = pspipeline;
-		desc_m3.sampler = sampler;
-		desc_m3.vertex_ubo = &mvp3;
-		desc_m3.vertex_ubo_size = sizeof(mvp3);
-		//desc_m3.diffuse_map_or = &car_alttext; didn't work
-
 		Graphics_BeginDrawing(&renderer);
-			Graphics_DrawSkybox(&skybox, &renderer, &cam_1); //need to be first, FIXME later
-			Graphics_DrawModel(&model1, &renderer, &desc_m1);
-			Graphics_DrawModel(&model2, &renderer, &desc_m2);
-			Graphics_DrawModel(&model3, &renderer, &desc_m3);
-		//Graphics_DrawModelT1(&model1, &renderer, pipeline1, mvp1, sampler);
-		//Graphics_DrawModelT1(&model2, &renderer, pipeline1, mvp2, sampler);
-		//Graphics_DrawModelT1(&model3, &renderer, pipeline1, mvp3, sampler);
+			Graphics_DrawSkybox(&skybox, &renderer, &cam_1);
+			Graphics_DrawModelSimple(&house, &renderer, sampler, mvp1);
+			Graphics_DrawModelSimple(&vroid_test, &renderer, sampler, mvp2);
 		Graphics_EndDrawing(&renderer);
 		/************************************/
 	}
 
 	//i forgor more things to kill
 	//valgrind is going to scream
-	Graphics_ReleaseModel(&model1); //at least this destroy textures
-	Graphics_ReleaseModel(&model2);
-	Graphics_ReleaseModel(&model3);
+	Graphics_ReleaseModel(&house);
+	Graphics_ReleaseModel(&vroid_test);
 	Graphics_ReleaseSampler(sampler);
-	//TODO release pipeline
-
 	Leiden_Deinit();
 
 	return 0;

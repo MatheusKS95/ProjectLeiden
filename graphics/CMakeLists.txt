@@ -7,8 +7,8 @@ add_library(graphics STATIC
 	models.c
 	renderer.c
 	shaders.c
-	scene.c
 	skybox.c
+	materials.c
 )
 
 target_include_directories(graphics PUBLIC .)

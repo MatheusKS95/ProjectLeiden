@@ -178,3 +178,57 @@ void Graphics_UploadTexture(Texture2D *texture)
 	SDL_ReleaseGPUTransferBuffer(context.device, textureTransferBuffer);
 	return;
 }
+
+bool Graphics_SetupDefaultTextures(const char *path_d,
+									const char *path_n,
+									const char *path_s,
+									const char *path_e)
+{
+	if(path_d == NULL || path_n == NULL || path_s == NULL || path_e == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default textures, invalid paths.");
+		return false;
+	}
+
+	if(SDL_strcmp(path_d, "") == 0 || SDL_strcmp(path_n, "") == 0 || SDL_strcmp(path_s, "") == 0 || SDL_strcmp(path_e, "") == 0)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default textures, invalid paths.");
+		return false;
+	}
+
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_diffuse, path_d, TEXTURE_DIFFUSE))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default diffuse texture.");
+		return false;
+	}
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_normal, path_n, TEXTURE_NORMAL))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default normal texture.");
+		return false;
+	}
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_spec, path_s, TEXTURE_SPECULAR))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default specular texture.");
+		return false;
+	}
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_emission, path_e, TEXTURE_EMISSION))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default emission texture.");
+		return false;
+	}
+
+	Graphics_UploadTexture(&default_textures.default_diffuse);
+	Graphics_UploadTexture(&default_textures.default_normal);
+	Graphics_UploadTexture(&default_textures.default_spec);
+	Graphics_UploadTexture(&default_textures.default_emission);
+
+	return true;
+}
+
+void Graphics_ReleaseDefaultTextures()
+{
+	Graphics_ReleaseTexture(&default_textures.default_diffuse);
+	Graphics_ReleaseTexture(&default_textures.default_normal);
+	Graphics_ReleaseTexture(&default_textures.default_spec);
+	Graphics_ReleaseTexture(&default_textures.default_emission);
+}
