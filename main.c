@@ -109,15 +109,18 @@ int main(int argc, char *argv[])
 	Graphics_ImportIQM(&house, "test_models/house/house.iqm");
 	Graphics_LoadModelMaterials(&house, "test_models/house/house.material");
 	Graphics_UploadModel(&house, true);
-	Graphics_MoveModel(&house, (Vector3){1.0f, 0.0f, 5.0f});
+	Graphics_MoveModel(&house, (Vector3){10.0f, 0.0f, 5.0f});
 
 	Model vroid_test = { 0 };
 	Graphics_ImportIQM(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.iqm");
 	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.material");
 	Graphics_UploadModel(&vroid_test, true);
-	Graphics_MoveModel(&vroid_test, (Vector3){-1.0f, 0.0f, 0.0f});
-	Graphics_RotateModel(&vroid_test, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90));
-	Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(180));
+	Graphics_RotateModel(&vroid_test, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90)); //fix iqm rotation
+	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
+
+	//TODO: the correct order for transform a model is scale > rotation > translation
+	//this is the issue i have when rotating it using the deltatime and begin orbiting the middle at mach speeds
+	//keep this in mind when doing stuff in the loop - besides, transform shouldn't be here at all, but...
 
 	Sampler *sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
@@ -187,14 +190,6 @@ int main(int argc, char *argv[])
 		last_y = state.mouse_y;
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
-
-		//these kind of rotation are wacky, need to figure out them later, but they aren't wrong
-		/*Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 0.0f});
-		Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
-		Graphics_MoveModel(&vroid_test, (Vector3){3.0f, 1.0f, 0.0f});
-		Graphics_MoveModel(&house, (Vector3){0.0f, 0.0f, 0.0f});
-		Graphics_RotateModel(&house, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(deltatime / 10));
-		Graphics_MoveModel(&house, (Vector3){3.0f, 0.0f, -2.0f});*/
 
 		Matrix4x4 viewproj;
 		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
