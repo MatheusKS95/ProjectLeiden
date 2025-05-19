@@ -112,10 +112,10 @@ int main(int argc, char *argv[])
 	Graphics_MoveModel(&house, (Vector3){10.0f, 0.0f, 5.0f});
 
 	Model vroid_test = { 0 };
-	Graphics_ImportIQM(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.iqm");
-	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsampleb_teste/avatarsampleb.material");
+	Graphics_ImportIQM(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
+	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
 	Graphics_UploadModel(&vroid_test, true);
-	Graphics_RotateModel(&vroid_test, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(-90)); //fix iqm rotation
+	Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(120));
 	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
 
 	//TODO: the correct order for transform a model is scale > rotation > translation
