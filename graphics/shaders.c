@@ -25,79 +25,51 @@
 #include <fileio.h>
 #include <graphics.h>
 
-bool Graphics_LoadShaderFromMem(Shader *shader,
-								uint8_t *buffer, size_t size,
-								const char *entrypoint,
-								ShaderStage stage,
-								Uint32 samplerCount,
-								Uint32 uniformBufferCount,
-								Uint32 storageBufferCount,
-								Uint32 storageTextureCount)
+static SDL_GPUShader* loadshader(const char *path,
+									SDL_GPUShaderStage stage,
+									Uint32 samplerCount,
+									Uint32 uniformBufferCount,
+									Uint32 storageBufferCount,
+									Uint32 storageTextureCount)
 {
-	if(shader == NULL || buffer == NULL || size <= 0)
+	if(path == NULL || SDL_strcmp(path, "") == 0)
 	{
-		return false;
+		return NULL;
 	}
-	SDL_GPUShaderStage sdl_stage;
-	switch(stage)
+	size_t filesize;
+	Uint8 *file = FileIOReadBytes(path, &filesize);
+
+	if(file == NULL)
 	{
-		case SHADERSTAGE_VERTEX: sdl_stage = SDL_GPU_SHADERSTAGE_VERTEX; break;
-		case SHADERSTAGE_FRAGMENT: sdl_stage = SDL_GPU_SHADERSTAGE_FRAGMENT; break;
-		default: return false;
+		//error message
+		return NULL;
 	}
 
 	SDL_GPUShaderCreateInfo shader_info = {
-		.code = buffer,
-		.code_size = size,
-		.entrypoint = entrypoint,
+		.code = file,
+		.code_size = filesize,
+		.entrypoint = "main",
 		.format = SDL_GPU_SHADERFORMAT_SPIRV, //the only one accepted for now
-		.stage = sdl_stage,
+		.stage = stage,
 		.num_samplers = samplerCount,
 		.num_uniform_buffers = uniformBufferCount,
 		.num_storage_buffers = storageBufferCount,
 		.num_storage_textures = storageTextureCount
 	};
-	shader->shader = SDL_CreateGPUShader(context.device, &shader_info);
-	if(shader->shader == NULL)
-	{
-		return false;
-	}
-	return true;
-}
-
-bool Graphics_LoadShaderFromFS(Shader *shader,
-								const char *path,
-								const char *entrypoint,
-								ShaderStage stage,
-								Uint32 samplerCount,
-								Uint32 uniformBufferCount,
-								Uint32 storageBufferCount,
-								Uint32 storageTextureCount)
-{
-	if(shader == NULL || path == NULL) //TODO compare with incompatible strings
-	{
-		return false;
-	}
-	bool result = false;
-	size_t filesize;
-	Uint8 *file = FileIOReadBytes(path, &filesize);
-
-	result = Graphics_LoadShaderFromMem(shader, file, filesize, entrypoint, stage,
-										samplerCount, uniformBufferCount, storageBufferCount, storageTextureCount);
-	return result;
+	return SDL_CreateGPUShader(context.device, &shader_info);
 }
 
 bool Graphics_CreatePipelineSkybox(const char *path_vs,
 										const char *path_fs)
 {
-	Shader vsshader = { 0 };
-	if(!Graphics_LoadShaderFromFS(&vsshader, path_vs, "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
+	SDL_GPUShader *vsshader = loadshader(path_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	if(vsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox vertex shader.");
 		return false;
 	}
-	Shader fsshader = { 0 };
-	if(!Graphics_LoadShaderFromFS(&fsshader, path_fs, "main", SHADERSTAGE_FRAGMENT, 1, 0, 0, 0))
+	SDL_GPUShader *fsshader = loadshader(path_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	if(fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
 		return false;
@@ -138,12 +110,12 @@ bool Graphics_CreatePipelineSkybox(const char *path_vs,
 			}}
 		},
 		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = vsshader.shader,
-		.fragment_shader = fsshader.shader
+		.vertex_shader = vsshader,
+		.fragment_shader = fsshader
 	};
 	pipelines.skybox = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	SDL_ReleaseGPUShader(context.device, vsshader.shader);
-	SDL_ReleaseGPUShader(context.device, fsshader.shader);
+	SDL_ReleaseGPUShader(context.device, vsshader);
+	SDL_ReleaseGPUShader(context.device, fsshader);
 
 	return true;
 }
@@ -151,14 +123,14 @@ bool Graphics_CreatePipelineSkybox(const char *path_vs,
 bool Graphics_CreatePipelineSimple(const char *path_vs,
 									const char *path_fs)
 {
-	Shader vsshader = { 0 };
-	if(!Graphics_LoadShaderFromFS(&vsshader, path_vs, "main", SHADERSTAGE_VERTEX, 0, 1, 0, 0))
+	SDL_GPUShader *vsshader = loadshader(path_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	if(vsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox vertex shader.");
 		return false;
 	}
-	Shader fsshader = { 0 };
-	if(!Graphics_LoadShaderFromFS(&fsshader, path_fs, "main", SHADERSTAGE_FRAGMENT, 1, 0, 0, 0))
+	SDL_GPUShader *fsshader = loadshader(path_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	if(fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
 		return false;
@@ -212,12 +184,12 @@ bool Graphics_CreatePipelineSimple(const char *path_vs,
 			}}
 		},
 		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = vsshader.shader,
-		.fragment_shader = fsshader.shader
+		.vertex_shader = vsshader,
+		.fragment_shader = fsshader
 	};
 	pipelines.simple = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	SDL_ReleaseGPUShader(context.device, vsshader.shader);
-	SDL_ReleaseGPUShader(context.device, fsshader.shader);
+	SDL_ReleaseGPUShader(context.device, vsshader);
+	SDL_ReleaseGPUShader(context.device, fsshader);
 
 	return true;
 }

@@ -112,28 +112,6 @@ typedef struct Dirlight
 	//vec3 intensity;
 } Dirlight;
 
-/* SHADERS AND PIPELINES */
-//TODO FIXME requires rework
-
-typedef enum ShaderStage
-{
-	SHADERSTAGE_NONE = 0,
-	SHADERSTAGE_VERTEX,
-	SHADERSTAGE_FRAGMENT
-} ShaderStage;
-
-//FIXME change to typedef only
-typedef struct Shader
-{
-	SDL_GPUShader *shader;
-} Shader;
-
-typedef enum PipelineType
-{
-	PIPELINETYPE_3D = 0, //generic, to render a 3D object
-	PIPELINETYPE_RENDERTOTEXTURE //generic, to be used for framebuffers
-} PipelineType;
-
 /* 2D TEXTURES */
 
 typedef enum SamplerFilter
@@ -435,13 +413,5 @@ void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 extern GraphicsContext context;
 extern GeneralPipelines pipelines;
 extern DefaultTextures default_textures;
-
-/*
- * TODO
- * Remove Graphics_CreatePipeline as generic function and use
- * specific purpose-built pipelines wherever needed. Should not be
- * directly used. Don't like the shaders? Either change the
- * provided SPIR-Vs or modify the engine.
-*/
 
 #endif
