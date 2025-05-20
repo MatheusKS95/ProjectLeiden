@@ -4,7 +4,7 @@ I'll **not** accept pull requests, due to licensing issues and due to transient 
 # Project Leiden
 WIP game engine focused on driving stuff. Future platform for some games I'm planning to work with. This is a personal project, intended for personal use. Hopefully this also helps someone to learn something.
 
-This project is not intended for use in production. It's not feature-complete, it's unstable (despite what the branch name says), and poorly optimized. The repo also don't have the required assets nor required dependencies. It won't work out-of-the-box. This is probably not the final repository where this project will sit. This is a temporary repository that will exist until I have a final name and most of the API is done. It's safe to say it's just a code dump.
+This project is not intended for use in production. It's not feature-complete, it's unstable and poorly optimized. The repo also don't have the required assets nor required dependencies. It won't work out-of-the-box. This is probably not the final repository where this project will sit. This is a temporary repository that will exist until I have a final name and most of the API is done. It's safe to say it's just a code dump.
 
 The goal is to make a library with all the functionalities I need to make racing and car games. The library should care of all the windowing, asset loading, graphics, audio and physics, leaving the programmer only with an API similar to raylib and similar libraries, with a focus on 3D and vehicular physics. Right now, the library is... not actually a library, there's a main.c that exists for testing (and will be there until everything works as intended).
 
