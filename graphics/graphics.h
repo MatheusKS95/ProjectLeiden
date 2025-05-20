@@ -319,28 +319,6 @@ void Graphics_DestroySpotlight(Spotlight *l);
 
 /* SHADERS AND PIPELINES */
 
-bool Graphics_LoadShaderFromMem(Shader *shader,
-								uint8_t *buffer, size_t size,
-								const char *entrypoint,
-								ShaderStage stage,
-								Uint32 samplerCount,
-								Uint32 uniformBufferCount,
-								Uint32 storageBufferCount,
-								Uint32 storageTextureCount);
-
-bool Graphics_LoadShaderFromFS(Shader *shader,
-								const char *path,
-								const char *entrypoint,
-								ShaderStage stage,
-								Uint32 samplerCount,
-								Uint32 uniformBufferCount,
-								Uint32 storageBufferCount,
-								Uint32 storageTextureCount);
-
-Pipeline Graphics_CreatePipeline(Shader *vs, Shader *fs,
-									PipelineType type,
-									bool release_shader);
-
 bool Graphics_CreatePipelineSkybox(const char *path_vs,
 										const char *path_fs);
 
