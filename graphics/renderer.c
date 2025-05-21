@@ -90,6 +90,7 @@ void Graphics_CreateRenderer(Renderer *renderer, Color clear_color)
 {
 	if(renderer == NULL)
 	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't properly create the renderer, invalid renderer.");
 		return;
 	}
 	renderer->clear_color = clear_color;
@@ -112,6 +113,7 @@ void Graphics_BeginDrawing(Renderer *renderer)
 {
 	if(renderer == NULL)
 	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't properly begin the renderer, invalid renderer.");
 		return;
 	}
 	renderer->cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
@@ -155,6 +157,7 @@ void Graphics_EndDrawing(Renderer *renderer)
 {
 	if(renderer == NULL)
 	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't properly finish the renderer, invalid renderer.");
 		return;
 	}
 	if(renderer->swapchain_texture != NULL)
@@ -302,6 +305,7 @@ void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
 {
 	if(skybox == NULL || renderer == NULL)
 	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render skybox.");
 		return;
 	}
 	Matrix4x4 cam_view = camera->view;
