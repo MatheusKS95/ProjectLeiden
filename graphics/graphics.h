@@ -194,7 +194,8 @@ typedef struct Vertex
 	Vector3 normal;
 	Vector3 tangent;
 	Color color;
-	//TODO expand later for animations
+	Uint8 blend_indices[4];
+	Uint8 blend_weights[4];
 } Vertex;
 
 typedef struct VertexArray

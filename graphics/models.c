@@ -340,7 +340,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 
 	Vertex *vertices = (Vertex*)SDL_malloc(sizeof(Vertex) * (header.num_vertexes));
 	float *position, *uv, *normal, *tangent;
-	uint8_t *blend_indexes, *blend_weights, *color;
+	Uint8 *blend_indexes, *blend_weights, *color;
 	struct iqmvertexarray *vertarrs = (struct iqmvertexarray *)&iqmbuffer[header.ofs_vertexarrays];
 
 	for(int i = 0; i < header.num_vertexarrays; i++)
@@ -387,20 +387,20 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 			}
 			case IQM_BLENDINDEXES:
 			{
-				blend_indexes = (uint8_t *)&iqmbuffer[vertarr.offset];
-				/*for(int x = 0; x < header.num_vertexes; x++)
+				blend_indexes = (Uint8 *)&iqmbuffer[vertarr.offset];
+				for(int x = 0; x < header.num_vertexes; x++)
 				{
-					SDL_memcpy(&vertices[x].blend_indexes, &blend_indexes[x * vertarr.size], vertarr.size * sizeof(uint8_t));
-				}*/
+					SDL_memcpy(&vertices[x].blend_indices, &blend_indexes[x * vertarr.size], vertarr.size * sizeof(Uint8));
+				}
 				break;
 			}
 			case IQM_BLENDWEIGHTS:
 			{
 				blend_weights = (uint8_t *)&iqmbuffer[vertarr.offset];
-				/*for(int x = 0; x < header.num_vertexes; x++)
+				for(int x = 0; x < header.num_vertexes; x++)
 				{
-					SDL_memcpy(&vertices[x].blend_weights, &blend_weights[x * vertarr.size], vertarr.size * sizeof(uint8_t));
-				}*/
+					SDL_memcpy(&vertices[x].blend_weights, &blend_weights[x * vertarr.size], vertarr.size * sizeof(Uint8));
+				}
 				break;
 			}
 			case IQM_COLOR:
@@ -408,12 +408,13 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 				color = (uint8_t *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
-					SDL_memcpy(&vertices[x].color, &color[x * vertarr.size], vertarr.size * sizeof(uint8_t));
+					SDL_memcpy(&vertices[x].color, &color[x * vertarr.size], vertarr.size * sizeof(Uint8));
 				}
 			}
 		}
 	}
-	//bones and joints (not used yet) TODO
+	//TODO process bones and joints (need to create structures to handle them)
+	//TODO process animations (also need structures to handle them)
 
 	//indices
 	Uint32 *indices = (Uint32*)SDL_malloc(sizeof(Uint32) * (header.num_triangles * 3));
