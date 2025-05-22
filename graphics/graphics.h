@@ -194,7 +194,8 @@ typedef struct Vertex
 	Vector3 normal;
 	Vector3 tangent;
 	Color color;
-	//TODO expand later for animations
+	Uint8 blend_indices[4];
+	Uint8 blend_weights[4];
 } Vertex;
 
 typedef struct VertexArray
@@ -221,6 +222,30 @@ typedef struct Mesh
 
 	char meshname[64];
 } Mesh;
+
+/*in preparation for future work
+typedef struct Bone
+{
+	char bone_name[64];
+	int parent;
+	Vector3 position, scale;
+	Vector4 rotation;
+	Matrix4x4 transform;
+} Bone;
+
+typedef struct Anim
+{
+	char anim_name[64];
+	Uint32 first, last;
+	float rate;
+	bool loop;
+} Anim;
+
+typedef struct Pose
+{
+	Vector3 translation, scale;
+	Vector4 rotation;
+} Pose;*/
 
 typedef struct MeshArray
 {
