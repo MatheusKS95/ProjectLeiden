@@ -223,6 +223,30 @@ typedef struct Mesh
 	char meshname[64];
 } Mesh;
 
+/*in preparation for future work
+typedef struct Bone
+{
+	char bone_name[64];
+	int parent;
+	Vector3 position, scale;
+	Vector4 rotation;
+	Matrix4x4 transform;
+} Bone;
+
+typedef struct Anim
+{
+	char anim_name[64];
+	Uint32 first, last;
+	float rate;
+	bool loop;
+} Anim;
+
+typedef struct Pose
+{
+	Vector3 translation, scale;
+	Vector4 rotation;
+} Pose;*/
+
 typedef struct MeshArray
 {
 	size_t count;
