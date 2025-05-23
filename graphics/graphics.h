@@ -272,6 +272,14 @@ typedef struct OldRenderer
 	SDL_GPUTexture *texture_depth;
 } OldRenderer;
 
+typedef struct SimpleRenderer
+{
+	Model *models;
+	Uint8 num_models;
+	Skybox *skybox;
+	Sampler *sampler;
+} SimpleRenderer;
+
 /*******************************************************************
  * FUNCTIONS *******************************************************
  ******************************************************************/
@@ -429,6 +437,10 @@ void Graphics_OldDrawModelSimple(Model *model, OldRenderer *renderer,
 								Sampler *sampler, Matrix4x4 mvp);
 
 void Graphics_OldDrawSkybox(Skybox *skybox, OldRenderer *renderer,
+							Camera *camera);
+
+void Graphics_DrawSimple(SimpleRenderer *renderer,
+							Color clear_color,
 							Camera *camera);
 
 /*******************************************************************
