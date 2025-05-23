@@ -86,7 +86,7 @@ void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer)
 	SDL_ReleaseGPUBuffer(context.device, buffer);
 }
 
-void Graphics_CreateRenderer(Renderer *renderer, Color clear_color)
+void Graphics_OldCreateRenderer(OldRenderer *renderer, Color clear_color)
 {
 	if(renderer == NULL)
 	{
@@ -109,7 +109,7 @@ void Graphics_CreateRenderer(Renderer *renderer, Color clear_color)
 	);
 }
 
-void Graphics_BeginDrawing(Renderer *renderer)
+void Graphics_OldBeginDrawing(OldRenderer *renderer)
 {
 	if(renderer == NULL)
 	{
@@ -153,7 +153,7 @@ void Graphics_BeginDrawing(Renderer *renderer)
 	//renderer->render_pass = SDL_BeginGPURenderPass(renderer->cmdbuf, &colorTargetInfo, 1, NULL);
 }
 
-void Graphics_EndDrawing(Renderer *renderer)
+void Graphics_OldEndDrawing(OldRenderer *renderer)
 {
 	if(renderer == NULL)
 	{
@@ -269,7 +269,7 @@ void Graphics_EndDrawing(Renderer *renderer)
 	}
 }*/
 
-void Graphics_DrawModelSimple(Model *model, Renderer *renderer,
+void Graphics_OldDrawModelSimple(Model *model, OldRenderer *renderer,
 								Sampler *sampler, Matrix4x4 mvp)
 {
 	if(model == NULL || renderer == NULL)
@@ -300,7 +300,7 @@ void Graphics_DrawModelSimple(Model *model, Renderer *renderer,
 	}
 }
 
-void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
+void Graphics_OldDrawSkybox(Skybox *skybox, OldRenderer *renderer,
 							Camera *camera)
 {
 	if(skybox == NULL || renderer == NULL)

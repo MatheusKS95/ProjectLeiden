@@ -263,14 +263,14 @@ typedef struct Model
 
 /* RENDERER */
 
-typedef struct Renderer
+typedef struct OldRenderer
 {
 	SDL_GPUCommandBuffer *cmdbuf;
 	SDL_GPUTexture *swapchain_texture;
 	SDL_GPURenderPass *render_pass;
 	Color clear_color;
 	SDL_GPUTexture *texture_depth;
-} Renderer;
+} OldRenderer;
 
 /*******************************************************************
  * FUNCTIONS *******************************************************
@@ -408,11 +408,11 @@ bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 
 void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
 
-void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
+void Graphics_OldCreateRenderer(OldRenderer *renderer, Color clear_color);
 
-void Graphics_BeginDrawing(Renderer *renderer);
+void Graphics_OldBeginDrawing(OldRenderer *renderer);
 
-void Graphics_EndDrawing(Renderer *renderer);
+void Graphics_OldEndDrawing(OldRenderer *renderer);
 
 //test, will be removed when scene renderer is done
 /*void Graphics_DrawModelT1(Model *model, Renderer *renderer,
@@ -425,10 +425,10 @@ void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
 void Graphics_DrawModel(Model *model, Renderer *renderer,
 						RenderingStageDesc *desc);*/
 
-void Graphics_DrawModelSimple(Model *model, Renderer *renderer,
+void Graphics_OldDrawModelSimple(Model *model, OldRenderer *renderer,
 								Sampler *sampler, Matrix4x4 mvp);
 
-void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
+void Graphics_OldDrawSkybox(Skybox *skybox, OldRenderer *renderer,
 							Camera *camera);
 
 /*******************************************************************

@@ -129,8 +129,8 @@ int main(int argc, char *argv[])
 	SDL_Event event;
 	bool playing = true;
 
-	Renderer renderer = { 0 };
-	Graphics_CreateRenderer(&renderer, (Color){0.0f, 0.0f, 0.0f, 1.0f});
+	OldRenderer renderer = { 0 };
+	Graphics_OldCreateRenderer(&renderer, (Color){0.0f, 0.0f, 0.0f, 1.0f});
 
 	while(playing)
 	{
@@ -200,11 +200,11 @@ int main(int argc, char *argv[])
 		/************************
 		 * RENDERING STUFF ******
 		 ***********************/
-		Graphics_BeginDrawing(&renderer);
-			Graphics_DrawSkybox(&skybox, &renderer, &cam_1);
-			Graphics_DrawModelSimple(&house, &renderer, sampler, mvp1);
-			Graphics_DrawModelSimple(&vroid_test, &renderer, sampler, mvp2);
-		Graphics_EndDrawing(&renderer);
+		Graphics_OldBeginDrawing(&renderer);
+			Graphics_OldDrawSkybox(&skybox, &renderer, &cam_1);
+			Graphics_OldDrawModelSimple(&house, &renderer, sampler, mvp1);
+			Graphics_OldDrawModelSimple(&vroid_test, &renderer, sampler, mvp2);
+		Graphics_OldEndDrawing(&renderer);
 		/************************************/
 	}
 
