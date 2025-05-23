@@ -129,9 +129,6 @@ int main(int argc, char *argv[])
 	SDL_Event event;
 	bool playing = true;
 
-	/*OldRenderer renderer = { 0 };
-	Graphics_OldCreateRenderer(&renderer, (Color){0.0f, 0.0f, 0.0f, 1.0f});*/
-
 	while(playing)
 	{
 		while(SDL_PollEvent(&event))
@@ -191,6 +188,7 @@ int main(int argc, char *argv[])
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
 
+		//FIXME, let's re-create the arraylist to use instead
 		Model models[2];
 		models[0] = house;
 		models[1] = vroid_test;
@@ -200,20 +198,9 @@ int main(int argc, char *argv[])
 		testsimple.sampler = sampler;
 		testsimple.skybox = &skybox;
 
-		/*Matrix4x4 viewproj;
-		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
-
-		Matrix4x4 mvp1 = Matrix4x4_Mul(house.transform, viewproj);
-		Matrix4x4 mvp2 = Matrix4x4_Mul(vroid_test.transform, viewproj);*/
-
 		/************************
 		 * RENDERING STUFF ******
 		 ***********************/
-		/*Graphics_OldBeginDrawing(&renderer);
-			Graphics_OldDrawSkybox(&skybox, &renderer, &cam_1);
-			Graphics_OldDrawModelSimple(&house, &renderer, sampler, mvp1);
-			Graphics_OldDrawModelSimple(&vroid_test, &renderer, sampler, mvp2);
-		Graphics_OldEndDrawing(&renderer);*/
 		Graphics_DrawSimple(&testsimple, (Color){0.0f, 0.0f, 0.0f, 0.0f}, &cam_1);
 		/************************************/
 	}

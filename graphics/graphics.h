@@ -263,15 +263,6 @@ typedef struct Model
 
 /* RENDERER */
 
-typedef struct OldRenderer
-{
-	SDL_GPUCommandBuffer *cmdbuf;
-	SDL_GPUTexture *swapchain_texture;
-	SDL_GPURenderPass *render_pass;
-	Color clear_color;
-	SDL_GPUTexture *texture_depth;
-} OldRenderer;
-
 typedef struct SimpleRenderer
 {
 	Model *models;
@@ -415,29 +406,6 @@ bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);
 
 void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
-
-void Graphics_OldCreateRenderer(OldRenderer *renderer, Color clear_color);
-
-void Graphics_OldBeginDrawing(OldRenderer *renderer);
-
-void Graphics_OldEndDrawing(OldRenderer *renderer);
-
-//test, will be removed when scene renderer is done
-/*void Graphics_DrawModelT1(Model *model, Renderer *renderer,
-							Pipeline pipeline, Matrix4x4 mvp,
-							Sampler *sampler);
-
-void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
-						RenderingStageDesc *desc);
-
-void Graphics_DrawModel(Model *model, Renderer *renderer,
-						RenderingStageDesc *desc);*/
-
-void Graphics_OldDrawModelSimple(Model *model, OldRenderer *renderer,
-								Sampler *sampler, Matrix4x4 mvp);
-
-void Graphics_OldDrawSkybox(Skybox *skybox, OldRenderer *renderer,
-							Camera *camera);
 
 void Graphics_DrawSimple(SimpleRenderer *renderer,
 							Color clear_color,
