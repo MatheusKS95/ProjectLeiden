@@ -263,13 +263,25 @@ typedef struct Model
 
 /* RENDERER */
 
-typedef struct SimpleRenderer
+typedef struct SimpleRenderingSetup
 {
 	Model *models;
 	Uint8 num_models;
 	Skybox *skybox;
 	Sampler *sampler;
-} SimpleRenderer;
+} SimpleRenderingSetup;
+
+//TODO
+typedef struct ToonRenderingSetup
+{
+	Model *models;
+	Uint8 num_models;
+	Pointlight *pointlights;
+	Uint8 num_pointlights;
+	//TODO need dirlight and spotlights
+	Skybox *skybox;
+	Sampler *sampler;
+} ToonRenderingSetup;
 
 /*******************************************************************
  * FUNCTIONS *******************************************************
@@ -407,7 +419,7 @@ bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 
 void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
 
-void Graphics_DrawSimple(SimpleRenderer *renderer,
+void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
 							Color clear_color,
 							Camera *camera);
 

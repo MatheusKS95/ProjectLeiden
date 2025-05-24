@@ -137,11 +137,11 @@ static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_G
 	}
 }
 
-void Graphics_DrawSimple(SimpleRenderer *renderer,
+void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
 							Color clear_color,
 							Camera *camera)
 {
-	if(renderer == NULL)
+	if(stuff == NULL)
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render anything. Make sure you send the correct structure.");
 		return;
@@ -198,19 +198,19 @@ void Graphics_DrawSimple(SimpleRenderer *renderer,
 	SDL_GPURenderPass *render_pass = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, &depthStencilTargetInfo);
 
 	//render skybox
-	if(renderer->skybox != NULL)
+	if(stuff->skybox != NULL)
 	{
-		drawskybox(renderer->skybox, camera, render_pass, cmdbuf);
+		drawskybox(stuff->skybox, camera, render_pass, cmdbuf);
 	}
 	//render models
-	if(renderer->models != NULL)
+	if(stuff->models != NULL)
 	{
-		for(Uint8 i = 0; i < renderer->num_models; i++)
+		for(Uint8 i = 0; i < stuff->num_models; i++)
 		{
 			Matrix4x4 viewproj;
 			viewproj = Matrix4x4_Mul(camera->view, camera->projection);
-			Matrix4x4 mvp = Matrix4x4_Mul(renderer->models[i].transform, viewproj);
-			drawmodelsimple(&renderer->models[i], mvp, renderer->sampler, render_pass, cmdbuf);
+			Matrix4x4 mvp = Matrix4x4_Mul(stuff->models[i].transform, viewproj);
+			drawmodelsimple(&stuff->models[i], mvp, stuff->sampler, render_pass, cmdbuf);
 		}
 	}
 

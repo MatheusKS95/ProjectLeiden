@@ -105,18 +105,35 @@ int main(int argc, char *argv[])
 	}
 	Graphics_UploadSkybox(&skybox);
 
-	Model house = { 0 };
-	Graphics_ImportIQM(&house, "test_models/house/house.iqm");
+	//Model house = { 0 };
+	/*Graphics_ImportIQM(&house, "test_models/house/house.iqm");
 	Graphics_LoadModelMaterials(&house, "test_models/house/house.material");
 	Graphics_UploadModel(&house, true);
-	Graphics_MoveModel(&house, (Vector3){10.0f, 0.0f, 5.0f});
+	Graphics_MoveModel(&house, (Vector3){10.0f, 0.0f, 5.0f});*/
+	Model *house = (Model*)SDL_malloc(sizeof(Model));
+	if(house != NULL)
+	{
+		Graphics_ImportIQM(house, "test_models/house/house.iqm");
+		Graphics_LoadModelMaterials(house, "test_models/house/house.material");
+		Graphics_UploadModel(house, true);
+		Graphics_MoveModel(house, (Vector3){10.0f, 0.0f, 5.0f});
+	}
 
-	Model vroid_test = { 0 };
+	/*Model vroid_test = { 0 };
 	Graphics_ImportIQM(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
 	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
 	Graphics_UploadModel(&vroid_test, true);
 	Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(120));
-	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
+	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 2.0f});*/
+	Model *vroid_test = (Model*)SDL_malloc(sizeof(Model));
+	if(vroid_test != NULL)
+	{
+		Graphics_ImportIQM(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
+		Graphics_LoadModelMaterials(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
+		Graphics_UploadModel(vroid_test, true);
+		Graphics_RotateModel(vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(120));
+		Graphics_MoveModel(vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
+	}
 
 	//TODO: the correct order for transform a model is scale > rotation > translation
 	//this is the issue i have when rotating it using the deltatime and begin orbiting the middle at mach speeds
@@ -188,11 +205,11 @@ int main(int argc, char *argv[])
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
 
-		//FIXME, let's re-create the arraylist to use instead
+		//just a test, need to make sure if models are loaded correctly and are not null
 		Model models[2];
-		models[0] = house;
-		models[1] = vroid_test;
-		SimpleRenderer testsimple = { 0 };
+		models[0] = *house;
+		models[1] = *vroid_test;
+		SimpleRenderingSetup testsimple = { 0 };
 		testsimple.models = models;
 		testsimple.num_models = 2;
 		testsimple.sampler = sampler;
@@ -207,8 +224,10 @@ int main(int argc, char *argv[])
 
 	//i forgor more things to kill
 	//valgrind is going to scream
-	Graphics_ReleaseModel(&house);
-	Graphics_ReleaseModel(&vroid_test);
+	Graphics_ReleaseModel(house);
+	Graphics_ReleaseModel(vroid_test);
+	SDL_free(house);
+	SDL_free(vroid_test);
 	Graphics_ReleaseSampler(sampler);
 	Leiden_Deinit();
 
