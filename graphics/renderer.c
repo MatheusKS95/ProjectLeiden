@@ -137,6 +137,95 @@ static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_G
 	}
 }
 
+struct simplerendering_globals
+{
+	SDL_GPUTexture *depth_texture;
+};
+
+static struct simplerendering_globals simple_global;
+
+void Graphics_PrepareSimpleRendering()
+{
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Graphics: Preparing simple rendering.");
+
+	simple_global.depth_texture = SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = context.width,
+			.height = context.height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_D16_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET
+		}
+	);
+	return;
+}
+
+void Graphics_FinishSimpleRendering()
+{
+	SDL_ReleaseGPUTexture(context.device, simple_global.depth_texture);
+}
+
+struct toonrendering_globals
+{
+	SDL_GPUTexture *depth_texture; //depth testing
+	SDL_GPUTexture *norm_texture; //store first pass
+	SDL_GPUTexture *scene_texture; //store final (3rd pass) result to be used in post-processing
+};
+
+static struct toonrendering_globals toon_global;
+
+void Graphics_PrepareToonRendering()
+{
+	toon_global.depth_texture = SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = context.width,
+			.height = context.height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_D16_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET
+		}
+	);
+
+	toon_global.norm_texture = SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = context.width,
+			.height = context.height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
+		}
+	);
+
+	toon_global.scene_texture = SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = context.width,
+			.height = context.height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
+		}
+	);
+
+	//TODO the others
+	return;
+}
+
 void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
 							Color clear_color,
 							Camera *camera)
@@ -165,20 +254,6 @@ void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
 		return;
 	}
 
-	SDL_GPUTexture *texture_depth = SDL_CreateGPUTexture(
-		context.device,
-		&(SDL_GPUTextureCreateInfo) {
-			.type = SDL_GPU_TEXTURETYPE_2D,
-			.width = context.width,
-			.height = context.height,
-			.layer_count_or_depth = 1,
-			.num_levels = 1,
-			.sample_count = SDL_GPU_SAMPLECOUNT_1,
-			.format = SDL_GPU_TEXTUREFORMAT_D16_UNORM,
-			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET
-		}
-	);
-
 	SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
 	colorTargetInfo.texture = swapchain_texture;
 	colorTargetInfo.clear_color = (SDL_FColor){ clear_color.r, clear_color.g, clear_color.b, clear_color.a };
@@ -186,7 +261,7 @@ void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
 	colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
 
 	SDL_GPUDepthStencilTargetInfo depthStencilTargetInfo = { 0 };
-	depthStencilTargetInfo.texture = texture_depth;
+	depthStencilTargetInfo.texture = simple_global.depth_texture;
 	depthStencilTargetInfo.cycle = true;
 	depthStencilTargetInfo.clear_depth = 1;
 	depthStencilTargetInfo.clear_stencil = 0;

@@ -105,11 +105,6 @@ int main(int argc, char *argv[])
 	}
 	Graphics_UploadSkybox(&skybox);
 
-	//Model house = { 0 };
-	/*Graphics_ImportIQM(&house, "test_models/house/house.iqm");
-	Graphics_LoadModelMaterials(&house, "test_models/house/house.material");
-	Graphics_UploadModel(&house, true);
-	Graphics_MoveModel(&house, (Vector3){10.0f, 0.0f, 5.0f});*/
 	Model *house = (Model*)SDL_malloc(sizeof(Model));
 	if(house != NULL)
 	{
@@ -119,12 +114,6 @@ int main(int argc, char *argv[])
 		Graphics_MoveModel(house, (Vector3){10.0f, 0.0f, 5.0f});
 	}
 
-	/*Model vroid_test = { 0 };
-	Graphics_ImportIQM(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
-	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
-	Graphics_UploadModel(&vroid_test, true);
-	Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(120));
-	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 2.0f});*/
 	Model *vroid_test = (Model*)SDL_malloc(sizeof(Model));
 	if(vroid_test != NULL)
 	{
@@ -142,6 +131,8 @@ int main(int argc, char *argv[])
 	Sampler *sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
 	InputState state = { 0 };
+
+	Graphics_PrepareSimpleRendering();
 
 	SDL_Event event;
 	bool playing = true;
@@ -205,6 +196,9 @@ int main(int argc, char *argv[])
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
 
+		/************************
+		 * RENDERING STUFF ******
+		 ***********************/
 		//just a test, need to make sure if models are loaded correctly and are not null
 		Model models[2];
 		models[0] = *house;
@@ -215,9 +209,6 @@ int main(int argc, char *argv[])
 		testsimple.sampler = sampler;
 		testsimple.skybox = &skybox;
 
-		/************************
-		 * RENDERING STUFF ******
-		 ***********************/
 		Graphics_DrawSimple(&testsimple, (Color){0.0f, 0.0f, 0.0f, 0.0f}, &cam_1);
 		/************************************/
 	}
@@ -229,6 +220,7 @@ int main(int argc, char *argv[])
 	SDL_free(house);
 	SDL_free(vroid_test);
 	Graphics_ReleaseSampler(sampler);
+	Graphics_FinishSimpleRendering();
 	Leiden_Deinit();
 
 	return 0;

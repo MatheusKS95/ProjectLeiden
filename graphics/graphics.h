@@ -414,6 +414,12 @@ void Graphics_ReleaseModel(Model *model);
 
 /* RENDERER */
 
+void Graphics_PrepareSimpleRendering();
+
+void Graphics_FinishSimpleRendering();
+
+void Graphics_PrepareToonRendering();
+
 bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);
 
