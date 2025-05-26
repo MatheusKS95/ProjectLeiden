@@ -1,3 +1,5 @@
+//this will be removed later, each screen from a game will have their own rendering
+
 /*
  * Copyright (C) 2025 Matheus Klein Schaefer
  *
@@ -86,15 +88,69 @@ void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer)
 	SDL_ReleaseGPUBuffer(context.device, buffer);
 }
 
-void Graphics_CreateRenderer(Renderer *renderer, Color clear_color)
+static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render_pass, SDL_GPUCommandBuffer *cmdbuf)
 {
-	if(renderer == NULL)
+	if(skybox == NULL || camera == NULL || render_pass == NULL || cmdbuf == NULL)
 	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't properly create the renderer, invalid renderer.");
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render skybox.");
 		return;
 	}
-	renderer->clear_color = clear_color;
-	renderer->texture_depth = SDL_CreateGPUTexture(
+	Matrix4x4 cam_view = camera->view;
+	cam_view.ad = cam_view.bd = cam_view.cd = cam_view.dd = 0.0f;
+	cam_view.da = cam_view.db = cam_view.dc = 0.0f;
+	Matrix4x4 skyboxviewproj;
+	skyboxviewproj = Matrix4x4_Mul(cam_view, camera->projection);
+
+	SDL_BindGPUGraphicsPipeline(render_pass, pipelines.skybox);
+	SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
+	SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+	SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
+	SDL_PushGPUVertexUniformData(cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
+	SDL_DrawGPUIndexedPrimitives(render_pass, 36, 1, 0, 0, 0);
+}
+
+static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_GPURenderPass *render_pass, SDL_GPUCommandBuffer *cmdbuf)
+{
+	if(model == NULL || render_pass == NULL || cmdbuf == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render model.");
+		return;
+	}
+
+	for(size_t i = 0; i < model->meshes.count; i++)
+	{
+		Mesh *mesh = &model->meshes.meshes[i];
+		//binding graphics pipeline
+		SDL_BindGPUGraphicsPipeline(render_pass, pipelines.simple);
+
+		//binding vertex and index buffers
+		SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
+		SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+
+		//texture samplers
+		Material *material = Graphics_GetMaterialByName(&model->materials, mesh->material_name);
+		if(material == NULL) continue;
+		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
+		SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ diffuse->texture, sampler }, 1);
+
+		//UBO
+		SDL_PushGPUVertexUniformData(cmdbuf, 0, &mvp, sizeof(mvp));
+		SDL_DrawGPUIndexedPrimitives(render_pass, mesh->indices.count, 1, 0, 0, 0);
+	}
+}
+
+struct simplerendering_globals
+{
+	SDL_GPUTexture *depth_texture;
+};
+
+static struct simplerendering_globals simple_global;
+
+void Graphics_PrepareSimpleRendering()
+{
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Graphics: Preparing simple rendering.");
+
+	simple_global.depth_texture = SDL_CreateGPUTexture(
 		context.device,
 		&(SDL_GPUTextureCreateInfo) {
 			.type = SDL_GPU_TEXTURETYPE_2D,
@@ -107,40 +163,112 @@ void Graphics_CreateRenderer(Renderer *renderer, Color clear_color)
 			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET
 		}
 	);
+	return;
 }
 
-void Graphics_BeginDrawing(Renderer *renderer)
+void Graphics_FinishSimpleRendering()
 {
-	if(renderer == NULL)
+	SDL_ReleaseGPUTexture(context.device, simple_global.depth_texture);
+}
+
+struct toonrendering_globals
+{
+	SDL_GPUTexture *depth_texture; //depth testing
+	SDL_GPUTexture *norm_texture; //store first pass
+	SDL_GPUTexture *scene_texture; //store final (3rd pass) result to be used in post-processing
+};
+
+static struct toonrendering_globals toon_global;
+
+void Graphics_PrepareToonRendering()
+{
+	toon_global.depth_texture = SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = context.width,
+			.height = context.height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_D16_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET
+		}
+	);
+
+	toon_global.norm_texture = SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = context.width,
+			.height = context.height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
+		}
+	);
+
+	toon_global.scene_texture = SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = context.width,
+			.height = context.height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
+		}
+	);
+	return;
+}
+
+void Graphics_FinishToonRendering()
+{
+	SDL_ReleaseGPUTexture(context.device, toon_global.depth_texture);
+	SDL_ReleaseGPUTexture(context.device, toon_global.norm_texture);
+	SDL_ReleaseGPUTexture(context.device, toon_global.scene_texture);
+}
+
+void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
+							Color clear_color,
+							Camera *camera)
+{
+	if(stuff == NULL)
 	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't properly begin the renderer, invalid renderer.");
-		return;
-	}
-	renderer->cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
-	if (renderer->cmdbuf == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: AcquireGPUCommandBuffer failed: %s", SDL_GetError());
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render anything. Make sure you send the correct structure.");
 		return;
 	}
 
-	if (!SDL_WaitAndAcquireGPUSwapchainTexture(renderer->cmdbuf, context.window, &renderer->swapchain_texture, NULL, NULL))
+	SDL_GPUCommandBuffer *cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	if(cmdbuf == NULL)
 	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: WaitAndAcquireGPUSwapchainTexture failed: %s", SDL_GetError());;
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to acquire command buffer.");
+		return;
 	}
 
-	if(renderer->swapchain_texture == NULL)
+	SDL_GPUTexture *swapchain_texture;
+	if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, context.window, &swapchain_texture, NULL, NULL))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to acquire swapchain texture: %s", SDL_GetError());;
+	}
+
+	if(swapchain_texture == NULL)
 	{
 		return;
 	}
 
 	SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
-	colorTargetInfo.texture = renderer->swapchain_texture;
-	colorTargetInfo.clear_color = (SDL_FColor){ renderer->clear_color.r, renderer->clear_color.g, renderer->clear_color.b, renderer->clear_color.a };
+	colorTargetInfo.texture = swapchain_texture;
+	colorTargetInfo.clear_color = (SDL_FColor){ clear_color.r, clear_color.g, clear_color.b, clear_color.a };
 	colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
 	colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
 
 	SDL_GPUDepthStencilTargetInfo depthStencilTargetInfo = { 0 };
-	depthStencilTargetInfo.texture = renderer->texture_depth;
+	depthStencilTargetInfo.texture = simple_global.depth_texture;
 	depthStencilTargetInfo.cycle = true;
 	depthStencilTargetInfo.clear_depth = 1;
 	depthStencilTargetInfo.clear_stencil = 0;
@@ -149,175 +277,25 @@ void Graphics_BeginDrawing(Renderer *renderer)
 	depthStencilTargetInfo.stencil_load_op = SDL_GPU_LOADOP_CLEAR;
 	depthStencilTargetInfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
 
-	renderer->render_pass = SDL_BeginGPURenderPass(renderer->cmdbuf, &colorTargetInfo, 1, &depthStencilTargetInfo);
-	//renderer->render_pass = SDL_BeginGPURenderPass(renderer->cmdbuf, &colorTargetInfo, 1, NULL);
-}
+	SDL_GPURenderPass *render_pass = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, &depthStencilTargetInfo);
 
-void Graphics_EndDrawing(Renderer *renderer)
-{
-	if(renderer == NULL)
+	//render skybox
+	if(stuff->skybox != NULL)
 	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't properly finish the renderer, invalid renderer.");
-		return;
+		drawskybox(stuff->skybox, camera, render_pass, cmdbuf);
 	}
-	if(renderer->swapchain_texture != NULL)
+	//render models
+	if(stuff->models != NULL)
 	{
-		SDL_EndGPURenderPass(renderer->render_pass);
-	}
-	SDL_SubmitGPUCommandBuffer(renderer->cmdbuf);
-}
-
-//i will remove this later
-/*void Graphics_DrawModelT1(Model *model, Renderer *renderer,
-							Pipeline pipeline, Matrix4x4 mvp,
-							Sampler *sampler)
-{
-	if(model == NULL || renderer == NULL)
-	{
-		return;
+		for(Uint8 i = 0; i < stuff->num_models; i++)
+		{
+			Matrix4x4 viewproj;
+			viewproj = Matrix4x4_Mul(camera->view, camera->projection);
+			Matrix4x4 mvp = Matrix4x4_Mul(stuff->models[i].transform, viewproj);
+			drawmodelsimple(&stuff->models[i], mvp, stuff->sampler, render_pass, cmdbuf);
+		}
 	}
 
-	for(int i = 0; i < model->meshes.count; ++i)
-	{
-		SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipeline);
-		SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ model->meshes.meshes[i].vbuffer, 0 }, 1);
-		SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ model->meshes.meshes[i].ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ model->meshes.meshes[i].diffuse_map->texture, sampler }, 1);
-		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &mvp, sizeof(mvp));
-		SDL_DrawGPUIndexedPrimitives(renderer->render_pass, model->meshes.meshes[i].indices.count, 1, 0, 0, 0);
-	}
-}*/
-
-//i will remove this later
-/*void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
-						RenderingStageDesc *desc)
-{
-	if(mesh == NULL || renderer == NULL || desc == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Mesh %s failed to render.", mesh->meshname);
-		return;
-	}
-
-	//binding graphics pipeline
-	SDL_BindGPUGraphicsPipeline(renderer->render_pass, desc->pipeline);
-
-	//binding vertex and index buffers
-	SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
-	SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-
-	//bind vert storages
-	if(desc->vert_storage_buffers != NULL && desc->vert_storage_buffers_count > 0)
-		SDL_BindGPUVertexStorageBuffers(renderer->render_pass, 0, desc->vert_storage_buffers, desc->vert_storage_buffers_count);
-	if(desc->vert_storage_textures == NULL && desc->vert_storage_textures_count > 0)
-		SDL_BindGPUVertexStorageTextures(renderer->render_pass, 0, desc->vert_storage_textures, desc->vert_storage_textures_count);
-	//bind frag storages
-	if(desc->frag_storage_buffers != NULL && desc->frag_storage_buffers_count > 0)
-		SDL_BindGPUFragmentStorageBuffers(renderer->render_pass, 0, desc->frag_storage_buffers, desc->frag_storage_buffers_count);
-	if(desc->frag_storage_textures == NULL && desc->frag_storage_textures_count > 0)
-		SDL_BindGPUFragmentStorageTextures(renderer->render_pass, 0, desc->frag_storage_textures, desc->frag_storage_textures_count);
-
-	//texture samplers
-	//diffuse
-	if(desc->diffuse_map_or != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ desc->diffuse_map_or->texture, desc->sampler }, 1);
-	else if(mesh->diffuse_map != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ mesh->diffuse_map->texture, desc->sampler }, 1);
-	//normal
-	if(desc->normal_map_or != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 1, &(SDL_GPUTextureSamplerBinding){ desc->normal_map_or->texture, desc->sampler }, 1);
-	else if(mesh->normal_map != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 1, &(SDL_GPUTextureSamplerBinding){ mesh->normal_map->texture, desc->sampler }, 1);
-	//specular
-	if(desc->specular_map_or != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 2, &(SDL_GPUTextureSamplerBinding){ desc->specular_map_or->texture, desc->sampler }, 1);
-	else if(mesh->specular_map != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 2, &(SDL_GPUTextureSamplerBinding){ mesh->specular_map->texture, desc->sampler }, 1);
-	//emission
-	if(desc->emission_map_or != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 3, &(SDL_GPUTextureSamplerBinding){ desc->emission_map_or->texture, desc->sampler }, 1);
-	else if(mesh->emission_map != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 3, &(SDL_GPUTextureSamplerBinding){ mesh->emission_map->texture, desc->sampler }, 1);
-	//height
-	if(desc->height_map_or != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 4, &(SDL_GPUTextureSamplerBinding){ desc->height_map_or->texture, desc->sampler }, 1);
-	else if(mesh->height_map != NULL)
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 4, &(SDL_GPUTextureSamplerBinding){ mesh->height_map->texture, desc->sampler }, 1);
-
-	//push ubos
-	if(desc->vertex_ubo_size > 0 && desc->vertex_ubo != NULL)
-		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, desc->vertex_ubo, desc->vertex_ubo_size);
-	if(desc->fragment_ubo_size > 0 && desc->fragment_ubo != NULL)
-		SDL_PushGPUFragmentUniformData(renderer->cmdbuf, 0, desc->fragment_ubo, desc->fragment_ubo_size);
-
-	//finally
-	SDL_DrawGPUIndexedPrimitives(renderer->render_pass, mesh->indices.count, 1, 0, 0, 0);
-}*/
-
-//i will remove this later
-/*void Graphics_DrawModel(Model *model, Renderer *renderer,
-						RenderingStageDesc *desc)
-{
-	if(model == NULL || renderer == NULL || desc == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render model.");
-		return;
-	}
-
-	for(size_t i = 0; i < model->meshes.count; i++)
-	{
-		Graphics_DrawMesh(&model->meshes.meshes[i], renderer, desc);
-	}
-}*/
-
-void Graphics_DrawModelSimple(Model *model, Renderer *renderer,
-								Sampler *sampler, Matrix4x4 mvp)
-{
-	if(model == NULL || renderer == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render model.");
-		return;
-	}
-
-	for(size_t i = 0; i < model->meshes.count; i++)
-	{
-		Mesh *mesh = &model->meshes.meshes[i];
-		//binding graphics pipeline
-		SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipelines.simple);
-
-		//binding vertex and index buffers
-		SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
-		SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-
-		//texture samplers
-		Material *material = Graphics_GetMaterialByName(&model->materials, mesh->material_name);
-		if(material == NULL) continue;
-		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
-		SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ diffuse->texture, sampler }, 1);
-
-		//UBO
-		SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &mvp, sizeof(mvp));
-		SDL_DrawGPUIndexedPrimitives(renderer->render_pass, mesh->indices.count, 1, 0, 0, 0);
-	}
-}
-
-void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
-							Camera *camera)
-{
-	if(skybox == NULL || renderer == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't render skybox.");
-		return;
-	}
-	Matrix4x4 cam_view = camera->view;
-	cam_view.ad = cam_view.bd = cam_view.cd = cam_view.dd = 0.0f;
-	cam_view.da = cam_view.db = cam_view.dc = 0.0f;
-	Matrix4x4 skyboxviewproj;
-	skyboxviewproj = Matrix4x4_Mul(cam_view, camera->projection);
-
-	SDL_BindGPUGraphicsPipeline(renderer->render_pass, pipelines.skybox);
-	SDL_BindGPUVertexBuffers(renderer->render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
-	SDL_BindGPUIndexBuffer(renderer->render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-	SDL_BindGPUFragmentSamplers(renderer->render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
-	SDL_PushGPUVertexUniformData(renderer->cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
-	SDL_DrawGPUIndexedPrimitives(renderer->render_pass, 36, 1, 0, 0, 0);
+	SDL_EndGPURenderPass(render_pass);
+	SDL_SubmitGPUCommandBuffer(cmdbuf);
 }

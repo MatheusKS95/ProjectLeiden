@@ -1,5 +1,5 @@
-//i am going raylib route, plus some macgyver crap i will regret later
-//https://www.youtube.com/watch?v=yOEe1uzurKo
+//i regret this
+//going to change a lot of stuff now (kind of demo subproject will make a small return)
 
 /*
  * CURRENTLY RUNS ON
@@ -105,18 +105,24 @@ int main(int argc, char *argv[])
 	}
 	Graphics_UploadSkybox(&skybox);
 
-	Model house = { 0 };
-	Graphics_ImportIQM(&house, "test_models/house/house.iqm");
-	Graphics_LoadModelMaterials(&house, "test_models/house/house.material");
-	Graphics_UploadModel(&house, true);
-	Graphics_MoveModel(&house, (Vector3){10.0f, 0.0f, 5.0f});
+	Model *house = (Model*)SDL_malloc(sizeof(Model));
+	if(house != NULL)
+	{
+		Graphics_ImportIQM(house, "test_models/house/house.iqm");
+		Graphics_LoadModelMaterials(house, "test_models/house/house.material");
+		Graphics_UploadModel(house, true);
+		Graphics_MoveModel(house, (Vector3){10.0f, 0.0f, 5.0f});
+	}
 
-	Model vroid_test = { 0 };
-	Graphics_ImportIQM(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
-	Graphics_LoadModelMaterials(&vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
-	Graphics_UploadModel(&vroid_test, true);
-	Graphics_RotateModel(&vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(120));
-	Graphics_MoveModel(&vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
+	Model *vroid_test = (Model*)SDL_malloc(sizeof(Model));
+	if(vroid_test != NULL)
+	{
+		Graphics_ImportIQM(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
+		Graphics_LoadModelMaterials(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
+		Graphics_UploadModel(vroid_test, true);
+		Graphics_RotateModel(vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(120));
+		Graphics_MoveModel(vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
+	}
 
 	//TODO: the correct order for transform a model is scale > rotation > translation
 	//this is the issue i have when rotating it using the deltatime and begin orbiting the middle at mach speeds
@@ -126,11 +132,11 @@ int main(int argc, char *argv[])
 
 	InputState state = { 0 };
 
+	Graphics_PrepareSimpleRendering();
+	Graphics_PrepareToonRendering();
+
 	SDL_Event event;
 	bool playing = true;
-
-	Renderer renderer = { 0 };
-	Graphics_CreateRenderer(&renderer, (Color){0.0f, 0.0f, 0.0f, 1.0f});
 
 	while(playing)
 	{
@@ -191,28 +197,32 @@ int main(int argc, char *argv[])
 		Graphics_TestCameraFreecam(&cam_1, x_offset, y_offset, true);
 		state.mouse_x = state.mouse_y = 0;
 
-		Matrix4x4 viewproj;
-		viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
-
-		Matrix4x4 mvp1 = Matrix4x4_Mul(house.transform, viewproj);
-		Matrix4x4 mvp2 = Matrix4x4_Mul(vroid_test.transform, viewproj);
-
 		/************************
 		 * RENDERING STUFF ******
 		 ***********************/
-		Graphics_BeginDrawing(&renderer);
-			Graphics_DrawSkybox(&skybox, &renderer, &cam_1);
-			Graphics_DrawModelSimple(&house, &renderer, sampler, mvp1);
-			Graphics_DrawModelSimple(&vroid_test, &renderer, sampler, mvp2);
-		Graphics_EndDrawing(&renderer);
+		//just a test, need to make sure if models are loaded correctly and are not null
+		Model models[2];
+		models[0] = *house;
+		models[1] = *vroid_test;
+		SimpleRenderingSetup testsimple = { 0 };
+		testsimple.models = models;
+		testsimple.num_models = 2;
+		testsimple.sampler = sampler;
+		testsimple.skybox = &skybox;
+
+		Graphics_DrawSimple(&testsimple, (Color){0.0f, 0.0f, 0.0f, 0.0f}, &cam_1);
 		/************************************/
 	}
 
 	//i forgor more things to kill
 	//valgrind is going to scream
-	Graphics_ReleaseModel(&house);
-	Graphics_ReleaseModel(&vroid_test);
+	Graphics_ReleaseModel(house);
+	Graphics_ReleaseModel(vroid_test);
+	SDL_free(house);
+	SDL_free(vroid_test);
 	Graphics_ReleaseSampler(sampler);
+	Graphics_FinishSimpleRendering();
+	Graphics_FinishToonRendering();
 	Leiden_Deinit();
 
 	return 0;

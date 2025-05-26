@@ -49,8 +49,14 @@ typedef struct GraphicsContext
 typedef struct GeneralPipelines
 {
 	SDL_GPUGraphicsPipeline *skybox;
+
+	//SIMPLE RENDERING (no post processing)
 	SDL_GPUGraphicsPipeline *simple;
-	//TODO more
+
+	//TOON RENDERING
+	SDL_GPUGraphicsPipeline *norm;
+	SDL_GPUGraphicsPipeline *outline;
+	SDL_GPUGraphicsPipeline *toon;
 } GeneralPipelines;
 
 /* CAMERA */
@@ -262,15 +268,26 @@ typedef struct Model
 } Model;
 
 /* RENDERER */
-
-typedef struct Renderer
+//TODO drop this
+typedef struct SimpleRenderingSetup
 {
-	SDL_GPUCommandBuffer *cmdbuf;
-	SDL_GPUTexture *swapchain_texture;
-	SDL_GPURenderPass *render_pass;
-	Color clear_color;
-	SDL_GPUTexture *texture_depth;
-} Renderer;
+	Model *models;
+	Uint8 num_models;
+	Skybox *skybox;
+	Sampler *sampler;
+} SimpleRenderingSetup;
+
+//TODO drop this
+typedef struct ToonRenderingSetup
+{
+	Model *models;
+	Uint8 num_models;
+	Pointlight *pointlights;
+	Uint8 num_pointlights;
+	//TODO need dirlight and spotlights
+	Skybox *skybox;
+	Sampler *sampler;
+} ToonRenderingSetup;
 
 /*******************************************************************
  * FUNCTIONS *******************************************************
@@ -327,6 +344,13 @@ bool Graphics_CreatePipelineSkybox(const char *path_vs,
 
 bool Graphics_CreatePipelineSimple(const char *path_vs,
 									const char *path_fs);
+
+bool Graphics_CreatePipelineToon(const char *path_norm_vs,
+									const char *path_norm_fs,
+									const char *path_outl_vs,
+									const char *path_outl_fs,
+									const char *path_toon_vs,
+									const char *path_toon_fs);
 
 /* 2D TEXTURES */
 
@@ -402,39 +426,29 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 void Graphics_ReleaseModel(Model *model);
 
 /* RENDERER */
+//DROP THIS
+void Graphics_PrepareSimpleRendering();
+
+void Graphics_FinishSimpleRendering();
+
+void Graphics_PrepareToonRendering();
+
+void Graphics_FinishToonRendering();
 
 bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);
 
 void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
 
-void Graphics_CreateRenderer(Renderer *renderer, Color clear_color);
-
-void Graphics_BeginDrawing(Renderer *renderer);
-
-void Graphics_EndDrawing(Renderer *renderer);
-
-//test, will be removed when scene renderer is done
-/*void Graphics_DrawModelT1(Model *model, Renderer *renderer,
-							Pipeline pipeline, Matrix4x4 mvp,
-							Sampler *sampler);
-
-void Graphics_DrawMesh(Mesh *mesh, Renderer *renderer,
-						RenderingStageDesc *desc);
-
-void Graphics_DrawModel(Model *model, Renderer *renderer,
-						RenderingStageDesc *desc);*/
-
-void Graphics_DrawModelSimple(Model *model, Renderer *renderer,
-								Sampler *sampler, Matrix4x4 mvp);
-
-void Graphics_DrawSkybox(Skybox *skybox, Renderer *renderer,
+void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
+							Color clear_color,
 							Camera *camera);
 
 /*******************************************************************
  * GLOBALS *********************************************************
  ******************************************************************/
 
+//drop some of this
 extern GraphicsContext context;
 extern GeneralPipelines pipelines;
 extern DefaultTextures default_textures;
