@@ -1,5 +1,5 @@
-//i am going raylib route, plus some macgyver crap i will regret later
-//https://www.youtube.com/watch?v=yOEe1uzurKo
+//i regret this
+//going to change a lot of stuff now (kind of demo subproject will make a small return)
 
 /*
  * CURRENTLY RUNS ON

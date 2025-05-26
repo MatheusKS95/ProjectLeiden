@@ -268,7 +268,7 @@ typedef struct Model
 } Model;
 
 /* RENDERER */
-
+//TODO drop this
 typedef struct SimpleRenderingSetup
 {
 	Model *models;
@@ -277,7 +277,7 @@ typedef struct SimpleRenderingSetup
 	Sampler *sampler;
 } SimpleRenderingSetup;
 
-//TODO
+//TODO drop this
 typedef struct ToonRenderingSetup
 {
 	Model *models;
@@ -426,7 +426,7 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 void Graphics_ReleaseModel(Model *model);
 
 /* RENDERER */
-
+//DROP THIS
 void Graphics_PrepareSimpleRendering();
 
 void Graphics_FinishSimpleRendering();
@@ -448,6 +448,7 @@ void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
  * GLOBALS *********************************************************
  ******************************************************************/
 
+//drop some of this
 extern GraphicsContext context;
 extern GeneralPipelines pipelines;
 extern DefaultTextures default_textures;

@@ -1,3 +1,5 @@
+//this will be removed later, each screen from a game will have their own rendering
+
 /*
  * Copyright (C) 2025 Matheus Klein Schaefer
  *
