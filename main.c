@@ -133,6 +133,7 @@ int main(int argc, char *argv[])
 	InputState state = { 0 };
 
 	Graphics_PrepareSimpleRendering();
+	Graphics_PrepareToonRendering();
 
 	SDL_Event event;
 	bool playing = true;
@@ -221,6 +222,7 @@ int main(int argc, char *argv[])
 	SDL_free(vroid_test);
 	Graphics_ReleaseSampler(sampler);
 	Graphics_FinishSimpleRendering();
+	Graphics_FinishToonRendering();
 	Leiden_Deinit();
 
 	return 0;

@@ -49,8 +49,14 @@ typedef struct GraphicsContext
 typedef struct GeneralPipelines
 {
 	SDL_GPUGraphicsPipeline *skybox;
+
+	//SIMPLE RENDERING (no post processing)
 	SDL_GPUGraphicsPipeline *simple;
-	//TODO more
+
+	//TOON RENDERING
+	SDL_GPUGraphicsPipeline *norm;
+	SDL_GPUGraphicsPipeline *outline;
+	SDL_GPUGraphicsPipeline *toon;
 } GeneralPipelines;
 
 /* CAMERA */
@@ -339,6 +345,13 @@ bool Graphics_CreatePipelineSkybox(const char *path_vs,
 bool Graphics_CreatePipelineSimple(const char *path_vs,
 									const char *path_fs);
 
+bool Graphics_CreatePipelineToon(const char *path_norm_vs,
+									const char *path_norm_fs,
+									const char *path_outl_vs,
+									const char *path_outl_fs,
+									const char *path_toon_vs,
+									const char *path_toon_fs);
+
 /* 2D TEXTURES */
 
 Sampler* Graphics_GenerateSampler(SamplerFilter filter,
@@ -419,6 +432,8 @@ void Graphics_PrepareSimpleRendering();
 void Graphics_FinishSimpleRendering();
 
 void Graphics_PrepareToonRendering();
+
+void Graphics_FinishToonRendering();
 
 bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);

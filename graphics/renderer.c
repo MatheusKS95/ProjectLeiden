@@ -221,9 +221,14 @@ void Graphics_PrepareToonRendering()
 			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
 		}
 	);
-
-	//TODO the others
 	return;
+}
+
+void Graphics_FinishToonRendering()
+{
+	SDL_ReleaseGPUTexture(context.device, toon_global.depth_texture);
+	SDL_ReleaseGPUTexture(context.device, toon_global.norm_texture);
+	SDL_ReleaseGPUTexture(context.device, toon_global.scene_texture);
 }
 
 void Graphics_DrawSimple(SimpleRenderingSetup *stuff,

@@ -114,6 +114,8 @@ bool Leiden_Init(LeidenInitDesc *initdesc)
 		return 0;
 	}
 
+	//TODO load toon pipelines
+
 	//create default textures
 	if(!Graphics_SetupDefaultTextures(INIGetString(ini, "default_textures", "default_diffuse"),
 										INIGetString(ini, "default_textures", "default_normal"),
