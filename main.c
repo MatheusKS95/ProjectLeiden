@@ -103,6 +103,11 @@ int main(int argc, char *argv[])
 		//todo cleanup this
 		return -1;
 	}
+	if(!Graphics_CreatePipelineSkybox(&skybox, "shaders/skybox/skybox.vert.spv", "shaders/skybox/skybox.frag.spv"))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to generate skybox pipeline...");
+		return -1;
+	}
 	Graphics_UploadSkybox(&skybox);
 
 	Model *house = (Model*)SDL_malloc(sizeof(Model));

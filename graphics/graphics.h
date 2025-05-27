@@ -48,8 +48,6 @@ typedef struct GraphicsContext
 
 typedef struct GeneralPipelines
 {
-	SDL_GPUGraphicsPipeline *skybox;
-
 	//SIMPLE RENDERING (no post processing)
 	SDL_GPUGraphicsPipeline *simple;
 
@@ -166,6 +164,7 @@ typedef struct Skybox
 	Sampler *sampler;
 	SDL_GPUBuffer* vertex_buffer;
 	SDL_GPUBuffer* index_buffer;
+	SDL_GPUGraphicsPipeline *pipeline;
 } Skybox;
 
 /* MATERIAL */
@@ -339,8 +338,12 @@ void Graphics_DestroySpotlight(Spotlight *l);
 
 /* SHADERS AND PIPELINES */
 
-bool Graphics_CreatePipelineSkybox(const char *path_vs,
-										const char *path_fs);
+SDL_GPUShader* Graphics_LoadShader(const char *path,
+									SDL_GPUShaderStage stage,
+									Uint32 samplerCount,
+									Uint32 uniformBufferCount,
+									Uint32 storageBufferCount,
+									Uint32 storageTextureCount);
 
 bool Graphics_CreatePipelineSimple(const char *path_vs,
 									const char *path_fs);
@@ -379,6 +382,10 @@ bool Graphics_SetupDefaultTextures(const char *path_d,
 void Graphics_ReleaseDefaultTextures();
 
 /* SKYBOXES */
+
+bool Graphics_CreatePipelineSkybox(Skybox *skybox,
+									const char *path_vs,
+									const char *path_fs);
 
 bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
 							const char *path_down,
