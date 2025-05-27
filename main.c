@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 		/************************
 		 * LOGIC STUFF **********
 		 ***********************/
-		//TODO should be moved somewhere, stuff don't have a home
+		//TODO should be moved somewhere else
 		float current_frame = (float)SDL_GetTicks();
 		deltatime = current_frame - lastframe;
 		lastframe = current_frame;
