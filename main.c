@@ -228,6 +228,7 @@ int main(int argc, char *argv[])
 	Graphics_ReleaseSampler(sampler);
 	Graphics_FinishSimpleRendering();
 	Graphics_FinishToonRendering();
+	Graphics_ReleaseSkybox(&skybox);
 	Leiden_Deinit();
 
 	return 0;

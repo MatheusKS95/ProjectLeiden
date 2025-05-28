@@ -219,6 +219,11 @@ bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
 
 void Graphics_UploadSkybox(Skybox *skybox)
 {
+	if(skybox == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to upload skybox, invalid structure.");
+		return;
+	}
 	//shape of skybox
 	SDL_GPUTransferBuffer* buffer_transferbuffer = SDL_CreateGPUTransferBuffer(
 		context.device,
@@ -355,4 +360,18 @@ void Graphics_UploadSkybox(Skybox *skybox)
 	SDL_ReleaseGPUTransferBuffer(context.device, texture_transferbuffer);
 
 	SDL_SubmitGPUCommandBuffer(cmdbuf);
+}
+
+void Graphics_ReleaseSkybox(Skybox *skybox)
+{
+	if(skybox == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to release skybox, invalid structure.");
+		return;
+	}
+	SDL_ReleaseGPUGraphicsPipeline(context.device, skybox->pipeline);
+	SDL_ReleaseGPUTexture(context.device, skybox->gputexture);
+	SDL_ReleaseGPUSampler(context.device, skybox->sampler);
+	SDL_ReleaseGPUBuffer(context.device, skybox->vertex_buffer);
+	SDL_ReleaseGPUBuffer(context.device, skybox->index_buffer);
 }

@@ -395,7 +395,8 @@ bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
 							const char *path_back);
 
 void Graphics_UploadSkybox(Skybox *skybox);
-//TODO FIXME create unload/destroy skybox
+
+void Graphics_ReleaseSkybox(Skybox *skybox);
 
 /* MATERIALS */
 
