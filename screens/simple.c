@@ -43,14 +43,18 @@ bool Simple_Setup()
 	//need to bring lookat, or a camera update thing
 	Graphics_InitCameraBasic(&cam_1, (Vector3){0.0f, 0.5f, 0.0f});
 
-	if(!Graphics_LoadSkyboxFS(skybox, "skybox/exosystem/top.jpg", "skybox/exosystem/bottom.jpg",
-								"skybox/exosystem/left.jpg", "skybox/exosystem/right.jpg",
-								"skybox/exosystem/front.jpg", "skybox/exosystem/back.jpg"))
+	skybox = (Skybox*)SDL_malloc(sizeof(Skybox));
+	if(skybox != NULL)
 	{
-		//todo cleanup this
-		return false;
+		if(!Graphics_LoadSkyboxFS(skybox, "skybox/exosystem/top.jpg", "skybox/exosystem/bottom.jpg",
+									"skybox/exosystem/left.jpg", "skybox/exosystem/right.jpg",
+									"skybox/exosystem/front.jpg", "skybox/exosystem/back.jpg"))
+		{
+			//todo cleanup this
+			return false;
+		}
+		Graphics_UploadSkybox(skybox);
 	}
-	Graphics_UploadSkybox(skybox);
 
 	house = (Model*)SDL_malloc(sizeof(Model));
 	if(house != NULL)
@@ -153,7 +157,7 @@ static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render
 	Matrix4x4 skyboxviewproj;
 	skyboxviewproj = Matrix4x4_Mul(cam_view, camera->projection);
 
-	SDL_BindGPUGraphicsPipeline(render_pass, pipelines.skybox);
+	SDL_BindGPUGraphicsPipeline(render_pass, skybox->pipeline);
 	SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
 	SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 	SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
@@ -280,5 +284,6 @@ void Simple_Destroy()
 	SDL_free(house);
 	SDL_free(vroid_test);
 	Graphics_ReleaseSampler(sampler);
+	Graphics_ReleaseSkybox(skybox);
 	return;
 }

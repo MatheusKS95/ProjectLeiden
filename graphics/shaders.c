@@ -25,7 +25,7 @@
 #include <fileio.h>
 #include <graphics.h>
 
-static SDL_GPUShader* loadshader(const char *path,
+SDL_GPUShader* Graphics_LoadShader(const char *path,
 									SDL_GPUShaderStage stage,
 									Uint32 samplerCount,
 									Uint32 uniformBufferCount,
@@ -59,77 +59,16 @@ static SDL_GPUShader* loadshader(const char *path,
 	return SDL_CreateGPUShader(context.device, &shader_info);
 }
 
-bool Graphics_CreatePipelineSkybox(const char *path_vs,
-										const char *path_fs)
-{
-	SDL_GPUShader *vsshader = loadshader(path_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
-	if(vsshader == NULL)
-	{
-		SDL_Log("Failed to load skybox vertex shader.");
-		return false;
-	}
-	SDL_GPUShader *fsshader = loadshader(path_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
-	if(fsshader == NULL)
-	{
-		SDL_Log("Failed to load skybox fragment shader.");
-		return false;
-	}
-
-	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = { 0 };
-	pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo)
-	{
-		.target_info =
-		{
-			.num_color_targets = 1,
-			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
-				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
-			}}
-		},
-		.depth_stencil_state = (SDL_GPUDepthStencilState) {
-			.enable_depth_test = true,
-			.enable_depth_write = true,
-			.enable_stencil_test = false,
-			.compare_op = SDL_GPU_COMPAREOP_NEVER,
-			.write_mask = 0xFF
-		},
-		.vertex_input_state = (SDL_GPUVertexInputState){
-			.num_vertex_buffers = 1,
-			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
-				.slot = 0,
-				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
-				.instance_step_rate = 0,
-				.pitch = sizeof(Vector3)
-			}},
-			.num_vertex_attributes = 1,
-			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
-				//position
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-				.location = 0,
-				.offset = 0
-			}}
-		},
-		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = vsshader,
-		.fragment_shader = fsshader
-	};
-	pipelines.skybox = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	SDL_ReleaseGPUShader(context.device, vsshader);
-	SDL_ReleaseGPUShader(context.device, fsshader);
-
-	return true;
-}
-
 bool Graphics_CreatePipelineSimple(const char *path_vs,
 									const char *path_fs)
 {
-	SDL_GPUShader *vsshader = loadshader(path_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	SDL_GPUShader *vsshader = Graphics_LoadShader(path_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
 	if(vsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox vertex shader.");
 		return false;
 	}
-	SDL_GPUShader *fsshader = loadshader(path_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	SDL_GPUShader *fsshader = Graphics_LoadShader(path_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
 	if(fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
@@ -201,38 +140,38 @@ bool Graphics_CreatePipelineToon(const char *path_norm_vs,
 									const char *path_toon_vs,
 									const char *path_toon_fs)
 {
-	SDL_GPUShader *norm_vsshader = loadshader(path_norm_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	SDL_GPUShader *norm_vsshader = Graphics_LoadShader(path_norm_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
 	if(norm_vsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox vertex shader.");
 		return false;
 	}
-	SDL_GPUShader *norm_fsshader = loadshader(path_norm_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	SDL_GPUShader *norm_fsshader = Graphics_LoadShader(path_norm_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
 	if(norm_fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
 		return false;
 	}
-	SDL_GPUShader *outl_vsshader = loadshader(path_outl_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	SDL_GPUShader *outl_vsshader = Graphics_LoadShader(path_outl_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
 	if(norm_vsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox vertex shader.");
 		return false;
 	}
-	SDL_GPUShader *outl_fsshader = loadshader(path_outl_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	SDL_GPUShader *outl_fsshader = Graphics_LoadShader(path_outl_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
 	if(norm_fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
 		return false;
 	}
 	//didn't complete the shaders for this one, need to complete it
-	SDL_GPUShader *toon_vsshader = loadshader(path_toon_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	SDL_GPUShader *toon_vsshader = Graphics_LoadShader(path_toon_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
 	if(toon_vsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox vertex shader.");
 		return false;
 	}
-	SDL_GPUShader *toon_fsshader = loadshader(path_toon_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 4, 1, 1, 0);
+	SDL_GPUShader *toon_fsshader = Graphics_LoadShader(path_toon_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 4, 1, 1, 0);
 	if(toon_fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");

@@ -102,7 +102,7 @@ static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render
 	Matrix4x4 skyboxviewproj;
 	skyboxviewproj = Matrix4x4_Mul(cam_view, camera->projection);
 
-	SDL_BindGPUGraphicsPipeline(render_pass, pipelines.skybox);
+	SDL_BindGPUGraphicsPipeline(render_pass, skybox->pipeline);
 	SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
 	SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 	SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
