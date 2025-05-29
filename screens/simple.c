@@ -37,6 +37,7 @@ static Camera cam_1;
 static Skybox *skybox;
 static Model *house;
 static Model *vroid_test;
+static Model *mulher2;
 static Sampler *sampler;
 static SDL_GPUTexture *depth_texture;
 static SDL_GPUGraphicsPipeline *simple_pipeline;
@@ -283,6 +284,16 @@ bool Simple_Setup()
 		Graphics_MoveModel(vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
 	}
 
+	mulher2 = (Model*)SDL_malloc(sizeof(Model));
+	if(mulher2 != NULL)
+	{
+		Graphics_ImportIQM(mulher2, "test_models/mulher2/mulher_face2.iqm");
+		Graphics_LoadModelMaterials(mulher2, "test_models/mulher2/mulher_face2.material");
+		Graphics_UploadModel(mulher2, true);
+		Graphics_ScaleModel(mulher2, 0.1);
+		Graphics_MoveModel(mulher2, (Vector3){3.0f, 0.0f, 2.0f});
+	}
+
 	//TODO: the correct order for transform a model is scale > rotation > translation
 	//this is the issue i have when rotating it using the deltatime and begin orbiting the middle at mach speeds
 	//keep this in mind when doing stuff in the loop - besides, transform shouldn't be here at all, but...
@@ -354,12 +365,13 @@ void Simple_Logic(InputState *state)
 
 void Simple_Draw()
 {
-	Model models[2];
+	Model models[3];
 	models[0] = *house;
 	models[1] = *vroid_test;
+	models[2] = *mulher2;
 	struct SimpleRenderingSetup testsimple = { 0 };
 	testsimple.models = models;
-	testsimple.num_models = 2;
+	testsimple.num_models = 3;
 	testsimple.sampler = sampler;
 	testsimple.skybox = skybox;
 
@@ -371,8 +383,10 @@ void Simple_Destroy()
 {
 	Graphics_ReleaseModel(house);
 	Graphics_ReleaseModel(vroid_test);
+	Graphics_ReleaseModel(mulher2);
 	SDL_free(house);
 	SDL_free(vroid_test);
+	SDL_free(mulher2);
 	Graphics_ReleaseSampler(sampler);
 	Graphics_ReleaseSkybox(skybox);
 	return;

@@ -312,15 +312,10 @@ SDL_GPUShader* Graphics_LoadShader(const char *path,
 									Uint32 storageBufferCount,
 									Uint32 storageTextureCount);
 
-bool Graphics_CreatePipelineSimple(const char *path_vs,
-									const char *path_fs);
+bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
+									void *data, size_t size);
 
-bool Graphics_CreatePipelineToon(const char *path_norm_vs,
-									const char *path_norm_fs,
-									const char *path_outl_vs,
-									const char *path_outl_fs,
-									const char *path_toon_vs,
-									const char *path_toon_fs);
+void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
 
 /* 2D TEXTURES */
 
@@ -399,13 +394,6 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 							float radians);
 
 void Graphics_ReleaseModel(Model *model);
-
-/* RENDERER */
-//Move storage buffer stuff to shaders
-bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
-									void *data, size_t size);
-
-void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
 
 /*******************************************************************
  * GLOBALS *********************************************************
