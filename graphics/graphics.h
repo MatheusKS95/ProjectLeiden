@@ -46,17 +46,6 @@ typedef struct GraphicsContext
 	SDL_GPUDevice *device;
 } GraphicsContext;
 
-typedef struct GeneralPipelines
-{
-	//SIMPLE RENDERING (no post processing)
-	SDL_GPUGraphicsPipeline *simple;
-
-	//TOON RENDERING
-	SDL_GPUGraphicsPipeline *norm;
-	SDL_GPUGraphicsPipeline *outline;
-	SDL_GPUGraphicsPipeline *toon;
-} GeneralPipelines;
-
 /* CAMERA */
 
 typedef struct Camera
@@ -266,28 +255,6 @@ typedef struct Model
 	Matrix4x4 transform;
 } Model;
 
-/* RENDERER */
-//TODO drop this
-typedef struct SimpleRenderingSetup
-{
-	Model *models;
-	Uint8 num_models;
-	Skybox *skybox;
-	Sampler *sampler;
-} SimpleRenderingSetup;
-
-//TODO drop this
-typedef struct ToonRenderingSetup
-{
-	Model *models;
-	Uint8 num_models;
-	Pointlight *pointlights;
-	Uint8 num_pointlights;
-	//TODO need dirlight and spotlights
-	Skybox *skybox;
-	Sampler *sampler;
-} ToonRenderingSetup;
-
 /*******************************************************************
  * FUNCTIONS *******************************************************
  ******************************************************************/
@@ -345,15 +312,10 @@ SDL_GPUShader* Graphics_LoadShader(const char *path,
 									Uint32 storageBufferCount,
 									Uint32 storageTextureCount);
 
-bool Graphics_CreatePipelineSimple(const char *path_vs,
-									const char *path_fs);
+bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
+									void *data, size_t size);
 
-bool Graphics_CreatePipelineToon(const char *path_norm_vs,
-									const char *path_norm_fs,
-									const char *path_outl_vs,
-									const char *path_outl_fs,
-									const char *path_toon_vs,
-									const char *path_toon_fs);
+void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
 
 /* 2D TEXTURES */
 
@@ -433,32 +395,11 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 
 void Graphics_ReleaseModel(Model *model);
 
-/* RENDERER */
-//DROP THIS
-void Graphics_PrepareSimpleRendering();
-
-void Graphics_FinishSimpleRendering();
-
-void Graphics_PrepareToonRendering();
-
-void Graphics_FinishToonRendering();
-
-bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
-									void *data, size_t size);
-
-void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
-
-void Graphics_DrawSimple(SimpleRenderingSetup *stuff,
-							Color clear_color,
-							Camera *camera);
-
 /*******************************************************************
  * GLOBALS *********************************************************
  ******************************************************************/
 
-//drop some of this
 extern GraphicsContext context;
-extern GeneralPipelines pipelines;
 extern DefaultTextures default_textures;
 
 #endif

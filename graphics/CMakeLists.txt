@@ -5,7 +5,6 @@ add_library(graphics STATIC
 	camera.c
 	lights.c
 	models.c
-	renderer.c
 	shaders.c
 	skybox.c
 	materials.c

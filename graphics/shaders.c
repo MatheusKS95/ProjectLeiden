@@ -59,81 +59,69 @@ SDL_GPUShader* Graphics_LoadShader(const char *path,
 	return SDL_CreateGPUShader(context.device, &shader_info);
 }
 
-bool Graphics_CreatePipelineSimple(const char *path_vs,
-									const char *path_fs)
+bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
+									void *data, size_t size)
 {
-	SDL_GPUShader *vsshader = Graphics_LoadShader(path_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
-	if(vsshader == NULL)
+	if(buffer == NULL || data == NULL || size <= 0)
 	{
-		SDL_Log("Failed to load skybox vertex shader.");
-		return false;
-	}
-	SDL_GPUShader *fsshader = Graphics_LoadShader(path_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
-	if(fsshader == NULL)
-	{
-		SDL_Log("Failed to load skybox fragment shader.");
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't generate storage buffer.");
 		return false;
 	}
 
-	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = { 0 };
-	pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo)
-	{
-		.target_info =
-		{
-			.num_color_targets = 1,
-			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
-				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
-			}},
-			.has_depth_stencil_target = true,
-			.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM
+	buffer = SDL_CreateGPUBuffer(
+		context.device,
+		&(SDL_GPUBufferCreateInfo) {
+			.usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
+			.size = size
+		}
+	);
+	SDL_GPUTransferBuffer* transferbuffer = SDL_CreateGPUTransferBuffer(
+		context.device,
+		&(SDL_GPUTransferBufferCreateInfo) {
+			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+			.size = size
+		}
+	);
+	void* buffer_transferdata = SDL_MapGPUTransferBuffer(context.device, transferbuffer, false);
+	SDL_memcpy(buffer_transferdata, data, size);
+	SDL_UnmapGPUTransferBuffer(context.device, transferbuffer);
+
+	SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdbuf);
+
+	SDL_UploadToGPUBuffer(
+		copyPass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = transferbuffer,
+			.offset = 0
 		},
-		.depth_stencil_state = (SDL_GPUDepthStencilState){
-			.enable_depth_test = true,
-			.enable_depth_write = true,
-			.enable_stencil_test = false,
-			.compare_op = SDL_GPU_COMPAREOP_LESS,
-			.write_mask = 0xFF
+		&(SDL_GPUBufferRegion) {
+			.buffer = buffer,
+			.offset = 0,
+			.size = size
 		},
-		.rasterizer_state = (SDL_GPURasterizerState){
-			.cull_mode = SDL_GPU_CULLMODE_NONE,
-			.fill_mode = SDL_GPU_FILLMODE_FILL,
-			.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE
-		},
-		.vertex_input_state = (SDL_GPUVertexInputState){
-			.num_vertex_buffers = 1,
-			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
-				.slot = 0,
-				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
-				.instance_step_rate = 0,
-				.pitch = sizeof(Vertex)
-			}},
-			.num_vertex_attributes = 2,
-			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
-				//position
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-				.location = 0,
-				.offset = 0
-			}, {
-				//uv
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-				.location = 1,
-				.offset = (sizeof(float) * 3)
-			}}
-		},
-		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = vsshader,
-		.fragment_shader = fsshader
-	};
-	pipelines.simple = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	SDL_ReleaseGPUShader(context.device, vsshader);
-	SDL_ReleaseGPUShader(context.device, fsshader);
+		false
+	);
+
+	SDL_EndGPUCopyPass(copyPass);
+	SDL_ReleaseGPUTransferBuffer(context.device, transferbuffer);
+	SDL_SubmitGPUCommandBuffer(cmdbuf);
 
 	return true;
 }
 
-bool Graphics_CreatePipelineToon(const char *path_norm_vs,
+void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer)
+{
+	if(buffer == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't release invalid storage buffer.");
+		return;
+	}
+	SDL_ReleaseGPUBuffer(context.device, buffer);
+}
+
+//keeping this for future use
+/*bool Graphics_CreatePipelineToon(const char *path_norm_vs,
 									const char *path_norm_fs,
 									const char *path_outl_vs,
 									const char *path_outl_fs,
@@ -265,4 +253,4 @@ bool Graphics_CreatePipelineToon(const char *path_norm_vs,
 	SDL_ReleaseGPUShader(context.device, toon_fsshader);
 
 	return true;
-}
+}*/
