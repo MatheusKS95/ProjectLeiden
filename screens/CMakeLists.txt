@@ -1,5 +1,6 @@
 add_library(screens STATIC
 	simple.c
+	controls.c
 )
 target_include_directories(screens PUBLIC .)
 target_link_libraries(screens PUBLIC SDL3_image::SDL3_image)

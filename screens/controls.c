@@ -14,43 +14,27 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <SDL3/SDL_stdinc.h>
-#include <input.h>
+#include <screens.h>
+#include <leiden.h>
 
-/* SCREEN CONTROLS
- * Manages screens
-*/
-//BEGIN SCREEN CONTROLS
+CurrentScreen current_screen;
 
-typedef enum CurrentScreen
+bool SCR_Setup()
 {
-	SCREEN_SPLASH = 0,
-	SCREEN_DEMOSIMPLE
-} CurrentScreen;
+	return false;
+}
 
-extern CurrentScreen current_screen;
+void SCR_Logic(InputState *state)
+{
+	return;
+}
 
-bool SCR_Setup();
+void SCR_Draw()
+{
+	return;
+}
 
-void SCR_Logic(InputState *state);
-
-void SCR_Draw();
-
-void SCR_Destroy();
-
-//END SCREEN CONTROLS
-
-/* SIMPLE RENDERING SCREEN
- * Intended to be used for testing.
-*/
-//BEGIN SIMPLE
-
-bool Simple_Setup();
-
-void Simple_Logic(InputState *state);
-
-void Simple_Draw();
-
-void Simple_Destroy();
-
-//END SIMPLE
+void SCR_Destroy()
+{
+	return;
+}
