@@ -21,20 +21,35 @@ CurrentScreen current_screen;
 
 bool SCR_Setup()
 {
+	current_screen = SCREEN_SPLASH;
+	SplashScreen_Setup();
 	return false;
 }
 
 void SCR_Logic(InputState *state)
 {
+	switch(current_screen)
+	{
+		case SCREEN_SPLASH: SplashScreen_Logic(state); break;
+		case SCREEN_DEMOSIMPLE: Simple_Logic(state); break;
+		default: break;
+	}
 	return;
 }
 
 void SCR_Draw()
 {
+	switch(current_screen)
+	{
+		case SCREEN_SPLASH: SplashScreen_Draw(); break;
+		case SCREEN_DEMOSIMPLE: Simple_Draw(); break;
+		default: break;
+	}
 	return;
 }
 
 void SCR_Destroy()
 {
+	//TODO FIXME, must destroy each screen in appropriate times
 	return;
 }

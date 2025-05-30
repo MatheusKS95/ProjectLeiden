@@ -343,6 +343,12 @@ void Simple_Logic(InputState *state)
 		newpos.z = newpos.z - aux.z;
 		Graphics_UpdateCameraPosition(&cam_1, newpos);
 	}
+	if(Input_IsKeyPressedTEMP(state, SDL_SCANCODE_ESCAPE))
+	{
+		//TEST, remove this later
+		current_screen = SCREEN_SPLASH;
+		Simple_Destroy();
+	}
 	if(first_mouse)
 	{
 		last_x = mouse_x;

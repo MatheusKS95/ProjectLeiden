@@ -40,6 +40,21 @@ void SCR_Destroy();
 
 //END SCREEN CONTROLS
 
+/* SPLASH SCREEN
+ * First screen on startup
+*/
+//BEGIN SPLASH
+
+bool SplashScreen_Setup();
+
+void SplashScreen_Logic(InputState *state);
+
+void SplashScreen_Draw();
+
+void SplashScreen_Destroy();
+
+//END SPLASH
+
 /* SIMPLE RENDERING SCREEN
  * Intended to be used for testing.
 */

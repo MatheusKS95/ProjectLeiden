@@ -69,7 +69,9 @@ int main(int argc, char *argv[])
 	SDL_snprintf(desc.asset_path, 128, "%s", assets_path);
 	Leiden_Init(&desc);
 
-	Simple_Setup();
+	//Simple_Setup();
+	//SplashScreen_Setup();
+	SCR_Setup();
 
 	InputState state = { 0 };
 
@@ -92,19 +94,24 @@ int main(int argc, char *argv[])
 		/************************
 		 * LOGIC STUFF **********
 		 ***********************/
-		Simple_Logic(&state);
+		//Simple_Logic(&state);
+		//SplashScreen_Logic(&state);
+		SCR_Logic(&state);
 
 		/************************
 		 * RENDERING STUFF ******
 		 ***********************/
-		Simple_Draw();
+		//Simple_Draw();
+		//SplashScreen_Draw();
+		SCR_Draw();
 
 		/************************************/
 	}
 
 	//i forgor more things to kill
 	//valgrind is going to scream
-	Simple_Destroy();
+	//Simple_Destroy();
+	//SplashScreen_Destroy();
 	Leiden_Deinit();
 
 	return 0;
