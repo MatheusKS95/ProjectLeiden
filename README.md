@@ -16,7 +16,7 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 - **Windows**: Works similarly to the Linux version when built with MinGW-W64. Does **not** build with MSVC due to some platform-specific code. Fixing this is currently low priority.
 - **MacOS**: No access to Apple hardware. No SPIR-V support. Making it work is [troublesome](https://github.com/libsdl-org/SDL/blob/main/docs/README-macos.md). No plans for support.
 - **iOS**: Same issues as MacOS. No plans to support.
-- **Android**: Too much work to get it running. The graphics module might [not work at all](https://github.com/libsdl-org/SDL/issues/12652). Support is unlikely.
+- **Android**: As of today, it [doesn't work at all, due to poor Vulkan support on most Android devices](https://github.com/libsdl-org/SDL/issues/12652). Support is currently unfeasible.
 
 ## 📦 About the submodules
 - **audio**: Manages spatial sound and music using `miniaudio.h`. Still very basic with only a few test functions. May be re-implemented.
