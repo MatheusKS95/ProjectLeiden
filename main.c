@@ -108,10 +108,9 @@ int main(int argc, char *argv[])
 		/************************************/
 	}
 
-	//i forgor more things to kill
+	//i might have forgotten more things to kill
 	//valgrind is going to scream
-	//Simple_Destroy();
-	//SplashScreen_Destroy();
+	SCR_Destroy();
 	Leiden_Deinit();
 
 	return 0;

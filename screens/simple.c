@@ -37,7 +37,7 @@ static Camera cam_1;
 static Skybox *skybox;
 static Model *house;
 static Model *vroid_test;
-static Model *mulher2;
+static Model *mulher;
 static Sampler *sampler;
 static SDL_GPUTexture *depth_texture;
 static SDL_GPUGraphicsPipeline *simple_pipeline;
@@ -239,6 +239,7 @@ static void simpledraw(struct SimpleRenderingSetup *stuff,
 
 bool Simple_Setup()
 {
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Starting simple test screen...");
 	deltatime = lastframe = 0.0f;
 	last_x = context.width / 2.0f;
 	last_y = context.height / 2.0f;
@@ -284,14 +285,14 @@ bool Simple_Setup()
 		Graphics_MoveModel(vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
 	}
 
-	mulher2 = (Model*)SDL_malloc(sizeof(Model));
-	if(mulher2 != NULL)
+	mulher = (Model*)SDL_malloc(sizeof(Model));
+	if(mulher != NULL)
 	{
-		Graphics_ImportIQM(mulher2, "test_models/mulher2/mulher_face2.iqm");
-		Graphics_LoadModelMaterials(mulher2, "test_models/mulher2/mulher_face2.material");
-		Graphics_UploadModel(mulher2, true);
-		Graphics_ScaleModel(mulher2, 0.1);
-		Graphics_MoveModel(mulher2, (Vector3){3.0f, 0.0f, 2.0f});
+		Graphics_ImportIQM(mulher, "test_models/mulher2/mulher_face2.iqm");
+		Graphics_LoadModelMaterials(mulher, "test_models/mulher2/mulher_face2.material");
+		Graphics_UploadModel(mulher, true);
+		Graphics_ScaleModel(mulher, 0.1);
+		Graphics_MoveModel(mulher, (Vector3){3.0f, 0.0f, 2.0f});
 	}
 
 	//TODO: the correct order for transform a model is scale > rotation > translation
@@ -374,7 +375,7 @@ void Simple_Draw()
 	Model models[3];
 	models[0] = *house;
 	models[1] = *vroid_test;
-	models[2] = *mulher2;
+	models[2] = *mulher;
 	struct SimpleRenderingSetup testsimple = { 0 };
 	testsimple.models = models;
 	testsimple.num_models = 3;
@@ -389,11 +390,12 @@ void Simple_Destroy()
 {
 	Graphics_ReleaseModel(house);
 	Graphics_ReleaseModel(vroid_test);
-	Graphics_ReleaseModel(mulher2);
+	Graphics_ReleaseModel(mulher);
 	SDL_free(house);
 	SDL_free(vroid_test);
-	SDL_free(mulher2);
+	SDL_free(mulher);
 	Graphics_ReleaseSampler(sampler);
 	Graphics_ReleaseSkybox(skybox);
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing simple test screen...");
 	return;
 }

@@ -50,6 +50,11 @@ void SCR_Draw()
 
 void SCR_Destroy()
 {
-	//TODO FIXME, must destroy each screen in appropriate times
+	switch(current_screen)
+	{
+		case SCREEN_SPLASH: SplashScreen_Destroy(); break;
+		case SCREEN_DEMOSIMPLE: Simple_Destroy(); break;
+		default: break;
+	}
 	return;
 }

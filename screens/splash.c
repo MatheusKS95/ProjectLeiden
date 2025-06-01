@@ -23,6 +23,7 @@
 
 bool SplashScreen_Setup()
 {
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Starting splash screen...");
 	return true;
 }
 
@@ -73,5 +74,6 @@ void SplashScreen_Draw()
 
 void SplashScreen_Destroy()
 {
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing splash screen...");
 	return;
 }
