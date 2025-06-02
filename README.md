@@ -19,6 +19,7 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 - **Android**: As of today, it [doesn't work at all, due to poor Vulkan support on most Android devices](https://github.com/libsdl-org/SDL/issues/12652). Support is currently unfeasible.
 
 ## 📦 About the submodules
+Note: out of date
 - **audio**: Manages spatial sound and music using `miniaudio.h`. Still very basic with only a few test functions. May be re-implemented.
 - **data**: Provides helper structures for future use. Currently includes a hashtable implementation.
 - **filesystem**: Handles file access and includes an INI parser. Uses `miniphysfs` internally.
@@ -26,6 +27,7 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 - **input**: Manages input. Currently basic—supports keyboard and limited mouse input. Gamepad and steering wheel support are planned.
 - **leiden**: The central glue module that aggregates the others into a single header. May be renamed in the future.
 - **linmath**: A simple math library.
+- **screens**: today it's a testbed for everything I'm doing before making sure it works properly. Later it'll become the place for demo screens and minigames.
 - **physics**: A planned module. Will likely use either JoltC or ODE for 3D physics. Not a current focus.
 
 ## 📝 Licence
