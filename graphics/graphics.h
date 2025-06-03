@@ -25,7 +25,8 @@
  * TYPEDEFS ********************************************************
  ******************************************************************/
 
-typedef SDL_GPUGraphicsPipeline* Pipeline;
+typedef SDL_GPUGraphicsPipeline Pipeline;
+typedef SDL_GPUShader Shader;
 typedef SDL_GPUSampler Sampler;
 typedef SDL_GPUBuffer StorageBuffer;
 
@@ -142,7 +143,7 @@ typedef struct Skybox
 	Sampler *sampler;
 	SDL_GPUBuffer* vertex_buffer;
 	SDL_GPUBuffer* index_buffer;
-	SDL_GPUGraphicsPipeline *pipeline;
+	Pipeline *pipeline;
 } Skybox;
 
 /* MATERIAL */
@@ -170,7 +171,7 @@ typedef struct Color
 	float r, g, b, a;
 } Color;
 
-typedef struct Vertex
+typedef struct Vertex3D
 {
 	Vector3 position;
 	Vector2 uv;
@@ -179,13 +180,13 @@ typedef struct Vertex
 	Color color;
 	Uint8 blend_indices[4];
 	Uint8 blend_weights[4];
-} Vertex;
+} Vertex3D;
 
 typedef struct VertexArray
 {
 	size_t count;
 	size_t capacity;
-	Vertex *vertices;
+	Vertex3D *vertices;
 } VertexArray;
 
 typedef struct IndexArray
@@ -294,17 +295,20 @@ void Graphics_DestroySpotlight(Spotlight *l);
 
 /* SHADERS AND PIPELINES */
 
-SDL_GPUShader* Graphics_LoadShader(const char *path,
-									SDL_GPUShaderStage stage,
-									Uint32 samplerCount,
-									Uint32 uniformBufferCount,
-									Uint32 storageBufferCount,
-									Uint32 storageTextureCount);
+Shader* Graphics_LoadShader(const char *path,
+							SDL_GPUShaderStage stage,
+							Uint32 samplerCount,
+							Uint32 uniformBufferCount,
+							Uint32 storageBufferCount,
+							Uint32 storageTextureCount);
 
 bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);
 
 void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
+
+Pipeline *Graphics_Generate3DPipeline(Shader *vs, Shader *fs,
+										bool release_shaders);
 
 /* 2D TEXTURES */
 

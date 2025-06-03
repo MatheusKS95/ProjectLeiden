@@ -40,80 +40,7 @@ static Model *vroid_test;
 static Model *mulher;
 static Sampler *sampler;
 static SDL_GPUTexture *depth_texture;
-static SDL_GPUGraphicsPipeline *simple_pipeline;
-
-static SDL_GPUGraphicsPipeline *create_pipeline(const char *path_vs, const char *path_fs)
-{
-	SDL_GPUShader *vsshader = Graphics_LoadShader(path_vs, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
-	if(vsshader == NULL)
-	{
-		SDL_Log("Failed to load skybox vertex shader.");
-		return NULL;
-	}
-	SDL_GPUShader *fsshader = Graphics_LoadShader(path_fs, SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
-	if(fsshader == NULL)
-	{
-		SDL_Log("Failed to load skybox fragment shader.");
-		return NULL;
-	}
-
-	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = { 0 };
-	pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo)
-	{
-		.target_info =
-		{
-			.num_color_targets = 1,
-			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
-				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
-			}},
-			.has_depth_stencil_target = true,
-			.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM
-		},
-		.depth_stencil_state = (SDL_GPUDepthStencilState){
-			.enable_depth_test = true,
-			.enable_depth_write = true,
-			.enable_stencil_test = false,
-			.compare_op = SDL_GPU_COMPAREOP_LESS,
-			.write_mask = 0xFF
-		},
-		.rasterizer_state = (SDL_GPURasterizerState){
-			.cull_mode = SDL_GPU_CULLMODE_NONE,
-			.fill_mode = SDL_GPU_FILLMODE_FILL,
-			.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE
-		},
-		.vertex_input_state = (SDL_GPUVertexInputState){
-			.num_vertex_buffers = 1,
-			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
-				.slot = 0,
-				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
-				.instance_step_rate = 0,
-				.pitch = sizeof(Vertex)
-			}},
-			.num_vertex_attributes = 2,
-			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
-				//position
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-				.location = 0,
-				.offset = 0
-			}, {
-				//uv
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-				.location = 1,
-				.offset = (sizeof(float) * 3)
-			}}
-		},
-		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = vsshader,
-		.fragment_shader = fsshader
-	};
-	SDL_GPUGraphicsPipeline *pipeline = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	SDL_ReleaseGPUShader(context.device, vsshader);
-	SDL_ReleaseGPUShader(context.device, fsshader);
-
-	return pipeline;
-}
+static Pipeline *simple_pipeline;
 
 static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render_pass, SDL_GPUCommandBuffer *cmdbuf)
 {
@@ -264,7 +191,19 @@ bool Simple_Setup()
 		Graphics_CreatePipelineSkybox(skybox, "shaders/skybox/skybox.vert.spv", "shaders/skybox/skybox.frag.spv");
 	}
 
-	simple_pipeline = create_pipeline("shaders/simple/simple.vert.spv", "shaders/simple/simple.frag.spv");
+	Shader *vsshader = Graphics_LoadShader("shaders/simple/simple.vert.spv", SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	if(vsshader == NULL)
+	{
+		SDL_Log("Failed to load skybox vertex shader.");
+		return NULL;
+	}
+	Shader *fsshader = Graphics_LoadShader("shaders/simple/simple.frag.spv", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	if(fsshader == NULL)
+	{
+		SDL_Log("Failed to load skybox fragment shader.");
+		return NULL;
+	}
+	simple_pipeline = Graphics_Generate3DPipeline(vsshader, fsshader, true);
 
 	house = (Model*)SDL_malloc(sizeof(Model));
 	if(house != NULL)

@@ -132,7 +132,7 @@ static bool _arrayRealocVertex(VertexArray *arr, size_t new_size)
 {
 	if(arr->vertices != NULL)
 	{
-		Vertex *aux = (Vertex*)SDL_realloc(arr->vertices, sizeof(Vertex) * new_size);
+		Vertex3D *aux = (Vertex3D*)SDL_realloc(arr->vertices, sizeof(Vertex3D) * new_size);
 		if(aux != NULL)
 		{
 			arr->vertices = aux;
@@ -147,10 +147,10 @@ static void _arrayInitVertex(VertexArray *arr)
 {
 	arr->capacity = 1;
 	arr->count = 0;
-	arr->vertices = (Vertex*)SDL_calloc(arr->capacity, sizeof(Vertex));
+	arr->vertices = (Vertex3D*)SDL_calloc(arr->capacity, sizeof(Vertex3D));
 }
 
-static bool _arrayPushLastVertex(VertexArray *arr, Vertex value)
+static bool _arrayPushLastVertex(VertexArray *arr, Vertex3D value)
 {
 	if(arr->capacity == arr->count)
 	{
@@ -164,14 +164,14 @@ static bool _arrayPushLastVertex(VertexArray *arr, Vertex value)
 	return true;
 }
 
-static bool _arrayPopAtVertex(VertexArray *arr, unsigned int index, Vertex *value)
+static bool _arrayPopAtVertex(VertexArray *arr, unsigned int index, Vertex3D *value)
 {
 	if(arr->count == 0)
 	{
 		return false;
 	}
 	*value = arr->vertices[index];
-	SDL_memmove(&arr->vertices[index], &arr->vertices[index + 1], sizeof(Vertex) * ((arr->count - 1) - index));
+	SDL_memmove(&arr->vertices[index], &arr->vertices[index + 1], sizeof(Vertex3D) * ((arr->count - 1) - index));
 	arr->count--;
 	_arrayRealocVertex(arr, arr->capacity - 1);
 	return true;
@@ -338,7 +338,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 	struct iqmmesh *meshes = (struct iqmmesh *)&iqmbuffer[header.ofs_meshes];
 	char *file_texts = header.ofs_text ? (char *)&iqmbuffer[header.ofs_text] : "";
 
-	Vertex *vertices = (Vertex*)SDL_malloc(sizeof(Vertex) * (header.num_vertexes));
+	Vertex3D *vertices = (Vertex3D*)SDL_malloc(sizeof(Vertex3D) * (header.num_vertexes));
 	float *position, *uv, *normal, *tangent;
 	Uint8 *blend_indexes, *blend_weights, *color;
 	struct iqmvertexarray *vertarrs = (struct iqmvertexarray *)&iqmbuffer[header.ofs_vertexarrays];
@@ -426,7 +426,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 	uint32_t index_offset = 0;
 	for(int i = 0; i < header.num_meshes; i++)
 	{
-		Vertex *imported_vertices = &vertices[meshes[i].first_vertex];
+		Vertex3D *imported_vertices = &vertices[meshes[i].first_vertex];
 		uint32_t *imported_indices = &indices[meshes[i].first_triangle * 3];
 
 		uint32_t offset = 0;
@@ -451,7 +451,7 @@ static bool _import_iqm_buffer(Model *model, Uint8 *iqmbuffer,
 		_arrayInitVertex(&mesh.vertices);
 		for(unsigned int m = 0; m < vcount; m++)
 		{
-			Vertex vert = imported_vertices[m];
+			Vertex3D vert = imported_vertices[m];
 			if(!_arrayPushLastVertex(&mesh.vertices, vert))
 			{
 				SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to load IQM model - unable to copy vertices.");
@@ -547,8 +547,8 @@ static void uploadmesh(Mesh *mesh)
 		}
 	);
 
-	Vertex* bufferTransferData = SDL_MapGPUTransferBuffer(context.device, vbufferTransferBuffer, false);
-	SDL_memcpy(bufferTransferData, mesh->vertices.vertices, sizeof(Vertex) * mesh->vertices.count);
+	Vertex3D* bufferTransferData = SDL_MapGPUTransferBuffer(context.device, vbufferTransferBuffer, false);
+	SDL_memcpy(bufferTransferData, mesh->vertices.vertices, sizeof(Vertex3D) * mesh->vertices.count);
 	SDL_UnmapGPUTransferBuffer(context.device, vbufferTransferBuffer);
 	Uint32* indexData = SDL_MapGPUTransferBuffer(context.device, ibufferTransferBuffer, false);
 	SDL_memcpy(indexData, mesh->indices.indices, sizeof(Uint32) * mesh->indices.count);
@@ -567,7 +567,7 @@ static void uploadmesh(Mesh *mesh)
 		&(SDL_GPUBufferRegion) {
 			.buffer = mesh->vbuffer,
 			.offset = 0,
-			.size = sizeof(Vertex) * mesh->vertices.count
+			.size = sizeof(Vertex3D) * mesh->vertices.count
 		},
 		false
 	);
