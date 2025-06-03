@@ -156,7 +156,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		{
 			material.diffuse_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.diffuse_map != NULL)
-				Graphics_LoadTextureFromFS(material.diffuse_map, diffusepath, TEXTURE_DIFFUSE);
+				Graphics_LoadTextureFromFS(material.diffuse_map, diffusepath);
 		}
 
 		char normalpath[512];
@@ -166,7 +166,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		{
 			material.normal_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.normal_map != NULL)
-				Graphics_LoadTextureFromFS(material.normal_map, normalpath, TEXTURE_NORMAL);
+				Graphics_LoadTextureFromFS(material.normal_map, normalpath);
 		}
 
 		char specularpath[512];
@@ -176,7 +176,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		{
 			material.specular_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.specular_map != NULL)
-				Graphics_LoadTextureFromFS(material.specular_map, specularpath, TEXTURE_SPECULAR);
+				Graphics_LoadTextureFromFS(material.specular_map, specularpath);
 		}
 
 		char emissionpath[512];
@@ -186,7 +186,7 @@ bool Graphics_LoadModelMaterials(Model *model,
 		{
 			material.emission_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
 			if(material.emission_map != NULL)
-				Graphics_LoadTextureFromFS(material.emission_map, emissionpath, TEXTURE_EMISSION);
+				Graphics_LoadTextureFromFS(material.emission_map, emissionpath);
 		}
 
 		if(!_arrayPushLastMaterial(&model->materials, material))

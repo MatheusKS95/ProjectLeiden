@@ -120,20 +120,9 @@ typedef enum SamplerMode
 	SAMPLER_MODE_MIRROREDREPEAT
 } SamplerMode;
 
-typedef enum TextureType
-{
-	TEXTURE_DIFFUSE = 0,
-	TEXTURE_NORMAL,
-	TEXTURE_SPECULAR,
-	TEXTURE_EMISSION,
-	TEXTURE_HEIGHT,
-	TEXTURE_DEFAULT //unused, placeholder
-} TextureType;
-
 typedef struct Texture2D
 {
 	SDL_GPUTexture *texture;
-	TextureType type;
 	SDL_Surface *surface;
 } Texture2D;
 
@@ -325,12 +314,10 @@ Sampler* Graphics_GenerateSampler(SamplerFilter filter,
 void Graphics_ReleaseSampler(Sampler *sampler);
 
 bool Graphics_LoadTextureFromMem(Texture2D *texture,
-									uint8_t *buffer, size_t size,
-									TextureType type);
+									uint8_t *buffer, size_t size);
 
 bool Graphics_LoadTextureFromFS(Texture2D *texture,
-								const char *path,
-								TextureType type);
+								const char *path);
 
 void Graphics_ReleaseTexture(Texture2D *texture);
 

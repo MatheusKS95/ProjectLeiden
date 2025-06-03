@@ -79,8 +79,7 @@ void Graphics_ReleaseSampler(Sampler *sampler)
 }
 
 bool Graphics_LoadTextureFromMem(Texture2D *texture,
-									uint8_t *buffer, size_t size,
-									TextureType type)
+									uint8_t *buffer, size_t size)
 {
 	if(texture == NULL)
 	{
@@ -117,17 +116,15 @@ bool Graphics_LoadTextureFromMem(Texture2D *texture,
 		//TODO check for errors SDL_GetError
 		return false;
 	}
-	texture->type = type;
 	return true;
 }
 
 bool Graphics_LoadTextureFromFS(Texture2D *texture,
-								const char *path,
-								TextureType type)
+								const char *path)
 {
 	size_t filesize;
 	uint8_t *file = FileIOReadBytes(path, &filesize);
-	return Graphics_LoadTextureFromMem(texture, file, filesize, type);
+	return Graphics_LoadTextureFromMem(texture, file, filesize);
 }
 
 void Graphics_ReleaseTexture(Texture2D *texture)
@@ -196,22 +193,22 @@ bool Graphics_SetupDefaultTextures(const char *path_d,
 		return false;
 	}
 
-	if(!Graphics_LoadTextureFromFS(&default_textures.default_diffuse, path_d, TEXTURE_DIFFUSE))
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_diffuse, path_d))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default diffuse texture.");
 		return false;
 	}
-	if(!Graphics_LoadTextureFromFS(&default_textures.default_normal, path_n, TEXTURE_NORMAL))
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_normal, path_n))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default normal texture.");
 		return false;
 	}
-	if(!Graphics_LoadTextureFromFS(&default_textures.default_spec, path_s, TEXTURE_SPECULAR))
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_spec, path_s))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default specular texture.");
 		return false;
 	}
-	if(!Graphics_LoadTextureFromFS(&default_textures.default_emission, path_e, TEXTURE_EMISSION))
+	if(!Graphics_LoadTextureFromFS(&default_textures.default_emission, path_e))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: failed to load default emission texture.");
 		return false;
