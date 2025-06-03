@@ -29,6 +29,9 @@ typedef SDL_GPUGraphicsPipeline Pipeline;
 typedef SDL_GPUShader Shader;
 typedef SDL_GPUSampler Sampler;
 typedef SDL_GPUBuffer StorageBuffer;
+typedef SDL_GPUCommandBuffer CommandBuffer;
+typedef SDL_GPUTexture GPUTexture;
+typedef SDL_GPURenderPass RenderPass;
 
 /*******************************************************************
  * STRUCTURES AND ENUMS ********************************************
@@ -302,11 +305,6 @@ Shader* Graphics_LoadShader(const char *path,
 							Uint32 storageBufferCount,
 							Uint32 storageTextureCount);
 
-bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
-									void *data, size_t size);
-
-void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
-
 Pipeline *Graphics_Generate3DPipeline(Shader *vs, Shader *fs,
 										bool release_shaders);
 
@@ -385,6 +383,20 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 							float radians);
 
 void Graphics_ReleaseModel(Model *model);
+
+/* RENDERING */
+
+bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
+									void *data, size_t size);
+
+void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
+
+void Graphics_SetupCommandBuffer(CommandBuffer *cmdbuf);
+
+void Graphics_CommitCommandBuffer(CommandBuffer *cmdbuf);
+
+void Graphics_AcquireSwapchainTexture(GPUTexture *swapchain,
+										CommandBuffer *cmdbuf);
 
 /*******************************************************************
  * GLOBALS *********************************************************
