@@ -55,9 +55,9 @@ static void drawskybox(Skybox *skybox, Camera *camera, RenderPass *render_pass, 
 	Matrix4x4 skyboxviewproj;
 	skyboxviewproj = Matrix4x4_Mul(cam_view, camera->projection);
 
-	SDL_BindGPUGraphicsPipeline(render_pass, skybox->pipeline);
-	SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
-	SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+	Graphics_BindPipeline(render_pass, skybox->pipeline);
+	Graphics_BindVertexBuffers(render_pass, skybox->vertex_buffer, 0, 0, 1);
+	Graphics_BindIndexBuffers(render_pass, skybox->index_buffer, 0);
 	SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
 	SDL_PushGPUVertexUniformData(cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
 	SDL_DrawGPUIndexedPrimitives(render_pass, 36, 1, 0, 0, 0);
@@ -75,11 +75,10 @@ static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, Rende
 	{
 		Mesh *mesh = &model->meshes.meshes[i];
 		//binding graphics pipeline
-		SDL_BindGPUGraphicsPipeline(render_pass, simple_pipeline);
+		Graphics_BindPipeline(render_pass, simple_pipeline);
 
 		//binding vertex and index buffers
-		SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
-		SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+		Graphics_BindMeshBuffers(render_pass, mesh);
 
 		//texture samplers
 		Material *material = Graphics_GetMaterialByName(&model->materials, mesh->material_name);

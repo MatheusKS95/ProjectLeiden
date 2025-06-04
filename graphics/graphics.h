@@ -28,7 +28,8 @@
 typedef SDL_GPUGraphicsPipeline Pipeline;
 typedef SDL_GPUShader Shader;
 typedef SDL_GPUSampler Sampler;
-typedef SDL_GPUBuffer StorageBuffer;
+typedef SDL_GPUBuffer StorageBuffer; //TODO remove this
+typedef SDL_GPUBuffer GPUBuffer;
 typedef SDL_GPUCommandBuffer CommandBuffer;
 typedef SDL_GPUTexture GPUTexture;
 typedef SDL_GPURenderPass RenderPass;
@@ -203,8 +204,8 @@ typedef struct Mesh
 {
 	VertexArray vertices;
 	IndexArray indices;
-	SDL_GPUBuffer *vbuffer;
-	SDL_GPUBuffer *ibuffer;
+	GPUBuffer *vbuffer;
+	GPUBuffer *ibuffer;
 	char material_name[64];
 
 	char meshname[64];
@@ -406,6 +407,22 @@ RenderPass *Graphics_BeginRenderPass(CommandBuffer *cmdbuf,
 										Color clear_color);
 
 void Graphics_EndRenderPass(RenderPass *renderpass);
+
+void Graphics_BindPipeline(RenderPass *renderpass,
+							Pipeline *pipeline);
+
+void Graphics_BindVertexBuffers(RenderPass *renderpass,
+								GPUBuffer *buffer,
+								Uint32 buffer_offset,
+								Uint32 first_slot,
+								Uint32 num_bindings);
+
+//NOTE: indices must be 32 bit
+void Graphics_BindIndexBuffers(RenderPass *renderpass,
+								GPUBuffer *buffer,
+								Uint32 buffer_offset);
+
+void Graphics_BindMeshBuffers(RenderPass *renderpass, Mesh *mesh);
 
 /*******************************************************************
  * GLOBALS *********************************************************

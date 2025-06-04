@@ -150,5 +150,70 @@ RenderPass *Graphics_BeginRenderPass(CommandBuffer *cmdbuf,
 
 void Graphics_EndRenderPass(RenderPass *renderpass)
 {
+	if(renderpass == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass.");
+		return;
+	}
 	SDL_EndGPURenderPass(renderpass);
+}
+
+void Graphics_BindPipeline(RenderPass *renderpass,
+							Pipeline *pipeline)
+{
+	if(renderpass == NULL || pipeline == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass and/or invalid pipeline.");
+		return;
+	}
+	SDL_BindGPUGraphicsPipeline(renderpass, pipeline);
+}
+
+void Graphics_BindVertexBuffers(RenderPass *renderpass,
+								GPUBuffer *buffer,
+								Uint32 buffer_offset,
+								Uint32 first_slot,
+								Uint32 num_bindings)
+{
+	if(renderpass == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass.");
+		return;
+	}
+	SDL_GPUBufferBinding binding;
+	binding.buffer = buffer;
+	binding.offset = buffer_offset;
+	SDL_BindGPUVertexBuffers(renderpass, first_slot, &binding, num_bindings);
+}
+
+void Graphics_BindIndexBuffers(RenderPass *renderpass,
+								GPUBuffer *buffer,
+								Uint32 buffer_offset)
+{
+	if(renderpass == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass.");
+		return;
+	}
+	SDL_GPUBufferBinding binding;
+	binding.buffer = buffer;
+	binding.offset = buffer_offset;
+	SDL_BindGPUIndexBuffer(renderpass, &binding, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+}
+
+void Graphics_BindMeshBuffers(RenderPass *renderpass, Mesh *mesh)
+{
+	if(renderpass == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass.");
+		return;
+	}
+	if(mesh == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid mesh.");
+		return;
+	}
+
+	Graphics_BindVertexBuffers(renderpass, mesh->vbuffer, 0, 0, 1);
+	Graphics_BindIndexBuffers(renderpass, mesh->ibuffer, 0);
 }
