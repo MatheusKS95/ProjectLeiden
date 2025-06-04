@@ -42,7 +42,7 @@ static Sampler *sampler;
 static SDL_GPUTexture *depth_texture;
 static Pipeline *simple_pipeline;
 
-static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render_pass, SDL_GPUCommandBuffer *cmdbuf)
+static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render_pass, CommandBuffer *cmdbuf)
 {
 	if(skybox == NULL || camera == NULL || render_pass == NULL || cmdbuf == NULL)
 	{
@@ -63,7 +63,7 @@ static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render
 	SDL_DrawGPUIndexedPrimitives(render_pass, 36, 1, 0, 0, 0);
 }
 
-static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_GPURenderPass *render_pass, SDL_GPUCommandBuffer *cmdbuf)
+static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_GPURenderPass *render_pass, CommandBuffer *cmdbuf)
 {
 	if(model == NULL || render_pass == NULL || cmdbuf == NULL)
 	{
@@ -103,18 +103,14 @@ static void simpledraw(struct SimpleRenderingSetup *stuff,
 		return;
 	}
 
-	SDL_GPUCommandBuffer *cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	CommandBuffer *cmdbuf = Graphics_SetupCommandBuffer();
 	if(cmdbuf == NULL)
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to acquire command buffer.");
 		return;
 	}
 
-	SDL_GPUTexture *swapchain_texture;
-	if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, context.window, &swapchain_texture, NULL, NULL))
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to acquire swapchain texture: %s", SDL_GetError());;
-	}
+	GPUTexture *swapchain_texture = Graphics_AcquireSwapchainTexture(cmdbuf);
 
 	if(swapchain_texture == NULL)
 	{
@@ -157,7 +153,7 @@ static void simpledraw(struct SimpleRenderingSetup *stuff,
 	}
 
 	SDL_EndGPURenderPass(render_pass);
-	SDL_SubmitGPUCommandBuffer(cmdbuf);
+	Graphics_CommitCommandBuffer(cmdbuf);
 }
 
 /***************************************************************************************

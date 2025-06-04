@@ -391,12 +391,11 @@ bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 
 void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
 
-void Graphics_SetupCommandBuffer(CommandBuffer *cmdbuf);
+CommandBuffer *Graphics_SetupCommandBuffer();
 
 void Graphics_CommitCommandBuffer(CommandBuffer *cmdbuf);
 
-void Graphics_AcquireSwapchainTexture(GPUTexture *swapchain,
-										CommandBuffer *cmdbuf);
+GPUTexture *Graphics_AcquireSwapchainTexture(CommandBuffer *cmdbuf);
 
 /*******************************************************************
  * GLOBALS *********************************************************

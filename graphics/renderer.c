@@ -85,9 +85,9 @@ void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer)
 	SDL_ReleaseGPUBuffer(context.device, buffer);
 }
 
-void Graphics_SetupCommandBuffer(CommandBuffer *cmdbuf)
+CommandBuffer *Graphics_SetupCommandBuffer()
 {
-	cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	return SDL_AcquireGPUCommandBuffer(context.device);
 }
 
 void Graphics_CommitCommandBuffer(CommandBuffer *cmdbuf)
@@ -96,12 +96,13 @@ void Graphics_CommitCommandBuffer(CommandBuffer *cmdbuf)
 	SDL_SubmitGPUCommandBuffer(cmdbuf);
 }
 
-void Graphics_AcquireSwapchainTexture(GPUTexture *swapchain,
-										CommandBuffer *cmdbuf)
+GPUTexture *Graphics_AcquireSwapchainTexture(CommandBuffer *cmdbuf)
 {
-	if(!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, context.window, &swapchain, NULL, NULL))
+	GPUTexture *texture;
+	if(!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, context.window, &texture, NULL, NULL))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Splash screen: failed to acquire swapchain texture: %s", SDL_GetError());
-		return;
+		return NULL;
 	}
+	return texture;
 }
