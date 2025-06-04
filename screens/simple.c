@@ -42,7 +42,7 @@ static Sampler *sampler;
 static SDL_GPUTexture *depth_texture;
 static Pipeline *simple_pipeline;
 
-static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render_pass, CommandBuffer *cmdbuf)
+static void drawskybox(Skybox *skybox, Camera *camera, RenderPass *render_pass, CommandBuffer *cmdbuf)
 {
 	if(skybox == NULL || camera == NULL || render_pass == NULL || cmdbuf == NULL)
 	{
@@ -63,7 +63,7 @@ static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render
 	SDL_DrawGPUIndexedPrimitives(render_pass, 36, 1, 0, 0, 0);
 }
 
-static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_GPURenderPass *render_pass, CommandBuffer *cmdbuf)
+static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, RenderPass *render_pass, CommandBuffer *cmdbuf)
 {
 	if(model == NULL || render_pass == NULL || cmdbuf == NULL)
 	{
@@ -117,23 +117,7 @@ static void simpledraw(struct SimpleRenderingSetup *stuff,
 		return;
 	}
 
-	SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
-	colorTargetInfo.texture = swapchain_texture;
-	colorTargetInfo.clear_color = (SDL_FColor){ clear_color.r, clear_color.g, clear_color.b, clear_color.a };
-	colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
-	colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-
-	SDL_GPUDepthStencilTargetInfo depthStencilTargetInfo = { 0 };
-	depthStencilTargetInfo.texture = depth_texture;
-	depthStencilTargetInfo.cycle = true;
-	depthStencilTargetInfo.clear_depth = 1;
-	depthStencilTargetInfo.clear_stencil = 0;
-	depthStencilTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
-	depthStencilTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-	depthStencilTargetInfo.stencil_load_op = SDL_GPU_LOADOP_CLEAR;
-	depthStencilTargetInfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
-
-	SDL_GPURenderPass *render_pass = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, &depthStencilTargetInfo);
+	RenderPass *render_pass = Graphics_BeginRenderPass(cmdbuf, swapchain_texture, depth_texture, clear_color);
 
 	//render skybox
 	if(stuff->skybox != NULL)
@@ -152,7 +136,7 @@ static void simpledraw(struct SimpleRenderingSetup *stuff,
 		}
 	}
 
-	SDL_EndGPURenderPass(render_pass);
+	Graphics_EndRenderPass(render_pass);
 	Graphics_CommitCommandBuffer(cmdbuf);
 }
 

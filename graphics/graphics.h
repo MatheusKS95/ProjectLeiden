@@ -126,7 +126,7 @@ typedef enum SamplerMode
 
 typedef struct Texture2D
 {
-	SDL_GPUTexture *texture;
+	GPUTexture *texture;
 	SDL_Surface *surface;
 } Texture2D;
 
@@ -142,7 +142,7 @@ typedef struct DefaultTextures
 typedef struct Skybox
 {
 	SDL_Surface *surface[6];
-	SDL_GPUTexture *gputexture;
+	GPUTexture *gputexture;
 	Sampler *sampler;
 	SDL_GPUBuffer* vertex_buffer;
 	SDL_GPUBuffer* index_buffer;
@@ -325,11 +325,14 @@ void Graphics_ReleaseTexture(Texture2D *texture);
 
 void Graphics_UploadTexture(Texture2D *texture);
 
+GPUTexture *Graphics_GenerateDepthTexture(int width, int height);
+
 bool Graphics_SetupDefaultTextures(const char *path_d,
 									const char *path_n,
 									const char *path_s,
 									const char *path_e);
 
+//FIXME I'll keep only diffuse, everything else will be removed
 void Graphics_ReleaseDefaultTextures();
 
 /* SKYBOXES */
@@ -396,6 +399,13 @@ CommandBuffer *Graphics_SetupCommandBuffer();
 void Graphics_CommitCommandBuffer(CommandBuffer *cmdbuf);
 
 GPUTexture *Graphics_AcquireSwapchainTexture(CommandBuffer *cmdbuf);
+
+RenderPass *Graphics_BeginRenderPass(CommandBuffer *cmdbuf,
+										GPUTexture *render_texture,
+										GPUTexture *depth_texture,
+										Color clear_color);
+
+void Graphics_EndRenderPass(RenderPass *renderpass);
 
 /*******************************************************************
  * GLOBALS *********************************************************

@@ -101,8 +101,54 @@ GPUTexture *Graphics_AcquireSwapchainTexture(CommandBuffer *cmdbuf)
 	GPUTexture *texture;
 	if(!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, context.window, &texture, NULL, NULL))
 	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Splash screen: failed to acquire swapchain texture: %s", SDL_GetError());
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: Failed to acquire swapchain texture: %s", SDL_GetError());
 		return NULL;
 	}
 	return texture;
+}
+
+RenderPass *Graphics_BeginRenderPass(CommandBuffer *cmdbuf,
+										GPUTexture *render_texture,
+										GPUTexture *depth_texture,
+										Color clear_color)
+{
+	if(cmdbuf == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid command buffer");
+		return NULL;
+	}
+	if(render_texture == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render texture - please provide a texture to render (or swapchain texture)");
+		return NULL;
+	}
+
+	SDL_GPUColorTargetInfo colortargetinfo = { 0 };
+	colortargetinfo.texture = render_texture;
+	colortargetinfo.clear_color = (SDL_FColor){ clear_color.r, clear_color.g, clear_color.b, clear_color.a };
+	colortargetinfo.load_op = SDL_GPU_LOADOP_CLEAR;
+	colortargetinfo.store_op = SDL_GPU_STOREOP_STORE;
+
+	if(depth_texture != NULL)
+	{
+		SDL_GPUDepthStencilTargetInfo depthstenciltargetinfo = { 0 };
+		depthstenciltargetinfo.texture = depth_texture;
+		depthstenciltargetinfo.cycle = true;
+		depthstenciltargetinfo.clear_depth = 1;
+		depthstenciltargetinfo.clear_stencil = 0;
+		depthstenciltargetinfo.load_op = SDL_GPU_LOADOP_CLEAR;
+		depthstenciltargetinfo.store_op = SDL_GPU_STOREOP_STORE;
+		depthstenciltargetinfo.stencil_load_op = SDL_GPU_LOADOP_CLEAR;
+		depthstenciltargetinfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
+		return SDL_BeginGPURenderPass(cmdbuf, &colortargetinfo, 1, &depthstenciltargetinfo);
+	}
+	else
+	{
+		return SDL_BeginGPURenderPass(cmdbuf, &colortargetinfo, 1, NULL);
+	}
+}
+
+void Graphics_EndRenderPass(RenderPass *renderpass)
+{
+	SDL_EndGPURenderPass(renderpass);
 }
