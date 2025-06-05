@@ -424,11 +424,39 @@ void Graphics_BindIndexBuffers(RenderPass *renderpass,
 
 void Graphics_BindMeshBuffers(RenderPass *renderpass, Mesh *mesh);
 
+void Graphics_BindFragmentSampledTexture(RenderPass *renderpass,
+											Texture2D *texture,
+											Sampler *sampler,
+											Uint32 first_slot,
+											Uint32 num_bindings);
+
+void Graphics_BindFragmentSampledGPUTexture(RenderPass *renderpass,
+											GPUTexture *texture,
+											Sampler *sampler,
+											Uint32 first_slot,
+											Uint32 num_bindings);
+
+void Graphics_PushVertexUniforms(CommandBuffer *cmdbuf,
+									Uint32 slot, void *data,
+									size_t length);
+
+void Graphics_PushFragmentUniforms(CommandBuffer *cmdbuf,
+									Uint32 slot, void *data,
+									size_t length);
+
+void Graphics_DrawPrimitives(RenderPass *renderpass,
+								size_t num_indices,
+								Uint32 num_instances,
+								int first_index, int vertex_offset,
+								Uint32 first_instance);
+
 /*******************************************************************
  * GLOBALS *********************************************************
  ******************************************************************/
 
 extern GraphicsContext context;
+
+//DELETE THIS (or move to leiden module)
 extern DefaultTextures default_textures;
 
 #endif

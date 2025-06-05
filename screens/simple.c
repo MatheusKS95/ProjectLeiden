@@ -39,7 +39,7 @@ static Model *house;
 static Model *vroid_test;
 static Model *mulher;
 static Sampler *sampler;
-static SDL_GPUTexture *depth_texture;
+static GPUTexture *depth_texture;
 static Pipeline *simple_pipeline;
 
 static void drawskybox(Skybox *skybox, Camera *camera, RenderPass *render_pass, CommandBuffer *cmdbuf)
@@ -58,9 +58,9 @@ static void drawskybox(Skybox *skybox, Camera *camera, RenderPass *render_pass, 
 	Graphics_BindPipeline(render_pass, skybox->pipeline);
 	Graphics_BindVertexBuffers(render_pass, skybox->vertex_buffer, 0, 0, 1);
 	Graphics_BindIndexBuffers(render_pass, skybox->index_buffer, 0);
-	SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
-	SDL_PushGPUVertexUniformData(cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
-	SDL_DrawGPUIndexedPrimitives(render_pass, 36, 1, 0, 0, 0);
+	Graphics_BindFragmentSampledGPUTexture(render_pass, skybox->gputexture, skybox->sampler, 0, 1);
+	Graphics_PushVertexUniforms(cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
+	Graphics_DrawPrimitives(render_pass, 36, 1, 0, 0, 0);
 }
 
 static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, RenderPass *render_pass, CommandBuffer *cmdbuf)
@@ -84,11 +84,12 @@ static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, Rende
 		Material *material = Graphics_GetMaterialByName(&model->materials, mesh->material_name);
 		if(material == NULL) continue;
 		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
-		SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ diffuse->texture, sampler }, 1);
+		Graphics_BindFragmentSampledTexture(render_pass, diffuse, sampler, 0, 1);
 
 		//UBO
-		SDL_PushGPUVertexUniformData(cmdbuf, 0, &mvp, sizeof(mvp));
-		SDL_DrawGPUIndexedPrimitives(render_pass, mesh->indices.count, 1, 0, 0, 0);
+		Graphics_PushVertexUniforms(cmdbuf, 0, &mvp, sizeof(mvp));
+
+		Graphics_DrawPrimitives(render_pass, mesh->indices.count, 1, 0, 0, 0);
 	}
 }
 
@@ -219,19 +220,7 @@ bool Simple_Setup()
 
 	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
-	depth_texture = SDL_CreateGPUTexture(
-		context.device,
-		&(SDL_GPUTextureCreateInfo) {
-			.type = SDL_GPU_TEXTURETYPE_2D,
-			.width = context.width,
-			.height = context.height,
-			.layer_count_or_depth = 1,
-			.num_levels = 1,
-			.sample_count = SDL_GPU_SAMPLECOUNT_1,
-			.format = SDL_GPU_TEXTUREFORMAT_D16_UNORM,
-			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET
-		}
-	);
+	depth_texture = Graphics_GenerateDepthTexture(context.width, context.height);
 
 	return true;
 }

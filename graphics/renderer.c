@@ -217,3 +217,105 @@ void Graphics_BindMeshBuffers(RenderPass *renderpass, Mesh *mesh)
 	Graphics_BindVertexBuffers(renderpass, mesh->vbuffer, 0, 0, 1);
 	Graphics_BindIndexBuffers(renderpass, mesh->ibuffer, 0);
 }
+
+void Graphics_BindFragmentSampledTexture(RenderPass *renderpass,
+											Texture2D *texture,
+											Sampler *sampler,
+											Uint32 first_slot,
+											Uint32 num_bindings)
+{
+	if(renderpass == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass.");
+		return;
+	}
+	if(texture == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid texture.");
+		return;
+	}
+	if(sampler == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid sampler.");
+		return;
+	}
+	SDL_GPUTextureSamplerBinding binding;
+	binding.sampler = sampler;
+	binding.texture = texture->texture;
+	SDL_BindGPUFragmentSamplers(renderpass, first_slot, &binding, num_bindings);
+}
+
+void Graphics_BindFragmentSampledGPUTexture(RenderPass *renderpass,
+											GPUTexture *texture,
+											Sampler *sampler,
+											Uint32 first_slot,
+											Uint32 num_bindings)
+{
+	if(renderpass == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass.");
+		return;
+	}
+	if(texture == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid texture.");
+		return;
+	}
+	if(sampler == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid sampler.");
+		return;
+	}
+	SDL_GPUTextureSamplerBinding binding;
+	binding.sampler = sampler;
+	binding.texture = texture;
+	SDL_BindGPUFragmentSamplers(renderpass, first_slot, &binding, num_bindings);
+}
+
+void Graphics_PushVertexUniforms(CommandBuffer *cmdbuf,
+									Uint32 slot, void *data,
+									size_t length)
+{
+	if(cmdbuf == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid command buffer");
+		return;
+	}
+	if(data == NULL || length <= 0)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid uniform data buffer");
+		return;
+	}
+	SDL_PushGPUVertexUniformData(cmdbuf, slot, data, length);
+}
+
+void Graphics_PushFragmentUniforms(CommandBuffer *cmdbuf,
+									Uint32 slot, void *data,
+									size_t length)
+{
+	if(cmdbuf == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid command buffer");
+		return;
+	}
+	if(data == NULL || length <= 0)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid uniform data buffer");
+		return;
+	}
+	SDL_PushGPUFragmentUniformData(cmdbuf, slot, data, length);
+}
+
+void Graphics_DrawPrimitives(RenderPass *renderpass,
+								size_t num_indices,
+								Uint32 num_instances,
+								int first_index, int vertex_offset,
+								Uint32 first_instance)
+{
+	if(renderpass == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Renderer: invalid render pass.");
+		return;
+	}
+	SDL_DrawGPUIndexedPrimitives(renderpass, num_indices, num_instances, first_index, vertex_offset, first_instance);
+}
