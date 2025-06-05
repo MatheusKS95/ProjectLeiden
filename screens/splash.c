@@ -42,33 +42,23 @@ void SplashScreen_Logic(InputState *state)
 
 void SplashScreen_Draw()
 {
-	SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	CommandBuffer *cmdbuf = Graphics_SetupCommandBuffer();
 	if(cmdbuf == NULL)
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Splash screen: failed to acquire command buffer: %s", SDL_GetError());
 		return;
 	}
 
-	SDL_GPUTexture* swapchain_texture;
-	if(!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, context.window, &swapchain_texture, NULL, NULL))
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Splash screen: failed to acquire swapchain texture: %s", SDL_GetError());
-		return;
-	}
+	GPUTexture *swapchain_texture = Graphics_AcquireSwapchainTexture(cmdbuf);
 
 	if (swapchain_texture != NULL)
 	{
-		SDL_GPUColorTargetInfo colortargetinfo = { 0 };
-		colortargetinfo.texture = swapchain_texture;
-		colortargetinfo.clear_color = (SDL_FColor){ 1.0f, 0.5f, 0.0f, 1.0f };
-		colortargetinfo.load_op = SDL_GPU_LOADOP_CLEAR;
-		colortargetinfo.store_op = SDL_GPU_STOREOP_STORE;
-
-		SDL_GPURenderPass* renderpass = SDL_BeginGPURenderPass(cmdbuf, &colortargetinfo, 1, NULL);
-		SDL_EndGPURenderPass(renderpass);
+		Color clearcolor = { 1.0f, 0.5f, 0.0f, 1.0f };
+		RenderPass *renderpass = Graphics_BeginRenderPass(cmdbuf, swapchain_texture, NULL, clearcolor);
+		Graphics_EndRenderPass(renderpass);
 	}
 
-	SDL_SubmitGPUCommandBuffer(cmdbuf);
+	Graphics_CommitCommandBuffer(cmdbuf);
 	return;
 }
 

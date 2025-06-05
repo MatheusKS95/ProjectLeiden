@@ -39,10 +39,10 @@ static Model *house;
 static Model *vroid_test;
 static Model *mulher;
 static Sampler *sampler;
-static SDL_GPUTexture *depth_texture;
+static GPUTexture *depth_texture;
 static Pipeline *simple_pipeline;
 
-static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render_pass, SDL_GPUCommandBuffer *cmdbuf)
+static void drawskybox(Skybox *skybox, Camera *camera, RenderPass *render_pass, CommandBuffer *cmdbuf)
 {
 	if(skybox == NULL || camera == NULL || render_pass == NULL || cmdbuf == NULL)
 	{
@@ -55,15 +55,15 @@ static void drawskybox(Skybox *skybox, Camera *camera, SDL_GPURenderPass *render
 	Matrix4x4 skyboxviewproj;
 	skyboxviewproj = Matrix4x4_Mul(cam_view, camera->projection);
 
-	SDL_BindGPUGraphicsPipeline(render_pass, skybox->pipeline);
-	SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ skybox->vertex_buffer, 0 }, 1);
-	SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ skybox->index_buffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-	SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ skybox->gputexture, skybox->sampler }, 1);
-	SDL_PushGPUVertexUniformData(cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
-	SDL_DrawGPUIndexedPrimitives(render_pass, 36, 1, 0, 0, 0);
+	Graphics_BindPipeline(render_pass, skybox->pipeline);
+	Graphics_BindVertexBuffers(render_pass, skybox->vertex_buffer, 0, 0, 1);
+	Graphics_BindIndexBuffers(render_pass, skybox->index_buffer, 0);
+	Graphics_BindFragmentSampledGPUTexture(render_pass, skybox->gputexture, skybox->sampler, 0, 1);
+	Graphics_PushVertexUniforms(cmdbuf, 0, &skyboxviewproj, sizeof(skyboxviewproj));
+	Graphics_DrawPrimitives(render_pass, 36, 1, 0, 0, 0);
 }
 
-static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_GPURenderPass *render_pass, SDL_GPUCommandBuffer *cmdbuf)
+static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, RenderPass *render_pass, CommandBuffer *cmdbuf)
 {
 	if(model == NULL || render_pass == NULL || cmdbuf == NULL)
 	{
@@ -75,21 +75,21 @@ static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, SDL_G
 	{
 		Mesh *mesh = &model->meshes.meshes[i];
 		//binding graphics pipeline
-		SDL_BindGPUGraphicsPipeline(render_pass, simple_pipeline);
+		Graphics_BindPipeline(render_pass, simple_pipeline);
 
 		//binding vertex and index buffers
-		SDL_BindGPUVertexBuffers(render_pass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
-		SDL_BindGPUIndexBuffer(render_pass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+		Graphics_BindMeshBuffers(render_pass, mesh);
 
 		//texture samplers
 		Material *material = Graphics_GetMaterialByName(&model->materials, mesh->material_name);
 		if(material == NULL) continue;
 		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
-		SDL_BindGPUFragmentSamplers(render_pass, 0, &(SDL_GPUTextureSamplerBinding){ diffuse->texture, sampler }, 1);
+		Graphics_BindFragmentSampledTexture(render_pass, diffuse, sampler, 0, 1);
 
 		//UBO
-		SDL_PushGPUVertexUniformData(cmdbuf, 0, &mvp, sizeof(mvp));
-		SDL_DrawGPUIndexedPrimitives(render_pass, mesh->indices.count, 1, 0, 0, 0);
+		Graphics_PushVertexUniforms(cmdbuf, 0, &mvp, sizeof(mvp));
+
+		Graphics_DrawPrimitives(render_pass, mesh->indices.count, 1, 0, 0, 0);
 	}
 }
 
@@ -103,41 +103,21 @@ static void simpledraw(struct SimpleRenderingSetup *stuff,
 		return;
 	}
 
-	SDL_GPUCommandBuffer *cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	CommandBuffer *cmdbuf = Graphics_SetupCommandBuffer();
 	if(cmdbuf == NULL)
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to acquire command buffer.");
 		return;
 	}
 
-	SDL_GPUTexture *swapchain_texture;
-	if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, context.window, &swapchain_texture, NULL, NULL))
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Failed to acquire swapchain texture: %s", SDL_GetError());;
-	}
+	GPUTexture *swapchain_texture = Graphics_AcquireSwapchainTexture(cmdbuf);
 
 	if(swapchain_texture == NULL)
 	{
 		return;
 	}
 
-	SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
-	colorTargetInfo.texture = swapchain_texture;
-	colorTargetInfo.clear_color = (SDL_FColor){ clear_color.r, clear_color.g, clear_color.b, clear_color.a };
-	colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
-	colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-
-	SDL_GPUDepthStencilTargetInfo depthStencilTargetInfo = { 0 };
-	depthStencilTargetInfo.texture = depth_texture;
-	depthStencilTargetInfo.cycle = true;
-	depthStencilTargetInfo.clear_depth = 1;
-	depthStencilTargetInfo.clear_stencil = 0;
-	depthStencilTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
-	depthStencilTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-	depthStencilTargetInfo.stencil_load_op = SDL_GPU_LOADOP_CLEAR;
-	depthStencilTargetInfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
-
-	SDL_GPURenderPass *render_pass = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, &depthStencilTargetInfo);
+	RenderPass *render_pass = Graphics_BeginRenderPass(cmdbuf, swapchain_texture, depth_texture, clear_color);
 
 	//render skybox
 	if(stuff->skybox != NULL)
@@ -156,8 +136,8 @@ static void simpledraw(struct SimpleRenderingSetup *stuff,
 		}
 	}
 
-	SDL_EndGPURenderPass(render_pass);
-	SDL_SubmitGPUCommandBuffer(cmdbuf);
+	Graphics_EndRenderPass(render_pass);
+	Graphics_CommitCommandBuffer(cmdbuf);
 }
 
 /***************************************************************************************
@@ -240,19 +220,7 @@ bool Simple_Setup()
 
 	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
-	depth_texture = SDL_CreateGPUTexture(
-		context.device,
-		&(SDL_GPUTextureCreateInfo) {
-			.type = SDL_GPU_TEXTURETYPE_2D,
-			.width = context.width,
-			.height = context.height,
-			.layer_count_or_depth = 1,
-			.num_levels = 1,
-			.sample_count = SDL_GPU_SAMPLECOUNT_1,
-			.format = SDL_GPU_TEXTUREFORMAT_D16_UNORM,
-			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET
-		}
-	);
+	depth_texture = Graphics_GenerateDepthTexture(context.width, context.height);
 
 	return true;
 }

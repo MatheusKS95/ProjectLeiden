@@ -28,7 +28,11 @@
 typedef SDL_GPUGraphicsPipeline Pipeline;
 typedef SDL_GPUShader Shader;
 typedef SDL_GPUSampler Sampler;
-typedef SDL_GPUBuffer StorageBuffer;
+typedef SDL_GPUBuffer StorageBuffer; //TODO remove this
+typedef SDL_GPUBuffer GPUBuffer;
+typedef SDL_GPUCommandBuffer CommandBuffer;
+typedef SDL_GPUTexture GPUTexture;
+typedef SDL_GPURenderPass RenderPass;
 
 /*******************************************************************
  * STRUCTURES AND ENUMS ********************************************
@@ -123,7 +127,7 @@ typedef enum SamplerMode
 
 typedef struct Texture2D
 {
-	SDL_GPUTexture *texture;
+	GPUTexture *texture;
 	SDL_Surface *surface;
 } Texture2D;
 
@@ -139,7 +143,7 @@ typedef struct DefaultTextures
 typedef struct Skybox
 {
 	SDL_Surface *surface[6];
-	SDL_GPUTexture *gputexture;
+	GPUTexture *gputexture;
 	Sampler *sampler;
 	SDL_GPUBuffer* vertex_buffer;
 	SDL_GPUBuffer* index_buffer;
@@ -200,8 +204,8 @@ typedef struct Mesh
 {
 	VertexArray vertices;
 	IndexArray indices;
-	SDL_GPUBuffer *vbuffer;
-	SDL_GPUBuffer *ibuffer;
+	GPUBuffer *vbuffer;
+	GPUBuffer *ibuffer;
 	char material_name[64];
 
 	char meshname[64];
@@ -302,11 +306,6 @@ Shader* Graphics_LoadShader(const char *path,
 							Uint32 storageBufferCount,
 							Uint32 storageTextureCount);
 
-bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
-									void *data, size_t size);
-
-void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
-
 Pipeline *Graphics_Generate3DPipeline(Shader *vs, Shader *fs,
 										bool release_shaders);
 
@@ -327,11 +326,14 @@ void Graphics_ReleaseTexture(Texture2D *texture);
 
 void Graphics_UploadTexture(Texture2D *texture);
 
+GPUTexture *Graphics_GenerateDepthTexture(int width, int height);
+
 bool Graphics_SetupDefaultTextures(const char *path_d,
 									const char *path_n,
 									const char *path_s,
 									const char *path_e);
 
+//FIXME I'll keep only diffuse, everything else will be removed
 void Graphics_ReleaseDefaultTextures();
 
 /* SKYBOXES */
@@ -386,11 +388,75 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 
 void Graphics_ReleaseModel(Model *model);
 
+/* RENDERING */
+
+bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
+									void *data, size_t size);
+
+void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer);
+
+CommandBuffer *Graphics_SetupCommandBuffer();
+
+void Graphics_CommitCommandBuffer(CommandBuffer *cmdbuf);
+
+GPUTexture *Graphics_AcquireSwapchainTexture(CommandBuffer *cmdbuf);
+
+RenderPass *Graphics_BeginRenderPass(CommandBuffer *cmdbuf,
+										GPUTexture *render_texture,
+										GPUTexture *depth_texture,
+										Color clear_color);
+
+void Graphics_EndRenderPass(RenderPass *renderpass);
+
+void Graphics_BindPipeline(RenderPass *renderpass,
+							Pipeline *pipeline);
+
+void Graphics_BindVertexBuffers(RenderPass *renderpass,
+								GPUBuffer *buffer,
+								Uint32 buffer_offset,
+								Uint32 first_slot,
+								Uint32 num_bindings);
+
+//NOTE: indices must be 32 bit
+void Graphics_BindIndexBuffers(RenderPass *renderpass,
+								GPUBuffer *buffer,
+								Uint32 buffer_offset);
+
+void Graphics_BindMeshBuffers(RenderPass *renderpass, Mesh *mesh);
+
+void Graphics_BindFragmentSampledTexture(RenderPass *renderpass,
+											Texture2D *texture,
+											Sampler *sampler,
+											Uint32 first_slot,
+											Uint32 num_bindings);
+
+void Graphics_BindFragmentSampledGPUTexture(RenderPass *renderpass,
+											GPUTexture *texture,
+											Sampler *sampler,
+											Uint32 first_slot,
+											Uint32 num_bindings);
+
+void Graphics_PushVertexUniforms(CommandBuffer *cmdbuf,
+									Uint32 slot, void *data,
+									size_t length);
+
+void Graphics_PushFragmentUniforms(CommandBuffer *cmdbuf,
+									Uint32 slot, void *data,
+									size_t length);
+
+void Graphics_DrawPrimitives(RenderPass *renderpass,
+								size_t num_indices,
+								Uint32 num_instances,
+								int first_index, int vertex_offset,
+								Uint32 first_instance);
+
 /*******************************************************************
  * GLOBALS *********************************************************
  ******************************************************************/
 
 extern GraphicsContext context;
+
+//DELETE THIS (or move to leiden module)
 extern DefaultTextures default_textures;
 
 #endif

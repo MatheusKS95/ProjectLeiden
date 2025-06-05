@@ -16,7 +16,7 @@
 
 /**
  * @file shaders.c
- * @brief Implementation file for shader stuff (not pipelines)
+ * @brief Implementation file for shaders and pipelines
  *
  * @author
  * - Matheus Klein Schaefer (email here)
@@ -57,67 +57,6 @@ SDL_GPUShader* Graphics_LoadShader(const char *path,
 		.num_storage_textures = storageTextureCount
 	};
 	return SDL_CreateGPUShader(context.device, &shader_info);
-}
-
-bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
-									void *data, size_t size)
-{
-	if(buffer == NULL || data == NULL || size <= 0)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't generate storage buffer.");
-		return false;
-	}
-
-	buffer = SDL_CreateGPUBuffer(
-		context.device,
-		&(SDL_GPUBufferCreateInfo) {
-			.usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
-			.size = size
-		}
-	);
-	SDL_GPUTransferBuffer* transferbuffer = SDL_CreateGPUTransferBuffer(
-		context.device,
-		&(SDL_GPUTransferBufferCreateInfo) {
-			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-			.size = size
-		}
-	);
-	void* buffer_transferdata = SDL_MapGPUTransferBuffer(context.device, transferbuffer, false);
-	SDL_memcpy(buffer_transferdata, data, size);
-	SDL_UnmapGPUTransferBuffer(context.device, transferbuffer);
-
-	SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
-	SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdbuf);
-
-	SDL_UploadToGPUBuffer(
-		copyPass,
-		&(SDL_GPUTransferBufferLocation) {
-			.transfer_buffer = transferbuffer,
-			.offset = 0
-		},
-		&(SDL_GPUBufferRegion) {
-			.buffer = buffer,
-			.offset = 0,
-			.size = size
-		},
-		false
-	);
-
-	SDL_EndGPUCopyPass(copyPass);
-	SDL_ReleaseGPUTransferBuffer(context.device, transferbuffer);
-	SDL_SubmitGPUCommandBuffer(cmdbuf);
-
-	return true;
-}
-
-void Graphics_ReleaseStorageBuffer(StorageBuffer *buffer)
-{
-	if(buffer == NULL)
-	{
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Can't release invalid storage buffer.");
-		return;
-	}
-	SDL_ReleaseGPUBuffer(context.device, buffer);
 }
 
 Pipeline *Graphics_Generate3DPipeline(Shader *vs, Shader *fs,
