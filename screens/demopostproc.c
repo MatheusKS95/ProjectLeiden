@@ -14,41 +14,27 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <SDL3/SDL.h>
 #include <screens.h>
 #include <leiden.h>
 
-//TODO render texture, later a short video or something
-//also preload the simple test screen
-
-bool SplashScreen_Setup()
+bool DemoPostProc_Setup()
 {
-	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Starting splash screen...");
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Starting postproc screen...");
 	return true;
 }
 
-void SplashScreen_Logic(InputState *state)
+void DemoPostProc_Logic(InputState *state)
 {
-	if(Input_IsKeyPressedTEMP(state, SDL_SCANCODE_1))
+	if(Input_IsKeyPressedTEMP(state, SDL_SCANCODE_ESCAPE))
 	{
-		if(Simple_Setup())
-		{
-			SplashScreen_Destroy();
-			current_screen = SCREEN_DEMOSIMPLE;
-		}
-	}
-	if(Input_IsKeyPressedTEMP(state, SDL_SCANCODE_2))
-	{
-		if(DemoPostProc_Setup())
-		{
-			SplashScreen_Destroy();
-			current_screen = SCREEN_DEMOPOSTPROC;
-		}
+		//TEST, remove this later
+		current_screen = SCREEN_SPLASH;
+		DemoPostProc_Destroy();
 	}
 	return;
 }
 
-void SplashScreen_Draw()
+void DemoPostProc_Draw()
 {
 	CommandBuffer *cmdbuf = Graphics_SetupCommandBuffer();
 	if(cmdbuf == NULL)
@@ -61,7 +47,7 @@ void SplashScreen_Draw()
 
 	if (swapchain_texture != NULL)
 	{
-		Color clearcolor = { 1.0f, 0.5f, 0.0f, 1.0f };
+		Color clearcolor = { 0.0f, 0.0f, 0.8f, 1.0f };
 		RenderPass *renderpass = Graphics_BeginRenderPass(cmdbuf, swapchain_texture, NULL, clearcolor);
 		Graphics_EndRenderPass(renderpass);
 	}
@@ -70,8 +56,8 @@ void SplashScreen_Draw()
 	return;
 }
 
-void SplashScreen_Destroy()
+void DemoPostProc_Destroy()
 {
-	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing splash screen...");
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing postproc screen...");
 	return;
 }
