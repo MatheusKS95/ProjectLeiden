@@ -319,3 +319,183 @@ void Graphics_DrawPrimitives(RenderPass *renderpass,
 	}
 	SDL_DrawGPUIndexedPrimitives(renderpass, num_indices, num_instances, first_index, vertex_offset, first_instance);
 }
+
+void Graphics_CreateRenderTargetTexture(RenderTargetTexture *tex,
+										Uint32 scene_width,
+										Uint32 scene_height,
+										Uint32 sample_count, //MSAA
+										Shader *vs, Shader *fs,
+										bool release_shaders)
+{
+	if(tex == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics_CreateRenderTargetTexture: invalid render target texture.");
+		return;
+	}
+	if(vs == NULL || fs == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics_CreateRenderTargetTexture: invalid shaders.");
+		return;
+	}
+
+	struct planegeometry
+	{
+		float x, y, z;
+		float u, v;
+	};
+
+	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo){
+		.target_info = {
+			.num_color_targets = 1,
+			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
+				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window),
+				.blend_state = (SDL_GPUColorTargetBlendState) {
+					.enable_blend = true,
+					.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+					.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+					.color_blend_op = SDL_GPU_BLENDOP_ADD,
+					.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+					.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+					.alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+				}
+			}},
+		},
+		.vertex_input_state = (SDL_GPUVertexInputState){
+			.num_vertex_buffers = 1,
+			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
+				.slot = 0,
+				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
+				.instance_step_rate = 0,
+				.pitch = sizeof(struct planegeometry)
+			}},
+			.num_vertex_attributes = 2,
+			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
+				.buffer_slot = 0,
+				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
+				.location = 0,
+				.offset = 0
+			}, {
+				.buffer_slot = 0,
+				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
+				.location = 1,
+				.offset = sizeof(float) * 3
+			}}
+		},
+		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+		.vertex_shader = vs,
+		.fragment_shader = fs
+	};
+	tex->pipeline = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
+	if(tex->pipeline == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics_CreateRenderTargetTexture: failed to create pipeline.");
+		return;
+	}
+	if(release_shaders)
+	{
+		SDL_ReleaseGPUShader(context.device, vs);
+		SDL_ReleaseGPUShader(context.device, fs);
+	}
+
+	tex->vbuffer = SDL_CreateGPUBuffer(
+		context.device,
+		&(SDL_GPUBufferCreateInfo) {
+			.usage = SDL_GPU_BUFFERUSAGE_VERTEX,
+			.size = sizeof(struct planegeometry) * 4
+		}
+	);
+
+	tex->ibuffer = SDL_CreateGPUBuffer(
+		context.device,
+		&(SDL_GPUBufferCreateInfo) {
+			.usage = SDL_GPU_BUFFERUSAGE_INDEX,
+			.size = sizeof(Uint32) * 6
+		}
+	);
+
+	SDL_GPUTransferBuffer* buffer_transferbuffer = SDL_CreateGPUTransferBuffer(
+		context.device,
+		&(SDL_GPUTransferBufferCreateInfo) {
+			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+			.size = (sizeof(struct planegeometry) * 4) + (sizeof(Uint32) * 6)
+		}
+	);
+
+	struct planegeometry* transferdata = SDL_MapGPUTransferBuffer(
+		context.device,
+		buffer_transferbuffer,
+		false
+	);
+
+	transferdata[0] = (struct planegeometry) { -1,  1, 0, 0, 0 };
+	transferdata[1] = (struct planegeometry) {  1,  1, 0, 1, 0 };
+	transferdata[2] = (struct planegeometry) {  1, -1, 0, 1, 1 };
+	transferdata[3] = (struct planegeometry) { -1, -1, 0, 0, 1 };
+
+	Uint32* indexData = (Uint32*) &transferdata[4];
+	indexData[0] = 0;
+	indexData[1] = 1;
+	indexData[2] = 2;
+	indexData[3] = 0;
+	indexData[4] = 2;
+	indexData[5] = 3;
+
+	SDL_UnmapGPUTransferBuffer(context.device, buffer_transferbuffer);
+
+	CommandBuffer* upload_cmdbuf = SDL_AcquireGPUCommandBuffer(context.device);
+	SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(upload_cmdbuf);
+
+	SDL_UploadToGPUBuffer(
+		copyPass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = buffer_transferbuffer,
+			.offset = 0
+		},
+		&(SDL_GPUBufferRegion) {
+			.buffer = tex->vbuffer,
+			.offset = 0,
+			.size = sizeof(struct planegeometry) * 4
+		},
+		false
+	);
+
+	SDL_UploadToGPUBuffer(
+		copyPass,
+		&(SDL_GPUTransferBufferLocation) {
+			.transfer_buffer = buffer_transferbuffer,
+			.offset = sizeof(struct planegeometry) * 4
+		},
+		&(SDL_GPUBufferRegion) {
+			.buffer = tex->ibuffer,
+			.offset = 0,
+			.size = sizeof(Uint32) * 6
+		},
+		false
+	);
+
+	SDL_EndGPUCopyPass(copyPass);
+	SDL_SubmitGPUCommandBuffer(upload_cmdbuf);
+	SDL_ReleaseGPUTransferBuffer(context.device, buffer_transferbuffer);
+
+	SDL_GPUSampleCount samplecount;
+	switch(sample_count)
+	{
+		case 1: samplecount = SDL_GPU_SAMPLECOUNT_1; break;
+		case 2: samplecount = SDL_GPU_SAMPLECOUNT_2; break;
+		case 4: samplecount = SDL_GPU_SAMPLECOUNT_4; break;
+		case 8: samplecount = SDL_GPU_SAMPLECOUNT_8; break;
+		default: samplecount = SDL_GPU_SAMPLECOUNT_1; break;
+	}
+
+	SDL_GPUTextureCreateInfo createinfo = { 0 };
+	createinfo.type = SDL_GPU_TEXTURETYPE_2D;
+	createinfo.width = scene_width;
+	createinfo.height = scene_height;
+	createinfo.layer_count_or_depth = 1;
+	createinfo.num_levels = 1;
+	createinfo.sample_count = samplecount;
+	createinfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+	createinfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
+
+	tex->texture = SDL_CreateGPUTexture(context.device, &createinfo);
+}
