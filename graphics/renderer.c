@@ -385,8 +385,8 @@ void Graphics_CreateRenderTargetTexture(RenderTargetTexture *tex,
 		.vertex_shader = vs,
 		.fragment_shader = fs
 	};
-	tex->pipeline = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	if(tex->pipeline == NULL)
+	Pipeline *pipeline = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
+	if(pipeline == NULL)
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics_CreateRenderTargetTexture: failed to create pipeline.");
 		return;
@@ -396,6 +396,7 @@ void Graphics_CreateRenderTargetTexture(RenderTargetTexture *tex,
 		SDL_ReleaseGPUShader(context.device, vs);
 		SDL_ReleaseGPUShader(context.device, fs);
 	}
+	tex->pipeline = pipeline;
 
 	tex->vbuffer = SDL_CreateGPUBuffer(
 		context.device,

@@ -14,12 +14,13 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+//this currently not work :(
+
 #include <screens.h>
 #include <leiden.h>
 
 bool DemoPostProc_Setup()
 {
-	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Starting postproc screen...");
 	return true;
 }
 
