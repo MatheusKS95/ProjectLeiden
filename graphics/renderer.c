@@ -320,7 +320,8 @@ void Graphics_DrawPrimitives(RenderPass *renderpass,
 	SDL_DrawGPUIndexedPrimitives(renderpass, num_indices, num_instances, first_index, vertex_offset, first_instance);
 }
 
-void Graphics_CreateRenderTargetTexture(RenderTargetTexture *tex,
+//temporarily kept for future reference
+/*void Graphics_CreateRenderTargetTexture(RenderTargetTexture *tex,
 										Uint32 scene_width,
 										Uint32 scene_height,
 										Uint32 sample_count, //MSAA
@@ -499,4 +500,4 @@ void Graphics_CreateRenderTargetTexture(RenderTargetTexture *tex,
 	createinfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
 
 	tex->texture = SDL_CreateGPUTexture(context.device, &createinfo);
-}
+}*/

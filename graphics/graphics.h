@@ -249,21 +249,6 @@ typedef struct Model
 	Matrix4x4 transform;
 } Model;
 
-/* RENDERING */
-
-typedef struct RenderTargetTexture
-{
-	//the plane which the texture will be applied for
-	GPUBuffer *vbuffer;
-	GPUBuffer *ibuffer;
-
-	//pipeline used when rendering (allows post-processing, FXAA...)
-	Pipeline *pipeline;
-
-	//the actual texture which the scene can be rendered to
-	GPUTexture *texture;
-} RenderTargetTexture;
-
 /*******************************************************************
  * FUNCTIONS *******************************************************
  ******************************************************************/
@@ -321,8 +306,8 @@ Shader* Graphics_LoadShader(const char *path,
 							Uint32 storageBufferCount,
 							Uint32 storageTextureCount);
 
-Pipeline *Graphics_Generate3DPipeline(Shader *vs, Shader *fs,
-										bool release_shaders);
+Pipeline *Graphics_Generate3DPipelineFull(Shader *vs, Shader *fs,
+											bool release_shaders);
 
 /* 2D TEXTURES */
 
@@ -464,13 +449,6 @@ void Graphics_DrawPrimitives(RenderPass *renderpass,
 								Uint32 num_instances,
 								int first_index, int vertex_offset,
 								Uint32 first_instance);
-
-void Graphics_CreateRenderTargetTexture(RenderTargetTexture *tex,
-										Uint32 scene_width,
-										Uint32 scene_height,
-										Uint32 sample_count, //MSAA
-										Shader *vs, Shader *fs,
-										bool release_shaders);
 
 /*******************************************************************
  * GLOBALS *********************************************************

@@ -59,8 +59,8 @@ SDL_GPUShader* Graphics_LoadShader(const char *path,
 	return SDL_CreateGPUShader(context.device, &shader_info);
 }
 
-Pipeline *Graphics_Generate3DPipeline(Shader *vs, Shader *fs,
-										bool release_shaders)
+Pipeline *Graphics_Generate3DPipelineFull(Shader *vs, Shader *fs,
+											bool release_shaders)
 {
 	if(vs == NULL || fs == NULL)
 	{
