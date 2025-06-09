@@ -183,7 +183,7 @@ bool Simple_Setup()
 		SDL_Log("Failed to load skybox fragment shader.");
 		return NULL;
 	}
-	simple_pipeline = Graphics_Generate3DPipeline(vsshader, fsshader, true);
+	simple_pipeline = Graphics_Generate3DPipelineFull(vsshader, fsshader, true);
 
 	house = (Model*)SDL_malloc(sizeof(Model));
 	if(house != NULL)

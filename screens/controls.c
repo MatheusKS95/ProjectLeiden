@@ -32,6 +32,7 @@ void SCR_Logic(InputState *state)
 	{
 		case SCREEN_SPLASH: SplashScreen_Logic(state); break;
 		case SCREEN_DEMOSIMPLE: Simple_Logic(state); break;
+		case SCREEN_DEMOPOSTPROC: DemoPostProc_Logic(state); break;
 		default: break;
 	}
 	return;
@@ -43,6 +44,7 @@ void SCR_Draw()
 	{
 		case SCREEN_SPLASH: SplashScreen_Draw(); break;
 		case SCREEN_DEMOSIMPLE: Simple_Draw(); break;
+		case SCREEN_DEMOPOSTPROC: DemoPostProc_Draw(); break;
 		default: break;
 	}
 	return;
@@ -54,6 +56,7 @@ void SCR_Destroy()
 	{
 		case SCREEN_SPLASH: SplashScreen_Destroy(); break;
 		case SCREEN_DEMOSIMPLE: Simple_Destroy(); break;
+		case SCREEN_DEMOPOSTPROC: DemoPostProc_Destroy(); break;
 		default: break;
 	}
 	return;

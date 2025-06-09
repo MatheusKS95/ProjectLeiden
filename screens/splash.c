@@ -29,12 +29,20 @@ bool SplashScreen_Setup()
 
 void SplashScreen_Logic(InputState *state)
 {
-	if(Input_IsKeyPressedTEMP(state, SDL_SCANCODE_RETURN))
+	if(Input_IsKeyPressedTEMP(state, SDL_SCANCODE_1))
 	{
 		if(Simple_Setup())
 		{
 			SplashScreen_Destroy();
 			current_screen = SCREEN_DEMOSIMPLE;
+		}
+	}
+	if(Input_IsKeyPressedTEMP(state, SDL_SCANCODE_2))
+	{
+		if(DemoPostProc_Setup())
+		{
+			SplashScreen_Destroy();
+			current_screen = SCREEN_DEMOPOSTPROC;
 		}
 	}
 	return;

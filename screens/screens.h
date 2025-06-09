@@ -25,7 +25,8 @@
 typedef enum CurrentScreen
 {
 	SCREEN_SPLASH = 0,
-	SCREEN_DEMOSIMPLE
+	SCREEN_DEMOSIMPLE,
+	SCREEN_DEMOPOSTPROC
 } CurrentScreen;
 
 extern CurrentScreen current_screen;
@@ -69,3 +70,18 @@ void Simple_Draw();
 void Simple_Destroy();
 
 //END SIMPLE
+
+/* DEMO POSTPROC SCREEN
+ * Intended to be used for testing post-processing
+*/
+//BEGIN POSTPROC
+
+bool DemoPostProc_Setup();
+
+void DemoPostProc_Logic(InputState *state);
+
+void DemoPostProc_Draw();
+
+void DemoPostProc_Destroy();
+
+//END POSTPROC

@@ -193,6 +193,23 @@ GPUTexture *Graphics_GenerateDepthTexture(int width, int height)
 	);
 }
 
+GPUTexture *Graphics_GenerateRenderTexture(int width, int height)
+{
+	return SDL_CreateGPUTexture(
+		context.device,
+		&(SDL_GPUTextureCreateInfo) {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.width = width,
+			.height = height,
+			.layer_count_or_depth = 1,
+			.num_levels = 1,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+			.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
+		}
+	);
+}
+
 bool Graphics_SetupDefaultTextures(const char *path_d,
 									const char *path_n,
 									const char *path_s,

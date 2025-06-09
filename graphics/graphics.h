@@ -306,8 +306,8 @@ Shader* Graphics_LoadShader(const char *path,
 							Uint32 storageBufferCount,
 							Uint32 storageTextureCount);
 
-Pipeline *Graphics_Generate3DPipeline(Shader *vs, Shader *fs,
-										bool release_shaders);
+Pipeline *Graphics_Generate3DPipelineFull(Shader *vs, Shader *fs,
+											bool release_shaders);
 
 /* 2D TEXTURES */
 
@@ -327,6 +327,8 @@ void Graphics_ReleaseTexture(Texture2D *texture);
 void Graphics_UploadTexture(Texture2D *texture);
 
 GPUTexture *Graphics_GenerateDepthTexture(int width, int height);
+
+GPUTexture *Graphics_GenerateRenderTexture(int width, int height);
 
 bool Graphics_SetupDefaultTextures(const char *path_d,
 									const char *path_n,
