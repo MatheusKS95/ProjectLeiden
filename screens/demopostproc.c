@@ -167,19 +167,7 @@ bool DemoPostProc_Setup()
 
 	depth_texture = Graphics_GenerateDepthTexture(context.width, context.height);
 
-	SceneColorTexture = SDL_CreateGPUTexture(
-		context.device,
-		&(SDL_GPUTextureCreateInfo) {
-			.type = SDL_GPU_TEXTURETYPE_2D,
-			.width = context.width,
-			.height = context.height,
-			.layer_count_or_depth = 1,
-			.num_levels = 1,
-			.sample_count = SDL_GPU_SAMPLECOUNT_1,
-			.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
-			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
-		}
-	);
+	SceneColorTexture = Graphics_GenerateRenderTexture(context.width, context.height);
 
 	//effect stuff
 	Shader *effectvs = Graphics_LoadShader("shaders/effects/default.vert.spv", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 0, 0);
@@ -188,7 +176,7 @@ bool DemoPostProc_Setup()
 		SDL_Log("Failed to load skybox vertex shader.");
 		return NULL;
 	}
-	Shader *effectfs = Graphics_LoadShader("shaders/effects/depthoutline.frag.spv", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 1, 0, 0);
+	Shader *effectfs = Graphics_LoadShader("shaders/effects/blur.frag.spv", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
 	if(fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
@@ -200,7 +188,6 @@ bool DemoPostProc_Setup()
 	EffectSampler = Graphics_GenerateSampler(SAMPLER_FILTER_NEAREST, SAMPLER_MODE_REPEAT);
 
 	//NOTE, this is based from the SDL GPU examples repo, zlib license, I'll change this later
-	// Create & Upload Outline Effect Vertex and Index buffers
 	{
 		EffectVertexBuffer = SDL_CreateGPUBuffer(
 			context.device,
@@ -407,11 +394,12 @@ void DemoPostProc_Draw()
 	Graphics_BindPipeline(render_pass_effect, EffectPipeline);
 	Graphics_BindVertexBuffers(render_pass_effect, EffectVertexBuffer, 0, 0, 1);
 	Graphics_BindIndexBuffers(render_pass_effect, EffectIndexBuffer, 0);
-	SDL_BindGPUFragmentSamplers(render_pass_effect, 0, (SDL_GPUTextureSamplerBinding[]){
+	/*SDL_BindGPUFragmentSamplers(render_pass_effect, 0, (SDL_GPUTextureSamplerBinding[]){
 				{ .texture = SceneColorTexture, .sampler = EffectSampler },
 				{ .texture = depth_texture, .sampler = EffectSampler }
-			}, 2);
+			}, 2);*/
 	//Graphics_BindFragmentSampledGPUTexture don't support more than 1 texture, FIXME
+	Graphics_BindFragmentSampledGPUTexture(render_pass_effect, SceneColorTexture, EffectSampler, 0, 1);
 	Graphics_DrawPrimitives(render_pass_effect, 6, 1, 0, 0, 0);
 	Graphics_EndRenderPass(render_pass_effect);
 

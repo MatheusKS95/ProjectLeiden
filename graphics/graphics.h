@@ -328,6 +328,8 @@ void Graphics_UploadTexture(Texture2D *texture);
 
 GPUTexture *Graphics_GenerateDepthTexture(int width, int height);
 
+GPUTexture *Graphics_GenerateRenderTexture(int width, int height);
+
 bool Graphics_SetupDefaultTextures(const char *path_d,
 									const char *path_n,
 									const char *path_s,
