@@ -19,17 +19,10 @@
 #include <screens.h>
 #include <leiden.h>
 
-typedef struct effectvert
-{
-	float x, y, z;
-	float u, v;
-} effectvert;
-
-static Pipeline* EffectPipeline;
-static GPUBuffer* EffectVertexBuffer;
-static GPUBuffer* EffectIndexBuffer;
-static Sampler* EffectSampler;
-static GPUTexture *SceneColorTexture;
+static Pipeline* effect_pipeline;
+static EffectBuffers *effect_buffers;
+static Sampler* effect_sampler;
+static GPUTexture *scene_colortexture;
 
 static Model *vroid_test;
 static Model *mulher;
@@ -43,75 +36,6 @@ static float last_x, last_y;
 static float mouse_x, mouse_y;
 static bool first_mouse;
 static Camera cam_1;
-
-static Pipeline *TEMP_Generate3DPipelineEffect(Shader *vs, Shader *fs,
-												bool release_shaders)
-{
-	if(vs == NULL || fs == NULL)
-	{
-		return NULL;
-	}
-
-	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = { 0 };
-	pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo)
-	{
-		.target_info =
-		{
-			.num_color_targets = 1,
-			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
-				.format = SDL_GetGPUSwapchainTextureFormat(context.device, context.window)
-			}},
-			.has_depth_stencil_target = true,
-			.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM
-		},
-		.depth_stencil_state = (SDL_GPUDepthStencilState){
-			.enable_depth_test = true,
-			.enable_depth_write = true,
-			.enable_stencil_test = false,
-			.compare_op = SDL_GPU_COMPAREOP_LESS,
-			.write_mask = 0xFF
-		},
-		.rasterizer_state = (SDL_GPURasterizerState){
-			.cull_mode = SDL_GPU_CULLMODE_NONE,
-			.fill_mode = SDL_GPU_FILLMODE_FILL,
-			.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE
-		},
-		.vertex_input_state = (SDL_GPUVertexInputState){
-			.num_vertex_buffers = 1,
-			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
-				.slot = 0,
-				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
-				.instance_step_rate = 0,
-				.pitch = sizeof(effectvert)
-			}},
-			.num_vertex_attributes = 2,
-			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
-				//position
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-				.location = 0,
-				.offset = 0
-			}, {
-				//uv
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-				.location = 1,
-				.offset = (sizeof(float) * 3)
-			}} //there's more, but I need only these now
-		},
-		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = vs,
-		.fragment_shader = fs
-	};
-	Pipeline *pipeline = SDL_CreateGPUGraphicsPipeline(context.device, &pipeline_createinfo);
-	if(release_shaders)
-	{
-		SDL_ReleaseGPUShader(context.device, vs);
-		SDL_ReleaseGPUShader(context.device, fs);
-	}
-
-	return pipeline;
-}
 
 bool DemoPostProc_Setup()
 {
@@ -145,8 +69,8 @@ bool DemoPostProc_Setup()
 		Graphics_ImportIQM(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
 		Graphics_LoadModelMaterials(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
 		Graphics_UploadModel(vroid_test, true);
-		Graphics_RotateModel(vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(120));
-		Graphics_MoveModel(vroid_test, (Vector3){0.0f, 0.0f, 2.0f});
+		Graphics_RotateModel(vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(179));
+		Graphics_MoveModel(vroid_test, (Vector3){0.0f, 0.0f, 1.0f});
 	}
 
 	mulher = (Model*)SDL_malloc(sizeof(Model));
@@ -156,7 +80,7 @@ bool DemoPostProc_Setup()
 		Graphics_LoadModelMaterials(mulher, "test_models/mulher2/mulher_face2.material");
 		Graphics_UploadModel(mulher, true);
 		Graphics_ScaleModel(mulher, 0.1);
-		Graphics_MoveModel(mulher, (Vector3){3.0f, 0.0f, 2.0f});
+		Graphics_MoveModel(mulher, (Vector3){1.0f, 0.0f, 1.0f});
 	}
 
 	//TODO: the correct order for transform a model is scale > rotation > translation
@@ -167,7 +91,7 @@ bool DemoPostProc_Setup()
 
 	depth_texture = Graphics_GenerateDepthTexture(context.width, context.height);
 
-	SceneColorTexture = Graphics_GenerateRenderTexture(context.width, context.height);
+	scene_colortexture = Graphics_GenerateRenderTexture(context.width, context.height);
 
 	//effect stuff
 	Shader *effectvs = Graphics_LoadShader("shaders/effects/default.vert.spv", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 0, 0);
@@ -176,99 +100,18 @@ bool DemoPostProc_Setup()
 		SDL_Log("Failed to load skybox vertex shader.");
 		return NULL;
 	}
-	Shader *effectfs = Graphics_LoadShader("shaders/effects/blur.frag.spv", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	Shader *effectfs = Graphics_LoadShader("shaders/effects/outline.frag.spv", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
 	if(fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
 		return NULL;
 	}
-	EffectPipeline = TEMP_Generate3DPipelineEffect(effectvs, effectfs, true);
+	effect_pipeline = Graphics_GenerateEffectsPipeline(effectvs, effectfs, true);
 
-	//i think this might cause issues, if it looks off this might be the culprit, should allow to change mipmap mode
-	EffectSampler = Graphics_GenerateSampler(SAMPLER_FILTER_NEAREST, SAMPLER_MODE_REPEAT);
+	//TODO should allow to change mipmap mode
+	effect_sampler = Graphics_GenerateSampler(SAMPLER_FILTER_NEAREST, SAMPLER_MODE_REPEAT);
 
-	//NOTE, this is based from the SDL GPU examples repo, zlib license, I'll change this later
-	{
-		EffectVertexBuffer = SDL_CreateGPUBuffer(
-			context.device,
-			&(SDL_GPUBufferCreateInfo) {
-				.usage = SDL_GPU_BUFFERUSAGE_VERTEX,
-				.size = sizeof(effectvert) * 4
-			}
-		);
-
-		EffectIndexBuffer = SDL_CreateGPUBuffer(
-			context.device,
-			&(SDL_GPUBufferCreateInfo) {
-				.usage = SDL_GPU_BUFFERUSAGE_INDEX,
-				.size = sizeof(Uint32) * 6
-			}
-		);
-
-		SDL_GPUTransferBuffer* bufferTransferBuffer = SDL_CreateGPUTransferBuffer(
-			context.device,
-			&(SDL_GPUTransferBufferCreateInfo) {
-				.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-				.size = (sizeof(effectvert) * 4) + (sizeof(Uint32) * 6)
-			}
-		);
-
-		effectvert* transferData = SDL_MapGPUTransferBuffer(
-			context.device,
-			bufferTransferBuffer,
-			false
-		);
-
-		transferData[0] = (effectvert) { -1,  1, 0, 0, 0 };
-		transferData[1] = (effectvert) {  1,  1, 0, 1, 0 };
-		transferData[2] = (effectvert) {  1, -1, 0, 1, 1 };
-		transferData[3] = (effectvert) { -1, -1, 0, 0, 1 };
-
-		Uint32* indexData = (Uint32*) &transferData[4];
-		indexData[0] = 0;
-		indexData[1] = 1;
-		indexData[2] = 2;
-		indexData[3] = 0;
-		indexData[4] = 2;
-		indexData[5] = 3;
-
-		SDL_UnmapGPUTransferBuffer(context.device, bufferTransferBuffer);
-
-		SDL_GPUCommandBuffer* uploadCmdBuf = SDL_AcquireGPUCommandBuffer(context.device);
-		SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(uploadCmdBuf);
-
-		SDL_UploadToGPUBuffer(
-			copyPass,
-			&(SDL_GPUTransferBufferLocation) {
-				.transfer_buffer = bufferTransferBuffer,
-				.offset = 0
-			},
-			&(SDL_GPUBufferRegion) {
-				.buffer = EffectVertexBuffer,
-				.offset = 0,
-				.size = sizeof(effectvert) * 4
-			},
-			false
-		);
-
-		SDL_UploadToGPUBuffer(
-			copyPass,
-			&(SDL_GPUTransferBufferLocation) {
-				.transfer_buffer = bufferTransferBuffer,
-				.offset = sizeof(effectvert) * 4
-			},
-			&(SDL_GPUBufferRegion) {
-				.buffer = EffectIndexBuffer,
-				.offset = 0,
-				.size = sizeof(Uint32) * 6
-			},
-			false
-		);
-
-		SDL_EndGPUCopyPass(copyPass);
-		SDL_SubmitGPUCommandBuffer(uploadCmdBuf);
-		SDL_ReleaseGPUTransferBuffer(context.device, bufferTransferBuffer);
-	}
+	effect_buffers = Graphics_GenerateEffectBuffers();
 
 	return true;
 }
@@ -341,9 +184,9 @@ void DemoPostProc_Draw()
 		return;
 	}
 
-	Color clearcolor = { 0.4f, 0.2f, 0.6f, 1.0f };
+	Color clearcolor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-	RenderPass *render_pass_scene = Graphics_BeginRenderPass(cmdbuf, SceneColorTexture, depth_texture, clearcolor);
+	RenderPass *render_pass_scene = Graphics_BeginRenderPass(cmdbuf, scene_colortexture, depth_texture, clearcolor);
 	Graphics_BindPipeline(render_pass_scene, simple_pipeline);
 	Matrix4x4 viewproj;
 	viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
@@ -390,16 +233,17 @@ void DemoPostProc_Draw()
 	Graphics_EndRenderPass(render_pass_scene);
 
 	//effect drawing
+	//TODO make a function that draws this quickly, but first need to fix Graphics_BindFragmentSampledGPUTexture
 	RenderPass *render_pass_effect = Graphics_BeginRenderPass(cmdbuf, swapchain_texture, NULL, clearcolor);
-	Graphics_BindPipeline(render_pass_effect, EffectPipeline);
-	Graphics_BindVertexBuffers(render_pass_effect, EffectVertexBuffer, 0, 0, 1);
-	Graphics_BindIndexBuffers(render_pass_effect, EffectIndexBuffer, 0);
+	Graphics_BindPipeline(render_pass_effect, effect_pipeline);
+	Graphics_BindVertexBuffers(render_pass_effect, effect_buffers->effect_vbuffer, 0, 0, 1);
+	Graphics_BindIndexBuffers(render_pass_effect, effect_buffers->effect_ibuffer, 0);
 	/*SDL_BindGPUFragmentSamplers(render_pass_effect, 0, (SDL_GPUTextureSamplerBinding[]){
 				{ .texture = SceneColorTexture, .sampler = EffectSampler },
 				{ .texture = depth_texture, .sampler = EffectSampler }
 			}, 2);*/
 	//Graphics_BindFragmentSampledGPUTexture don't support more than 1 texture, FIXME
-	Graphics_BindFragmentSampledGPUTexture(render_pass_effect, SceneColorTexture, EffectSampler, 0, 1);
+	Graphics_BindFragmentSampledGPUTexture(render_pass_effect, scene_colortexture, effect_sampler, 0, 1);
 	Graphics_DrawPrimitives(render_pass_effect, 6, 1, 0, 0, 0);
 	Graphics_EndRenderPass(render_pass_effect);
 

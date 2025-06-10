@@ -242,12 +242,21 @@ typedef struct MeshArray
 	Mesh *meshes;
 } MeshArray;
 
+//might be broken up into several specialized types
 typedef struct Model
 {
 	MeshArray meshes;
 	MaterialArray materials;
 	Matrix4x4 transform;
 } Model;
+
+/* EFFECTS (aka POST-PROCESSING) */
+
+typedef struct EffectBuffers
+{
+	GPUBuffer *effect_vbuffer;
+	GPUBuffer *effect_ibuffer;
+} EffectBuffers;
 
 /*******************************************************************
  * FUNCTIONS *******************************************************
@@ -391,6 +400,9 @@ void Graphics_RotateModel(Model *model, Vector3 axis,
 void Graphics_ReleaseModel(Model *model);
 
 /* RENDERING */
+//things here are lower level due to the fact they are easier to
+//work with that way - specially if i want to play around with
+//more than one rendering style
 
 bool Graphics_CreateAndUploadStorageBuffer(StorageBuffer *buffer,
 									void *data, size_t size);
@@ -451,6 +463,13 @@ void Graphics_DrawPrimitives(RenderPass *renderpass,
 								Uint32 num_instances,
 								int first_index, int vertex_offset,
 								Uint32 first_instance);
+
+/* EFFECTS (aka POST-PROCESSING) */
+
+Pipeline *Graphics_GenerateEffectsPipeline(Shader *vs, Shader *fs,
+											bool release_shaders);
+
+EffectBuffers *Graphics_GenerateEffectBuffers();
 
 /*******************************************************************
  * GLOBALS *********************************************************
