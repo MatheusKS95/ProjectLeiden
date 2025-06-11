@@ -118,12 +118,18 @@ typedef enum SamplerFilter
 	SAMPLER_FILTER_NEAREST
 } SamplerFilter;
 
-typedef enum SamplerMode
+typedef enum SamplerMipmapMode
+{
+	SAMPLER_MIPMAPMODE_LINEAR = 0,
+	SAMPLER_MIPMAPMODE_NEAREST
+} SamplerMipmapMode;
+
+typedef enum SamplerAddressMode
 {
 	SAMPLER_MODE_REPEAT = 0,
 	SAMPLER_MODE_CLAMPTOEDGE,
 	SAMPLER_MODE_MIRROREDREPEAT
-} SamplerMode;
+} SamplerAddressMode;
 
 typedef struct Texture2D
 {
@@ -321,7 +327,8 @@ Pipeline *Graphics_Generate3DPipelineFull(Shader *vs, Shader *fs,
 /* 2D TEXTURES */
 
 Sampler* Graphics_GenerateSampler(SamplerFilter filter,
-									SamplerMode mode);
+									SamplerMipmapMode mpmode,
+									SamplerAddressMode addmode);
 
 void Graphics_ReleaseSampler(Sampler *sampler);
 

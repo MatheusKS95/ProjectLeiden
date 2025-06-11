@@ -26,34 +26,28 @@
 #include <fileio.h>
 #include <graphics.h>
 
-Sampler* Graphics_GenerateSampler(SamplerFilter filter, SamplerMode mode)
+Sampler* Graphics_GenerateSampler(SamplerFilter filter,
+									SamplerMipmapMode mpmode,
+									SamplerAddressMode addmode)
 {
 	SDL_GPUFilter sdlfilter;
 	SDL_GPUSamplerMipmapMode sdlmipmapmode;
 	SDL_GPUSamplerAddressMode sdlsam;
 	switch(filter)
 	{
-		case SAMPLER_FILTER_LINEAR:
-		{
-			sdlfilter = SDL_GPU_FILTER_LINEAR;
-			sdlmipmapmode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
-			break;
-		}
-		case SAMPLER_FILTER_NEAREST:
-		{
-			sdlfilter = SDL_GPU_FILTER_NEAREST;
-			sdlmipmapmode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
-			break;
-		}
-		default:
-		{
-			sdlfilter = SDL_GPU_FILTER_LINEAR;
-			sdlmipmapmode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
-			break;
-		}
+		case SAMPLER_FILTER_LINEAR: sdlfilter = SDL_GPU_FILTER_LINEAR; break;
+		case SAMPLER_FILTER_NEAREST: sdlfilter = SDL_GPU_FILTER_NEAREST; break;
+		default: sdlfilter = SDL_GPU_FILTER_LINEAR; break;
 	}
 
-	switch(mode)
+	switch(mpmode)
+	{
+		case SAMPLER_MIPMAPMODE_LINEAR: sdlmipmapmode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR; break;
+		case SAMPLER_MIPMAPMODE_NEAREST: sdlmipmapmode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST; break;
+		default: sdlmipmapmode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR; break;
+	}
+
+	switch(addmode)
 	{
 		case SAMPLER_MODE_REPEAT: sdlsam = SDL_GPU_SAMPLERADDRESSMODE_REPEAT; break;
 		case SAMPLER_MODE_CLAMPTOEDGE: sdlsam = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE; break;

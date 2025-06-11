@@ -212,7 +212,7 @@ bool Graphics_LoadSkyboxFS(Skybox *skybox, const char *path_up,
 				}
 	);
 
-	skybox->sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
+	skybox->sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MIPMAPMODE_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
 	return true;
 }

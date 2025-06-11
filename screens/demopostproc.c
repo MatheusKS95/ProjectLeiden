@@ -66,9 +66,10 @@ bool DemoPostProc_Setup()
 	vroid_test = (Model*)SDL_malloc(sizeof(Model));
 	if(vroid_test != NULL)
 	{
-		Graphics_ImportIQM(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.iqm");
-		Graphics_LoadModelMaterials(vroid_test, "test_models/avatarsamplek_teste/avatarsamplek.material");
+		Graphics_ImportIQM(vroid_test, "test_models/michikocasual/michikocasual.iqm");
+		Graphics_LoadModelMaterials(vroid_test, "test_models/michikocasual/michikocasual.material");
 		Graphics_UploadModel(vroid_test, true);
+		Graphics_RotateModel(vroid_test, (Vector3){1.0f, 0.0f, 0.0f}, DegToRad(90)); //iqm blender exporter problems
 		Graphics_RotateModel(vroid_test, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(179));
 		Graphics_MoveModel(vroid_test, (Vector3){0.0f, 0.0f, 1.0f});
 	}
@@ -87,7 +88,7 @@ bool DemoPostProc_Setup()
 	//this is the issue i have when rotating it using the deltatime and begin orbiting the middle at mach speeds
 	//keep this in mind when doing stuff in the loop - besides, transform shouldn't be here at all, but...
 
-	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
+	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MIPMAPMODE_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
 	depth_texture = Graphics_GenerateDepthTexture(context.width, context.height);
 
@@ -108,8 +109,7 @@ bool DemoPostProc_Setup()
 	}
 	effect_pipeline = Graphics_GenerateEffectsPipeline(effectvs, effectfs, true);
 
-	//TODO should allow to change mipmap mode
-	effect_sampler = Graphics_GenerateSampler(SAMPLER_FILTER_NEAREST, SAMPLER_MODE_REPEAT);
+	effect_sampler = Graphics_GenerateSampler(SAMPLER_FILTER_NEAREST, SAMPLER_MIPMAPMODE_NEAREST, SAMPLER_MODE_REPEAT);
 
 	effect_buffers = Graphics_GenerateEffectBuffers();
 
