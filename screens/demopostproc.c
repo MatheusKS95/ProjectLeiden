@@ -14,8 +14,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//this currently not work :(
-
 #include <screens.h>
 #include <leiden.h>
 
@@ -90,9 +88,9 @@ bool DemoPostProc_Setup()
 
 	sampler = Graphics_GenerateSampler(SAMPLER_FILTER_LINEAR, SAMPLER_MIPMAPMODE_LINEAR, SAMPLER_MODE_CLAMPTOEDGE);
 
-	depth_texture = Graphics_GenerateDepthTexture(context.width, context.height);
-
-	scene_colortexture = Graphics_GenerateRenderTexture(context.width, context.height);
+	unsigned int ssaa = 4;
+	depth_texture = Graphics_GenerateDepthTexture(context.width * ssaa, context.height * ssaa);
+	scene_colortexture = Graphics_GenerateRenderTexture(context.width * ssaa, context.height * ssaa);
 
 	//effect stuff
 	Shader *effectvs = Graphics_LoadShader("shaders/effects/default.vert.spv", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 0, 0);
@@ -101,7 +99,7 @@ bool DemoPostProc_Setup()
 		SDL_Log("Failed to load skybox vertex shader.");
 		return NULL;
 	}
-	Shader *effectfs = Graphics_LoadShader("shaders/effects/outline.frag.spv", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
+	Shader *effectfs = Graphics_LoadShader("shaders/effects/blur.frag.spv", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 0, 0);
 	if(fsshader == NULL)
 	{
 		SDL_Log("Failed to load skybox fragment shader.");
@@ -244,6 +242,7 @@ void DemoPostProc_Draw()
 			}, 2);*/
 	//Graphics_BindFragmentSampledGPUTexture don't support more than 1 texture, FIXME
 	Graphics_BindFragmentSampledGPUTexture(render_pass_effect, scene_colortexture, effect_sampler, 0, 1);
+	//Graphics_BindFragmentSampledGPUTexture(render_pass_effect, depth_texture, effect_sampler, 0, 1);
 	Graphics_DrawPrimitives(render_pass_effect, 6, 1, 0, 0, 0);
 	Graphics_EndRenderPass(render_pass_effect);
 
