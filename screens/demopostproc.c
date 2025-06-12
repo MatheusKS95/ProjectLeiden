@@ -203,7 +203,7 @@ void DemoPostProc_Draw()
 		//texture samplers
 		Material *material = Graphics_GetMaterialByName(&vroid_test->materials, mesh->material_name);
 		if(material == NULL) continue;
-		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
+		Texture2D *diffuse = material->diffuse_map;
 		Graphics_BindFragmentSampledTexture(render_pass_scene, diffuse, sampler, 0, 1);
 
 		//UBO
@@ -222,7 +222,7 @@ void DemoPostProc_Draw()
 		//texture samplers
 		Material *material = Graphics_GetMaterialByName(&mulher->materials, mesh->material_name);
 		if(material == NULL) continue;
-		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
+		Texture2D *diffuse = material->diffuse_map;
 		Graphics_BindFragmentSampledTexture(render_pass_scene, diffuse, sampler, 0, 1);
 
 		//UBO
