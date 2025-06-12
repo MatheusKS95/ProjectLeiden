@@ -159,42 +159,14 @@ bool Graphics_LoadModelMaterials(Model *model,
 				Graphics_LoadTextureFromFS(material.diffuse_map, diffusepath);
 		}
 
-		char normalpath[512];
-		const char *norm_map = INIGetString(material_ini, iqm_material, "normal_map");
-		SDL_snprintf(normalpath, sizeof(normalpath), "%s/%s", material_dir, norm_map);
-		if(norm_map != NULL && SDL_strcmp(norm_map, "") != 0)
-		{
-			material.normal_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-			if(material.normal_map != NULL)
-				Graphics_LoadTextureFromFS(material.normal_map, normalpath);
-		}
-
-		char specularpath[512];
-		const char *spec_map = INIGetString(material_ini, iqm_material, "specular_map");
-		SDL_snprintf(specularpath, sizeof(specularpath), "%s/%s", material_dir, spec_map);
-		if(spec_map != NULL && SDL_strcmp(spec_map, "") != 0)
-		{
-			material.specular_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-			if(material.specular_map != NULL)
-				Graphics_LoadTextureFromFS(material.specular_map, specularpath);
-		}
-
-		char emissionpath[512];
-		const char *emission_map = INIGetString(material_ini, iqm_material, "emission_map");
-		SDL_snprintf(emissionpath, sizeof(emissionpath), "%s/%s", material_dir, emission_map);
-		if(emission_map != NULL && SDL_strcmp(emission_map, "") != 0)
-		{
-			material.emission_map = (Texture2D*)SDL_malloc(sizeof(Texture2D));
-			if(material.emission_map != NULL)
-				Graphics_LoadTextureFromFS(material.emission_map, emissionpath);
-		}
-
 		if(!_arrayPushLastMaterial(&model->materials, material))
 		{
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Graphics: Error: Unable to load material %s into model.", iqm_material);
 			continue;
 		}
 	}
+
+	INIDestroy(&material_ini);
 
 	return true;
 }
@@ -227,12 +199,6 @@ void Graphics_UploadMaterial(Material *material)
 
 	if(material->diffuse_map != NULL)
 		Graphics_UploadTexture(material->diffuse_map);
-	if(material->normal_map != NULL)
-		Graphics_UploadTexture(material->normal_map);
-	if(material->specular_map != NULL)
-		Graphics_UploadTexture(material->specular_map);
-	if(material->emission_map != NULL)
-		Graphics_UploadTexture(material->emission_map);
 	return;
 }
 

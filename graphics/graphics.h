@@ -140,9 +140,8 @@ typedef struct Texture2D
 typedef struct DefaultTextures
 {
 	Texture2D default_diffuse;
-	Texture2D default_normal;
-	Texture2D default_spec;
-	Texture2D default_emission;
+	//Texture2D default_normal; //not needed here
+	//Texture2D default_spec; //not needed here
 } DefaultTextures;
 
 /* SKYBOXES */
