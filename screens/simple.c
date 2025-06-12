@@ -83,7 +83,7 @@ static void drawmodelsimple(Model *model, Matrix4x4 mvp, Sampler *sampler, Rende
 		//texture samplers
 		Material *material = Graphics_GetMaterialByName(&model->materials, mesh->material_name);
 		if(material == NULL) continue;
-		Texture2D *diffuse = material->diffuse_map != NULL ? material->diffuse_map : &default_textures.default_diffuse;
+		Texture2D *diffuse = material->diffuse_map;
 		Graphics_BindFragmentSampledTexture(render_pass, diffuse, sampler, 0, 1);
 
 		//UBO

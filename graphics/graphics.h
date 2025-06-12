@@ -346,14 +346,6 @@ GPUTexture *Graphics_GenerateDepthTexture(int width, int height);
 
 GPUTexture *Graphics_GenerateRenderTexture(int width, int height);
 
-bool Graphics_SetupDefaultTextures(const char *path_d,
-									const char *path_n,
-									const char *path_s,
-									const char *path_e);
-
-//FIXME I'll keep only diffuse, everything else will be removed
-void Graphics_ReleaseDefaultTextures();
-
 /* SKYBOXES */
 
 bool Graphics_CreatePipelineSkybox(Skybox *skybox,
@@ -483,8 +475,5 @@ EffectBuffers *Graphics_GenerateEffectBuffers();
  ******************************************************************/
 
 extern GraphicsContext context;
-
-//DELETE THIS (or move to leiden module)
-extern DefaultTextures default_textures;
 
 #endif

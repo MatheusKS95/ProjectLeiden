@@ -18,7 +18,6 @@
 #include <fileio.h>
 
 GraphicsContext context;
-DefaultTextures default_textures;
 
 bool Graphics_Init()
 {
