@@ -85,3 +85,18 @@ void DemoPostProc_Draw();
 void DemoPostProc_Destroy();
 
 //END POSTPROC
+
+/* DEMO CEL SHADING SCREEN
+ * Intended to be used for showcasing cel shading
+*/
+//BEGIN CEL SHADING
+
+bool CelShading_Setup();
+
+void CelShading_Logic(InputState *state);
+
+void CelShading_Draw();
+
+void CelShading_Destroy();
+
+//END CEL SHADING
