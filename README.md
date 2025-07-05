@@ -14,7 +14,7 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 - **Windows**: Works fine with both MinGW-W64 and MSVC. MSVC might be a problem sometimes, but it works.
 - **MacOS**: No access to Apple hardware. No SPIR-V support. Making it work is [troublesome](https://github.com/libsdl-org/SDL/blob/main/docs/README-macos.md). No plans for support.
 - **iOS**: Same issues as MacOS. No plans to support.
-- **Android**: As of today, it [doesn't work at all, due to poor Vulkan support on most Android devices](https://github.com/libsdl-org/SDL/issues/12652). Support is currently unfeasible. Also, no plans for OpenGL ES graphics.
+- **Android**: As of today, it [doesn't work at all, due to poor Vulkan support on most Android devices](https://github.com/libsdl-org/SDL/issues/12652#issuecomment-2755770682). Support is currently unfeasible. Also, no plans for OpenGL ES graphics.
 
 ## 📦 About the dependencies
 - **SDL3**: Used for most middleware, windowing and GPU API (currently Vulkan-only). [Link](https://github.com/libsdl-org/SDL).
