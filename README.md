@@ -19,7 +19,6 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 ## 📦 About the dependencies
 - **SDL3**: Used for most middleware, windowing and GPU API (currently Vulkan-only). [Link](https://github.com/libsdl-org/SDL).
 - **SDL3_image**: Used for loading images (textures used for testing are in PNG and QOI format). [Link](https://github.com/libsdl-org/SDL_image).
-- **joltc**: Wrapper around [Jolt Physics](https://github.com/jrouwe/JoltPhysics), so I can use it with C. [Link](https://github.com/amerkoleci/joltc).
 
 ## 📺 Rendering
 Currently, only a basic cel-shaded pipeline is being worked on. It is based on how classic cel shading works, relying on textures to achieve effects such as lights and shadows. I plan to work on a 5th-gen pipeline as well (PS1/N64/Saturn). No plans for more advanced rendering - it only has one texture per mesh (no normals, no specular, no PBR materials).
