@@ -15,7 +15,6 @@
  */
 
 #include <SDL3/SDL.h>
-#include <joltc.h>
 #include <fileio.h>
 #include <ini.h>
 #include <screens.h>
@@ -113,12 +112,7 @@ int main(int argc, char *argv[])
 
 	INIDestroy(&ini);
 
-	//init physics
-	if(!JPH_Init())
-	{
-		SDL_LogInfo(SDL_LOG_CATEGORY_ERROR, "Graphics: Failed to init joltc");
-		return -1;
-	}
+	//TODO physics
 
 	//more stuff
 	SCR_SetContext(window, device);
@@ -142,7 +136,6 @@ int main(int argc, char *argv[])
 
 	SCR_Destroy();
 	FileIODeinit();
-	JPH_Shutdown();
 	SDL_ReleaseWindowFromGPUDevice(device, window);
 	SDL_DestroyGPUDevice(device);
 	SDL_Quit();

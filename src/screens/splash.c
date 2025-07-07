@@ -199,11 +199,23 @@ void SplashScreen_Logic(SDL_Event event)
 		}
 		if(event.type == SDL_EVENT_KEY_DOWN)
 		{
-			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "key press");
-			if(TestScreen1_Setup())
+			if(event.key.key != SDLK_Q)
 			{
-				SplashScreen_Destroy();
-				current_screen = SCREEN_TEST;
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to cel shading test");
+				if(TestScreen1_Setup())
+				{
+					SplashScreen_Destroy();
+					current_screen = SCREEN_TEST;
+				}
+			}
+			else
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to joltc test");
+				if(TestScreen2_Setup())
+				{
+					SplashScreen_Destroy();
+					current_screen = SCREEN_TEST2;
+				}
 			}
 		}
 	}

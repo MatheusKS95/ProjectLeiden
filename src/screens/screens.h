@@ -19,7 +19,8 @@
 typedef enum CurrentScreen
 {
 	SCREEN_SPLASH = 0,
-	SCREEN_TEST
+	SCREEN_TEST,
+	SCREEN_TEST2
 } CurrentScreen;
 
 typedef struct RockportContext
