@@ -210,7 +210,7 @@ void SplashScreen_Logic(SDL_Event event)
 			}
 			else
 			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to joltc test");
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to physics test");
 				if(TestScreen2_Setup())
 				{
 					SplashScreen_Destroy();

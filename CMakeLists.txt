@@ -51,6 +51,13 @@ PRIVATE
 	src/linmath/linmath.c
 )
 
+#physics
+target_include_directories(${EXECUTABLE_NAME} PUBLIC src/physics)
+target_sources(${EXECUTABLE_NAME}
+PRIVATE
+	src/physics/physics.c
+)
+
 #assets
 target_include_directories(${EXECUTABLE_NAME} PUBLIC src/assets)
 target_sources(${EXECUTABLE_NAME}

@@ -22,7 +22,6 @@
 int main(int argc, char *argv[])
 {
 	SDL_Log("Copyright (C) 2025 Matheus Klein Schaefer - All rights reserved.");
-	SDL_Log("TODO GPL notice");
 	if(!SDL_Init(SDL_INIT_VIDEO))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "ERROR: %s", SDL_GetError());

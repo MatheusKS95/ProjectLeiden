@@ -15,10 +15,25 @@
  */
 
 #include <SDL3/SDL.h>
+#include <physics.h>
 #include <screens.h>
+
+PhysBody body;
+PhysWorld world;
+PhysJoint joint;
+
+static Vector3 environmentDistance(Vector3 point, Sint32 maxDistance)
+{
+	return Phys_EnvGround(point, 0); // just an infinite flat plane
+}
 
 bool TestScreen2_Setup()
 {
+	joint = Phys_NewJoint((Vector3){0, PHYSICS_F * 8.0f, 0.0f}, PHYSICS_F);
+	body = (PhysBody){ 0 };
+	Phys_BodyInit(&body, &joint, 1, NULL, 0, 2 * PHYSICS_F);
+	world = (PhysWorld){ 0 };
+	Phys_WorldInit(&world, &body, 1, environmentDistance);
 	return true;
 }
 
