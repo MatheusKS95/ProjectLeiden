@@ -14,6 +14,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+//this is a safe (as in as human safe, not memory safe) version of tinyphysicsengine
+
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
@@ -23,6 +25,43 @@
 #define PHYSICS_FRACTIONS_PER_UNIT 512			///< one fixed point unit, don't change
 #define PHYSICS_F PHYSICS_FRACTIONS_PER_UNIT	///< short for TPE_FRACTIONS_PER_UNIT
 #define PHYSICS_JOINT_SIZE_MULTIPLIER 32		///< joint size is scaled (size saving)
+
+#define PHYSICS_JOINT_SIZE(joint) ((joint).size_divided * PHYSICS_JOINT_SIZE_MULTIPLIER)
+
+
+/*
+ * Not being updated due to low energy, "sleeping", will be woken by
+ * collisions etc.
+*/
+#define PHYSICS_BODY_FLAG_DEACTIVATED 1
+
+/*
+ * When set, the body won't rotate, will only move linearly. Here the
+ * velocity of the body's first joint is the velocity of the whole
+ * body.
+*/
+#define PHYSICS_BODY_FLAG_NONROTATING 2
+
+/*
+ * Disabled, not taking part in simulation.
+*/
+#define PHYSICS_BODY_FLAG_DISABLED 4
+
+/*
+ * Soft connections, effort won't be made to keep the body's shape.
+*/
+#define PHYSICS_BODY_FLAG_SOFT 8
+
+/*
+ * Simple connections, don't zero out antagonist forces or apply
+ * connection friction, can increase performance.
+*/
+#define PHYSICS_BODY_FLAG_SIMPLE_CONN 16
+
+/*
+ * Will never deactivate due to low energy.
+*/
+#define PHYSICS_BODY_FLAG_ALWAYS_ACTIVE 32
 
 /** Function used for defining static environment, working similarly to an SDF
   (signed distance function). The parameters are: 3D point P, max distance D.
@@ -87,5 +126,15 @@ void Phys_BodyInit(PhysBody *body, PhysJoint *joints, Uint8 joint_count,
 
 void Phys_WorldInit(PhysWorld *world, PhysBody *bodies, Uint16 body_count,
 						PhysClosestPointFunction environmentFunction);
+
+bool Phys_IsBodyActive(const PhysBody *body);
+
+Vector3 Phys_GetBodyCenterOfMass(const PhysBody *body);
+
+void Phys_ApplyGravityToBody(PhysBody *body, float downwards_accel);
+
+void Phys_GetBodyAABB(const PhysBody *body, Vector3 *v_min, Vector3 *v_max);
+
+void Phys_WorldStep(PhysWorld *world);
 
 #endif
