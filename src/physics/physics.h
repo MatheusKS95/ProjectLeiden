@@ -1,4 +1,35 @@
 /*
+ * Modified from original work:
+ * ----------------------------
+ * Copyright (c) 2018 exezin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
+ * This file contains modified code originally licensed under the MIT License,
+ * now redistributed under the terms of the GNU GPL v3.
+ */
+
+/*
+ * This modified version:
+ * -----------------------------------------
  * Copyright (C) 2025 Matheus Klein Schaefer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,127 +45,114 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//this is a safe (as in as human safe, not memory safe) version of tinyphysicsengine
-
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
 #include <SDL3/SDL.h>
 #include <linmath.h>
 
-#define PHYSICS_FRACTIONS_PER_UNIT 512			///< one fixed point unit, don't change
-#define PHYSICS_F PHYSICS_FRACTIONS_PER_UNIT	///< short for TPE_FRACTIONS_PER_UNIT
-#define PHYSICS_JOINT_SIZE_MULTIPLIER 32		///< joint size is scaled (size saving)
+#define OCTREE_DEFAULT_MIN_SIZE 5.0f
+extern int octree_min_size;
 
-#define PHYSICS_JOINT_SIZE(joint) ((joint).size_divided * PHYSICS_JOINT_SIZE_MULTIPLIER)
-
-
-/*
- * Not being updated due to low energy, "sleeping", will be woken by
- * collisions etc.
-*/
-#define PHYSICS_BODY_FLAG_DEACTIVATED 1
-
-/*
- * When set, the body won't rotate, will only move linearly. Here the
- * velocity of the body's first joint is the velocity of the whole
- * body.
-*/
-#define PHYSICS_BODY_FLAG_NONROTATING 2
-
-/*
- * Disabled, not taking part in simulation.
-*/
-#define PHYSICS_BODY_FLAG_DISABLED 4
-
-/*
- * Soft connections, effort won't be made to keep the body's shape.
-*/
-#define PHYSICS_BODY_FLAG_SOFT 8
-
-/*
- * Simple connections, don't zero out antagonist forces or apply
- * connection friction, can increase performance.
-*/
-#define PHYSICS_BODY_FLAG_SIMPLE_CONN 16
-
-/*
- * Will never deactivate due to low energy.
-*/
-#define PHYSICS_BODY_FLAG_ALWAYS_ACTIVE 32
-
-/** Function used for defining static environment, working similarly to an SDF
-  (signed distance function). The parameters are: 3D point P, max distance D.
-  The function should behave like this: if P is inside the solid environment
-  volume, P will be returned; otherwise closest point (by Euclidean distance) to
-  the solid environment volume from P will be returned, except for a case when
-  this closest point would be further away than D, in which case any arbitrary
-  point further away than D may be returned (this allows for optimizations). */
-typedef Vector3 (*PhysClosestPointFunction)(Vector3, Sint32);
-
-/** Function that can be used as a joint-joint or joint-environment collision
-  callback, parameters are following: body1 index, joint1 index, body2 index,
-  joint2 index, collision world position. If body1 index is the same as body1
-  index, then collision type is body-environment, otherwise it is body-body
-  type. The function has to return either 1 if the collision is to be allowed
-  or 0 if it is to be discarded. This can besides others be used to disable
-  collisions between some bodies. */
-typedef Uint8 (*PhysCollisionCallback)(Uint16, Uint16, Uint16, Uint16, Vector3);
-
-typedef struct PhysJoint
+typedef struct Box
 {
-	Vector3 position;
-	Vector3 velocity;
-	Uint8 size_divided;
-} PhysJoint;
+	Vector3 min;
+	Vector3 max;
+} Box;
 
-typedef struct PhysConnection
+/**********************************************************************
+ * OCTREES ************************************************************
+ *********************************************************************/
+
+typedef enum
 {
-	Uint8 joint1;
-	Uint8 joint2;
-	Uint16 length;
-} PhysConnection;
+	OBJ_TYPE_UINT,
+	OBJ_TYPE_INT,
+	OBJ_TYPE_BYTE,
+	OBJ_TYPE_FLOAT,
+	OBJ_TYPE_DOUBLE,
+	OBJ_TYPE_NULL
+} OctreeObjectType;
 
-typedef struct PhysBody
+typedef struct OctreeObject
 {
-	PhysJoint *joints;
-	size_t num_joints;
-	PhysConnection *connections;
-	size_t num_connections;
-	Uint16 joint_mass; //mass of a single joint
-	Uint16 friction; //friction of each joint
-	Uint16 elasticity; //elasticity of each joint
-	Uint8 flags;
-	Uint8 deactivate_count;
-} PhysBody;
+	union
+	{
+		Uint32 data_uint;
+		Sint32 data_int;
+		Uint8 data_byte;
+		float data_float;
+		double data_double;
+	};
+	Box box;
+} OctreeObject;
 
-typedef struct PhysWorld
+typedef struct OctreeData
 {
-	PhysBody *bodies;
-	size_t num_bodies;
-	PhysClosestPointFunction environment_function;
-	PhysCollisionCallback collision_callback;
-} PhysWorld;
+	void *data;
+	size_t len;
+} OctreeData;
 
-Vector3 Phys_EnvGround(Vector3 point, Sint32 height);
+typedef struct Octree Octree;
 
-PhysJoint Phys_NewJoint(Vector3 position, Uint32 size);
+struct Octree
+{
+	Box region;
+	Octree *children[8];
+	int max_life, cur_life;
+	//ex_list_t *obj_list; //TODO
+	// flags etc
+	Uint8 rendered : 1;
+	Uint8 built : 1;
+	Uint8 first : 1;
+	Uint8 data_type : 5;
+	// data
+	size_t  data_len;
+	union {
+		Uint32 *data_uint;
+		Sint32 *data_int;
+		Uint8 *data_byte;
+		float *data_float;
+		double *data_double;
+	};
+	int player_inside;
+};
 
-void Phys_BodyInit(PhysBody *body, PhysJoint *joints, Uint8 joint_count,
-					PhysConnection *connections, Uint8 connection_count,
-					Sint32 mass);
+/**********************************************************************
+ * PHYSICS ************************************************************
+ *********************************************************************/
 
-void Phys_WorldInit(PhysWorld *world, PhysBody *bodies, Uint16 body_count,
-						PhysClosestPointFunction environmentFunction);
+typedef struct PhysPlane
+{
+	Vector3 origin;
+	Vector3 normal;
+	float equation[4];
+} PhysPlane;
 
-bool Phys_IsBodyActive(const PhysBody *body);
+typedef struct CollPacket
+{
+	//r3 space
+	Vector3 r3_velocity;
+	Vector3 r3_position;
 
-Vector3 Phys_GetBodyCenterOfMass(const PhysBody *body);
+	//ellipsoid space
+	Vector3 e_radius;
+	Vector3 e_velocity;
+	Vector3 e_norm_velocity;
+	Vector3 e_base_point;
 
-void Phys_ApplyGravityToBody(PhysBody *body, float downwards_accel);
+	//original tri points
+	Vector3 a, b, c;
 
-void Phys_GetBodyAABB(const PhysBody *body, Vector3 *v_min, Vector3 *v_max);
+	//hit information
+	int found_collision;
+	float nearest_distance;
+	double t;
+	Vector3 intersect_point;
+	PhysPlane plane;
 
-void Phys_WorldStep(PhysWorld *world);
+	// iteration depth
+	int depth;
+} CollPacket;
 
 #endif
