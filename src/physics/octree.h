@@ -98,10 +98,10 @@ struct Octree
 	int max_life, cur_life;
 	//ex_list_t *obj_list; //TODO
 	// flags etc
-	Uint8 rendered : 1;
-	Uint8 built : 1;
-	Uint8 first : 1;
-	Uint8 data_type : 5;
+	bool rendered;
+	bool built;
+	bool first;
+	OctreeObjectType data_type;
 	// data
 	size_t  data_len;
 	union {
@@ -113,5 +113,7 @@ struct Octree
 	};
 	int player_inside;
 };
+
+//Octree *Octree_Create(OctreeObjectType type);
 
 #endif
