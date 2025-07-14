@@ -103,6 +103,10 @@ bool List_Remove(List *list, void *value)
 			if(aux == list->first)
 			{
 				list->first = list->first->next;
+				if (list->first != NULL)
+				{
+					list->first->prev = NULL;
+				}
 			}
 			else if (aux == list->last)
 			{
@@ -112,6 +116,10 @@ bool List_Remove(List *list, void *value)
 			else
 			{
 				behind->next = aux->next;
+				if (aux->next != NULL)
+				{
+					aux->next->prev = behind;
+				}
 			}
 		}
 
@@ -133,7 +141,12 @@ void List_Destroy(List *list)
 	}
 
 	//remove first
-	ListItem *next = list->first->next;
+	ListItem *next = NULL;
+	if (list->first != NULL)
+	{
+		next = list->first->next;
+		SDL_free(list->first);
+	}
 	SDL_free(list->first);
 
 	while(next != NULL)
@@ -154,3 +167,60 @@ void List_Destroy(List *list)
 
 	return;
 }
+
+//the following functions are UNTESTED, so not available yet
+//binary search cannot be implemented, no way to know where the middle is
+/*ListItem* List_Find(List *list, void *value)
+{
+	if(list == NULL || value == NULL) return NULL;
+
+	ListItem *current = list->first;
+	while (current != NULL)
+	{
+		if (current->value == value)
+		{
+			return current;
+		}
+		current = current->next;
+	}
+	return NULL;
+}
+
+ListItem* List_FindReverse(List *list, void *value)
+{
+	if (list == NULL || value == NULL) return NULL;
+
+	ListItem *current = list->last;
+	while (current != NULL)
+	{
+		if (current->value == value)
+		{
+			return current;
+		}
+		current = current->prev;
+	}
+	return NULL;
+}
+
+//allows a callback function (example below)
+ListItem* List_FindBy(List *list, void *target, int (*cmp)(void*, void*))
+{
+	if (list == NULL || target == NULL || cmp == NULL) return NULL;
+
+	ListItem *current = list->first;
+	while (current != NULL)
+	{
+		if (cmp(current->value, target) == 0)
+		{
+			return current;
+		}
+		current = current->next;
+	}
+	return NULL;
+}
+//callback example
+int compare_ints(void *a, void *b)
+{
+	return *(int*)a - *(int*)b;
+}
+*/
