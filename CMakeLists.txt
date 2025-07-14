@@ -34,6 +34,7 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC src/data)
 target_sources(${EXECUTABLE_NAME} 
 PRIVATE 
 	src/data/hashtable.c
+	src/data/list.c
 )
 
 #filesystem
