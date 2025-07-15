@@ -106,7 +106,7 @@ struct Octree
 	OctreeObjectType data_type;
 
 	// data
-	size_t  data_len;
+	size_t data_len;
 	union {
 		Uint32 *data_uint;
 		Sint32 *data_int;
