@@ -26,6 +26,15 @@ Vector3 Vector3_Add(Vector3 vector_a, Vector3 vector_b)
 	return result;
 }
 
+Vector3 Vector3_Sub(Vector3 vector_a, Vector3 vector_b)
+{
+	Vector3 result;
+	result.x = vector_a.x - vector_b.x;
+	result.y = vector_a.y - vector_b.y;
+	result.z = vector_a.z - vector_b.z;
+	return result;
+}
+
 Vector3 Vector3_Normalize(Vector3 vector)
 {
 	float magnitude = SDL_sqrtf((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
@@ -48,6 +57,16 @@ Vector3 Vector3_Cross(Vector3 vector_a, Vector3 vector_b)
 	result.x = vector_a.y * vector_b.z - vector_b.y * vector_a.z;
 	result.y = -(vector_a.x * vector_b.z - vector_b.x * vector_a.z);
 	result.z = vector_a.x * vector_b.y - vector_b.x * vector_a.y;
+
+	return result;
+}
+
+Vector3 Vector3_Scale(Vector3 vector, float scale)
+{
+	Vector3 result;
+	result.x = vector.x * scale;
+	result.y = vector.y * scale;
+	result.z = vector.z * scale;
 
 	return result;
 }

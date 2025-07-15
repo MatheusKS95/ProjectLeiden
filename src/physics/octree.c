@@ -83,7 +83,7 @@ Octree *Octree_Create(OctreeObjectType type)
 	if(octree == NULL)
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Octree_Create error: failed to create octree.");
-		return;
+		return NULL;
 	}
 
 	for(int i = 0; i < 8; i++)
@@ -92,8 +92,8 @@ Octree *Octree_Create(OctreeObjectType type)
 	}
 
 	//FIXME Vector3 is not an array, so I don't need this
-	octree->region.min = Vector3{ 0.0f };
-	octree->region.max = Vector3{ 1.0f, 1.0f };
+	octree->region.min = (Vector3){ 0.0f, 0.0f };
+	octree->region.max = (Vector3){ 1.0f, 1.0f };
 
 	octree->rendered = false;
 	octree->built = false;
@@ -137,6 +137,7 @@ bool Octree_Init(Octree *octree, Box region, List objects)
 	octree->data_byte = NULL;
 	octree->data_float = NULL;
 	octree->data_double = NULL;
+	return true;
 }
 
 void Octree_Build(Octree *octree)
@@ -157,15 +158,104 @@ void Octree_Build(Octree *octree)
 	}
 
 	//our size
-	Vector3 region;
-	/*vec3_sub(region, o->region.max, o->region.min);
+	Vector3 region = Vector3_Sub(octree->region.max, octree->region.min);
 
-	if (region[0] <= ex_octree_min_size || region[1] <= ex_octree_min_size || region[2] <= ex_octree_min_size) {
-		if (!o->first) {
-		ex_octree_finalize(o);
-		return;
+	if(region.x <= octree_min_size || region.y <= octree_min_size || region.z <= octree_min_size)
+	{
+		if (!octree->first)
+		{
+			Octree_Finalize(octree);
+			return;
 		}
-	}*/
+	}
+
+	Vector3 half = Vector3_Scale(region, 0.5f);
+	Vector3 centre = Vector3_Add(octree->region.min, half);
+
+	//octant regions
+	Box octants[8];
+	octants[0] = _newbox(octree->region.min, centre);
+	octants[1] = _newbox((Vector3){centre.x, octree->region.min.y, octree->region.min.z}, (Vector3){octree->region.max.x, centre.y, centre.z});
+	octants[2] = _newbox((Vector3){centre.x, octree->region.min.y, centre.z}, (Vector3){octree->region.max.z, centre.y, octree->region.max.z});
+	octants[3] = _newbox((Vector3){octree->region.min.x, octree->region.min.y, centre.z}, (Vector3){centre.x, centre.y, octree->region.max.z});
+	octants[4] = _newbox((Vector3){octree->region.min.x, centre.y, octree->region.min.z}, (Vector3){centre.x, octree->region.max.y, centre.z});
+	octants[5] = _newbox((Vector3){centre.x, centre.y, octree->region.min.z}, (Vector3){octree->region.max.x, octree->region.max.y, centre.z});
+	octants[6] = _newbox(centre, octree->region.max);
+	octants[7] = _newbox((Vector3){octree->region.min.x, centre.y, centre.z}, (Vector3){centre.x, octree->region.max.y, octree->region.max.z});
+
+	// object lists
+	List obj_lists[8];
+	size_t obj_lenghts[8];
+	for (int i = 0; i < 8; i++)
+	{
+		List_Init(&obj_lists[i]);
+		obj_lenghts[i] = 0;
+	}
+
+	// add objects to appropriate octant
+	size_t obj_count = 0;
+	ListItem *n = octree->obj_list.first;
+	while(n->value != NULL)
+	{
+		int found = 0;
+
+		for(int j = 0; j < 8; j++)
+		{
+			OctreeObject *obj = (OctreeObject*)n->value;
+			if(_aabb_inside(octants[j], obj->box))
+			{
+				List_AddLast(&obj_lists[j], (void*)n->value); //FIXME deal with bool
+				obj_lenghts[j]++;
+				found = 1;
+				break;
+			}
+		}
+
+		//remove obj from this list
+		if (found)
+		{
+			ListItem *next = n->next;
+			List_Remove(&octree->obj_list, (void*)n->value);
+			if(next != NULL)
+			{
+				n = next;
+				continue;
+			}
+			else
+			{
+				break;
+			}
+		}
+		else
+		{
+			obj_count++;
+		}
+
+		if (n->next != NULL)
+			n = n->next;
+		else
+			break;
+	}
+
+	//create children
+	for(int i = 0; i < 8; i++)
+	{
+		if(obj_lists[i].first != NULL)
+		{
+			octree->children[i] = (Octree*)SDL_malloc(sizeof(Octree)); //FIXME deal with null (original code don't deal with it either)
+			Octree_Init(octree->children[i], octants[i], obj_lists[i]);
+			octree->children[i]->data_len  = obj_lenghts[i];
+			octree->children[i]->data_type = octree->data_type;
+			Octree_Build(octree->children[i]);
+		}
+		else
+		{
+			octree->children[i] = NULL;
+		}
+	}
+
+	octree->data_len = obj_count;
+	Octree_Finalize(octree);
 	return;
 }
 

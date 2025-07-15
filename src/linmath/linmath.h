@@ -42,11 +42,15 @@ typedef struct Matrix4x4
 
 Vector3 Vector3_Add(Vector3 vector_a, Vector3 vector_b);
 
+Vector3 Vector3_Sub(Vector3 vector_a, Vector3 vector_b);
+
 Vector3 Vector3_Normalize(Vector3 vector);
 
 float Vector3_Dot(Vector3 vector_a, Vector3 vector_b);
 
 Vector3 Vector3_Cross(Vector3 vector_a, Vector3 vector_b);
+
+Vector3 Vector3_Scale(Vector3 vector, float scale);
 
 Matrix4x4 Matrix4x4_Mul(Matrix4x4 matrix_a, Matrix4x4 matrix_b);
 
