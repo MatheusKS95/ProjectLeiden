@@ -77,6 +77,38 @@ static inline bool _aabb_inside(Box outer, Box inner)
 			outer.max.z >= inner.max.z);
 };
 
+static void* _octree_data_ptr(Octree *octree)
+{
+	switch(octree->data_type)
+	{
+		case OBJ_TYPE_UINT:
+			if(octree->data_uint != NULL)
+				return octree->data_uint;
+			break;
+		case OBJ_TYPE_INT:
+			if(octree->data_int != NULL)
+				return octree->data_int;
+			break;
+		case OBJ_TYPE_BYTE:
+			if(octree->data_byte != NULL)
+				return octree->data_byte;
+			break;
+		case OBJ_TYPE_FLOAT:
+			if(octree->data_float != NULL)
+				return octree->data_float;
+			break;
+		case OBJ_TYPE_DOUBLE:
+			if(octree->data_double != NULL)
+				return octree->data_double;
+			break;
+		default:
+			return NULL;
+			break;
+	}
+
+	return NULL;
+}
+
 Octree *Octree_Create(OctreeObjectType type)
 {
 	Octree *octree = (Octree*)SDL_malloc(sizeof(Octree));
@@ -95,7 +127,6 @@ Octree *Octree_Create(OctreeObjectType type)
 	octree->region.min = (Vector3){ 0.0f, 0.0f };
 	octree->region.max = (Vector3){ 1.0f, 1.0f };
 
-	octree->rendered = false;
 	octree->built = false;
 	octree->first = true;
 	List_Init(&octree->obj_list);
@@ -127,7 +158,6 @@ bool Octree_Init(Octree *octree, Box region, List objects)
 		octree->children[i] = NULL;
 	}
 	octree->obj_list = objects;
-	octree->rendered = false;
 	octree->built = false;
 	octree->first = false;
 	octree->data_len = 0;
@@ -261,20 +291,200 @@ void Octree_Build(Octree *octree)
 
 void Octree_Finalize(Octree *octree)
 {
+	if(octree == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Octree_Finalize error: invalid octree.");
+		return;
+	}
+
+	//move object data into a flat array
+	int i = 0;
+	ListItem *n = octree->obj_list.first;
+	while(n->value != NULL)
+	{
+		OctreeObject *data = n->value;
+
+		switch(octree->data_type)
+		{
+			case OBJ_TYPE_UINT:
+			{
+				if (i == 0)
+				{
+					octree->data_uint = (Uint32*)SDL_malloc(octree->data_len * sizeof(Uint32));
+				}
+				memcpy(&octree->data_uint[i], &data->data_uint, sizeof(Uint32));
+				break;
+			}
+			case OBJ_TYPE_INT:
+			{
+				if (i == 0)
+				{
+					octree->data_int = (Sint32*)SDL_malloc(octree->data_len * sizeof(Sint32));
+				}
+				memcpy(&octree->data_int[i], &data->data_int, sizeof(Sint32));
+				break;
+			}
+			case OBJ_TYPE_BYTE:
+			{
+				if (i == 0)
+				{
+					octree->data_byte = (Uint8*)SDL_malloc(octree->data_len * sizeof(Uint8));
+				}
+				memcpy(&octree->data_byte[i], &data->data_byte, sizeof(Uint8));
+				break;
+			}
+			case OBJ_TYPE_FLOAT:
+			{
+				if (i == 0)
+				{
+					octree->data_float  = (float*)SDL_malloc(octree->data_len * sizeof(float));
+				}
+				memcpy(&octree->data_float[i], &data->data_float, sizeof(float));
+				break;
+			}
+			case OBJ_TYPE_DOUBLE:
+			{
+				if (i == 0)
+				{
+					octree->data_double = (double*)SDL_malloc(octree->data_len * sizeof(double));
+				}
+				memcpy(&octree->data_double[i], &data->data_double, sizeof(double));
+				break;
+			}
+			case OBJ_TYPE_NULL: break;
+		}
+
+		SDL_free(n->value);
+		n->value = NULL;
+		i++;
+		if(n->next != NULL)
+			n = n->next;
+		else
+			break;
+	}
+
+	//destroy our temp list
+	if (octree->obj_list.first != NULL)
+	{
+		List_Destroy(&octree->obj_list);
+	}
+
+	octree->built = true;
+
 	return;
 }
 
 Octree *Octree_Reset(Octree *octree)
 {
+	if(octree == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Octree_Reset error: invalid octree.");
+		return NULL;
+	}
+
+	for (int i=0; i<8; i++)
+	{
+		if (octree->children[i] != NULL)
+		{
+			Octree_Reset(octree->children[i]);
+		}
+	}
+
+	if (octree->obj_list.first != NULL)
+	{
+		List_Destroy(&octree->obj_list);
+	}
+
+	if (octree->data_len > 0 && octree->data_type != OBJ_TYPE_NULL)
+	{
+		switch(octree->data_type)
+		{
+			case OBJ_TYPE_UINT:
+				if(octree->data_uint != NULL)
+					SDL_free(octree->data_uint);
+				break;
+			case OBJ_TYPE_INT:
+				if (octree->data_int != NULL)
+					SDL_free(octree->data_int);
+				break;
+			case OBJ_TYPE_BYTE:
+				if(octree->data_byte != NULL)
+					SDL_free(octree->data_byte);
+				break;
+			case OBJ_TYPE_FLOAT:
+				if (octree->data_float != NULL)
+					SDL_free(octree->data_float);
+				break;
+			case OBJ_TYPE_DOUBLE:
+				if (octree->data_double != NULL)
+					SDL_free(octree->data_double);
+				break;
+			default: break; //just because without this QtCreator keeps complaining
+		}
+	}
+
+	int data_type = octree->data_type;
+	if (!octree->first)
+	{
+		SDL_free(octree);
+	}
+	else
+	{
+		SDL_free(octree);
+		return Octree_Create(data_type);
+	}
+
 	return NULL;
 }
 
 void Octree_GetCollidingCount(Octree *octree, Box *bounds, int *count)
 {
+	if(octree == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Octree_GetCollidingCount error: invalid octree.");
+		return;
+	}
+
+	//add our data to the list
+	void *oct_data = _octree_data_ptr(octree);
+	if(oct_data != NULL)
+	{
+		if (!_aabb_aabb(octree->region, *bounds))
+			return;
+
+		(*count)++;
+	}
+
+	//recurse adding data to the list
+	for(int i = 0; i < 8; i++)
+		if(octree->children[i] != NULL)
+			Octree_GetCollidingCount(octree->children[i], bounds, count);
 	return;
 }
 
 void Octree_GetColliding(Octree *octree, Box *bounds, OctreeData *data_list, int *index)
 {
+	if(octree == NULL)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Octree_GetColliding error: invalid octree.");
+		return;
+	}
+
+	//add our data to the list
+	void *oct_data = _octree_data_ptr(octree);
+	if(oct_data != NULL)
+	{
+		if (!_aabb_aabb(octree->region, *bounds))
+			return;
+
+		data_list[*index].len = octree->data_len;
+		data_list[*index].data = oct_data;
+		(*index)++;
+	}
+
+	//recurse adding data to the list
+	for(int i = 0; i < 8; i++)
+		if(octree->children[i] != NULL)
+			Octree_GetColliding(octree->children[i], bounds, data_list, index);
 	return;
 }

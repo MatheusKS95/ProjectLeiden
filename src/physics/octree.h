@@ -100,7 +100,6 @@ struct Octree
 	List obj_list;
 
 	//flags etc
-	bool rendered;
 	bool built;
 	bool first;
 	OctreeObjectType data_type;
