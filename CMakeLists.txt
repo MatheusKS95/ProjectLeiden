@@ -58,6 +58,7 @@ target_sources(${EXECUTABLE_NAME}
 PRIVATE
 	src/physics/physics.c
 	src/physics/octree.c
+	src/physics/collision.c
 )
 
 #assets

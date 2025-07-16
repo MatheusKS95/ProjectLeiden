@@ -45,60 +45,89 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef COLLISION_H
-#define COLLISION_H
+#include <collision.h>
 
-#include <SDL3/SDL.h>
-#include <linmath.h>
-#include <octree.h>
-
-typedef struct PhysPlane
+PhysPlane Coll_PlaneNew(const Vector3 a, const Vector3 b)
 {
-	Vector3 origin;
-	Vector3 normal;
-	float equation[4];
-} PhysPlane;
-
-typedef struct CollPacket
-{
-	//r3 space
-	Vector3 r3_velocity;
-	Vector3 r3_position;
-
-	//ellipsoid space
-	Vector3 e_radius;
-	Vector3 e_velocity;
-	Vector3 e_norm_velocity;
-	Vector3 e_base_point;
-
-	//original tri points
-	Vector3 a, b, c;
-
-	//hit information
-	int found_collision;
-	float nearest_distance;
-	double t;
-	Vector3 intersect_point;
 	PhysPlane plane;
+	plane.origin = a;
+	plane.normal = b;
+	plane.equation[0] = b.x;
+	plane.equation[1] = b.y;
+	plane.equation[2] = b.z;
+	plane.equation[3] = -(b.x * a.x + b.y * a.y + b.z * a.z);
 
-	// iteration depth
-	int depth;
-} CollPacket;
+	return plane;
+}
 
-PhysPlane Coll_PlaneNew(const Vector3 a, const Vector3 b);
+PhysPlane Coll_TriangleToPlane(const Vector3 a, const Vector3 b, const Vector3 c)
+{
+	//FIXME (probably)
+	//i think i made mistakes here... need to check when testing it
+	//basically math functions are kinda not the same as the one exengine uses it
+	//so issues may happen
 
-PhysPlane Coll_TriangleToPlane(const Vector3 a, const Vector3 b, const Vector3 c);
+	Vector3 ba = Vector3_Sub(b, a);
+	Vector3 ca = Vector3_Sub(c, a);
 
-float Coll_SignedDistanceToPlane(const Vector3 base_point, const PhysPlane *plane);
+	Vector3 temp;
+	temp = Vector3_Cross(ba, ca);
+	temp = Vector3_Normalize(temp);
 
-bool Coll_IsFrontFacing(PhysPlane *plane, const Vector3 direction);
+	PhysPlane plane;
+	plane.origin = a;
+	plane.normal = temp;
 
-bool Coll_CheckPointInTriangle(const Vector3 point, const Vector3 p1, const Vector3 p2, const Vector3 p3);
+	plane.equation[0] = temp.x;
+	plane.equation[1] = temp.y;
+	plane.equation[2] = temp.z;
+	plane.equation[3] = -(temp.x * a.x + temp.y * a.y + temp.z * a.z);
 
-bool Coll_GetLowestRoot(float a, float b, float c, float max, float *root);
+	return plane;
+}
 
-bool Coll_RayInTriangle(Vector3 from, Vector3 to, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 intersect);
+static inline float vec3_mul_inner(Vector3 const a, Vector3 const b)
+{
+	float p = 0.;
+	int i;
+	p += b.x * a.x;
+	p += b.y * a.y;
+	p += b.z * a.z;
+	return p;
+}
 
-void Coll_CollisionCheckTriangle(CollPacket *packet, const Vector3 p1, const Vector3 p2, const Vector3 p3);
+float Coll_SignedDistanceToPlane(const Vector3 base_point, const PhysPlane *plane)
+{
+	// return vec3_mul_inner(base_point, plane->normal) - vec3_mul_inner(plane->normal, plane->origin);// + plane->equation[3];
+	return vec3_mul_inner(base_point, plane->normal) + plane->equation[3];
+}
 
-#endif
+bool Coll_IsFrontFacing(PhysPlane *plane, const Vector3 direction)
+{
+	double f = vec3_mul_inner(plane->normal, direction);
+
+	if (f <= 0.0)
+		return true;
+
+	return false;
+}
+
+bool Coll_CheckPointInTriangle(const Vector3 point, const Vector3 p1, const Vector3 p2, const Vector3 p3)
+{
+	return false;
+}
+
+bool Coll_GetLowestRoot(float a, float b, float c, float max, float *root)
+{
+	return false;
+}
+
+bool Coll_RayInTriangle(Vector3 from, Vector3 to, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 intersect)
+{
+	return false;
+}
+
+void Coll_CollisionCheckTriangle(CollPacket *packet, const Vector3 p1, const Vector3 p2, const Vector3 p3)
+{
+	return;
+}
