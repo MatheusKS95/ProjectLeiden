@@ -10,7 +10,7 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 
 ## ⚙️ Portability Status
 - **Linux**: Tested on Linux Mint. Works fine.
-- **GhostBSD**: Worked previously, unsure now. New testing is required.
+- **_BSD**: Tested on GhostBSD. Works fine.
 - **Windows**: Works fine with both MinGW-W64 and MSVC, but runs as Vulkan-only.
 - **MacOS**: No access to Apple hardware. No SPIR-V support. Making it work is [troublesome](https://github.com/libsdl-org/SDL/blob/main/docs/README-macos.md). No plans for support.
 - **iOS**: Same issues as MacOS. No plans to support.
