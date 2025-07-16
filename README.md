@@ -11,14 +11,14 @@ The name Project Leiden is a codename. Most of my projects use a fictional locat
 ## ⚙️ Portability Status
 - **Linux**: Tested on Linux Mint. Works fine.
 - **_BSD**: Tested on GhostBSD. Works fine.
-- **Windows**: Works fine with both MinGW-W64 and MSVC, but runs as Vulkan-only.
+- **Windows**: Works fine with both MinGW-W64 and MSVC, but runs as Vulkan-only (I haven't worked with DXIL/DXBC yet, only SPIR-V).
 - **MacOS**: No access to Apple hardware. No SPIR-V support. Making it work is [troublesome](https://github.com/libsdl-org/SDL/blob/main/docs/README-macos.md). No plans for support.
 - **iOS**: Same issues as MacOS. No plans to support.
 - **Android**: As of today, it [doesn't work at all, due to poor Vulkan support on most Android devices](https://github.com/libsdl-org/SDL/issues/12652#issuecomment-2755770682). Support is currently unfeasible. Also, no plans for OpenGL ES graphics.
 - **Consoles**: Most are proprietary platforms incompatible with the GPL and/or the current GPU API. Some homebrew ones are possible, but require all rendering code to be reworked from scratch. Steam Deck is the closest thing to a video game console that can run this project as is.
 
 ## 📦 About the dependencies
-- **SDL3**: Used for most middleware, windowing and GPU API (currently Vulkan-only). [Link](https://github.com/libsdl-org/SDL).
+- **SDL3**: Used for most middleware, windowing and GPU API. [Link](https://github.com/libsdl-org/SDL).
 - **SDL3_image**: Used for loading images (textures used for testing are in PNG and QOI format). [Link](https://github.com/libsdl-org/SDL_image).
 
 ## 📺 Rendering
