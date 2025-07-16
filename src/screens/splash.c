@@ -199,22 +199,24 @@ void SplashScreen_Logic(SDL_Event event)
 		}
 		if(event.type == SDL_EVENT_KEY_DOWN)
 		{
-			if(event.key.key != SDLK_Q)
-			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to cel shading test");
-				if(TestScreen1_Setup())
-				{
-					SplashScreen_Destroy();
-					current_screen = SCREEN_TEST;
-				}
-			}
-			else
+			if(event.key.key == SDLK_Q)
 			{
 				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to physics test");
 				if(TestScreen2_Setup())
 				{
 					SplashScreen_Destroy();
 					current_screen = SCREEN_TEST2;
+					break;
+				}
+			}
+			else
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to cel shading test");
+				if(TestScreen1_Setup())
+				{
+					SplashScreen_Destroy();
+					current_screen = SCREEN_TEST;
+					break;
 				}
 			}
 		}
