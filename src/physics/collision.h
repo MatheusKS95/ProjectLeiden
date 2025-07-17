@@ -97,7 +97,7 @@ bool Coll_CheckPointInTriangle(const Vector3 point, const Vector3 p1, const Vect
 
 bool Coll_GetLowestRoot(float a, float b, float c, float max, float *root);
 
-bool Coll_RayInTriangle(Vector3 from, Vector3 to, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 intersect);
+bool Coll_RayInTriangle(Vector3 from, Vector3 to, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 *intersect);
 
 void Coll_CollisionCheckTriangle(CollPacket *packet, const Vector3 p1, const Vector3 p2, const Vector3 p3);
 
