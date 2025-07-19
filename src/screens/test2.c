@@ -52,7 +52,7 @@ void TestScreen2_Draw()
 	{
 		SDL_GPUColorTargetInfo colortargetinfo = { 0 };
 		colortargetinfo.texture = swapchain_texture;
-		colortargetinfo.clear_color = (SDL_FColor){ 0.0f, 1.0f, 0.0f, 1.0f };
+		colortargetinfo.clear_color = (SDL_FColor){ 0.8f, 0.0f, 0.1f, 1.0f };
 		colortargetinfo.load_op = SDL_GPU_LOADOP_CLEAR;
 		colortargetinfo.store_op = SDL_GPU_STOREOP_STORE;
 

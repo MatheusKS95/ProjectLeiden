@@ -101,7 +101,7 @@ void TestScreen1_Destroy();
 //END TEST 1
 
 /* TEST SCREEN 2
- * Temporary, I want to test physics
+ * Temporary, empty test
 */
 //BEGIN TEST 2
 
