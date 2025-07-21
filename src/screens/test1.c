@@ -426,7 +426,7 @@ void TestScreen1_Logic(SDL_Event event)
 		first_mouse = false;
 	}
 
-	car_transform = (Matrix4x4){ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+	car_transform = Matrix4x4_Identity();
 	//car_transform = Matrix4x4_Scale(car_transform, (Vector3){0.1f, 0.1f, 0.1f});
 	car_transform = Matrix4x4_Rotate(car_transform, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(SDL_GetTicks() / 20));
 	car_transform = Matrix4x4_Translate(car_transform, 0.0f, 0.0f, -8.0f);

@@ -52,6 +52,8 @@ Vector3 Vector3_Cross(Vector3 vector_a, Vector3 vector_b);
 
 Vector3 Vector3_Scale(Vector3 vector, float scale);
 
+Matrix4x4 Matrix4x4_Identity();
+
 Matrix4x4 Matrix4x4_Mul(Matrix4x4 matrix_a, Matrix4x4 matrix_b);
 
 Matrix4x4 Matrix4x4_Rotate(Matrix4x4 mat, Vector3 axis, float radians);

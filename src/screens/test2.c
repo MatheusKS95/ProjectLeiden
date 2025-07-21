@@ -22,8 +22,8 @@
 static SDL_GPUGraphicsPipeline *simple;
 static SDL_GPUSampler *sampler;
 static SDL_GPUTexture *depth_texture;
-static Model *car;
-static Matrix4x4 car_transform;
+static Model *test_model;
+static Matrix4x4 test_model_transform;
 
 static float deltatime;
 static float lastframe;
@@ -131,10 +131,10 @@ bool TestScreen2_Setup()
 	}
 	simple = createpipeline_retro(vsimpleshader, fsimpleshader, true);
 
-	car = (Model*)SDL_malloc(sizeof(Model));
-	if(car != NULL)
+	test_model = (Model*)SDL_malloc(sizeof(Model));
+	if(test_model != NULL)
 	{
-		ImportIQM(drawing_context.device, car, "testmodels/torus/torus.iqm");
+		ImportIQM(drawing_context.device, test_model, "testmodels/tower/tower.iqm");
 	}
 
 	SDL_GPUSamplerCreateInfo samplercreateinfo = { 0 };
@@ -207,11 +207,9 @@ void TestScreen2_Logic(SDL_Event event)
 		first_mouse = false;
 	}
 
-	car_transform = (Matrix4x4){ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }; //TODO create a function to do this
-	car_transform = Matrix4x4_Scale(car_transform, (Vector3){2.0f, 2.0f, 2.0f});
-	//car_transform = Matrix4x4_Rotate(car_transform, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(SDL_GetTicks() / 20));
-	car_transform = Matrix4x4_Rotate(car_transform, (Vector3){1.0f, 1.0f, 1.0f}, DegToRad(SDL_GetTicks() / 20));
-	car_transform = Matrix4x4_Translate(car_transform, 0.0f, 0.0f, -8.0f);
+	test_model_transform = Matrix4x4_Identity();
+	test_model_transform = Matrix4x4_Rotate(test_model_transform, (Vector3){0.0f, 1.0f, 0.0f}, DegToRad(SDL_GetTicks() / 20));
+	test_model_transform = Matrix4x4_Translate(test_model_transform, 0.0f, 0.0f, -8.0f);
 }
 
 void TestScreen2_Draw()
@@ -254,10 +252,10 @@ void TestScreen2_Draw()
 	Matrix4x4 viewproj;
 	viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
 	//Matrix4x4 mvp = Matrix4x4_Mul(car->transform, viewproj);
-	Matrix4x4 mvp = Matrix4x4_Mul(car_transform, viewproj);
-	for(size_t i = 0; i < car->meshes.count; i++)
+	Matrix4x4 mvp = Matrix4x4_Mul(test_model_transform, viewproj);
+	for(size_t i = 0; i < test_model->meshes.count; i++)
 	{
-		Mesh *mesh = &car->meshes.meshes[i];
+		Mesh *mesh = &test_model->meshes.meshes[i];
 		//binding graphics pipeline
 		SDL_BindGPUGraphicsPipeline(renderpass_simple, simple);
 
@@ -265,11 +263,6 @@ void TestScreen2_Draw()
 		SDL_BindGPUVertexBuffers(renderpass_simple, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
 		SDL_BindGPUIndexBuffer(renderpass_simple, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 
-		//texture samplers
-		/*if(mesh->diffuse != NULL)
-		{
-			SDL_BindGPUFragmentSamplers(renderpass, 0, &(SDL_GPUTextureSamplerBinding){ mesh->diffuse->texture, sampler }, 1);
-		}*/
 		SDL_BindGPUFragmentSamplers(renderpass_simple, 0, &(SDL_GPUTextureSamplerBinding){ mesh->diffuse.texture, sampler }, 1);
 
 		//UBO
@@ -286,7 +279,7 @@ void TestScreen2_Draw()
 void TestScreen2_Destroy()
 {
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing test screen 2...");
-	ReleaseModel(drawing_context.device, car);
+	ReleaseModel(drawing_context.device, test_model);
 	SDL_ReleaseGPUGraphicsPipeline(drawing_context.device, simple);
 	SDL_ReleaseGPUSampler(drawing_context.device, sampler);
 	SDL_ReleaseGPUTexture(drawing_context.device, depth_texture);

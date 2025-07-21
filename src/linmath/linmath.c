@@ -15,7 +15,7 @@
  */
 
 #include <SDL3/SDL.h>
-#include "linmath.h"
+#include <linmath.h>
 
 Vector3 Vector3_Add(Vector3 vector_a, Vector3 vector_b)
 {
@@ -67,6 +67,16 @@ Vector3 Vector3_Scale(Vector3 vector, float scale)
 	result.x = vector.x * scale;
 	result.y = vector.y * scale;
 	result.z = vector.z * scale;
+
+	return result;
+}
+
+Matrix4x4 Matrix4x4_Identity()
+{
+	Matrix4x4 result = { 1, 0, 0, 0,
+						 0, 1, 0, 0,
+						 0, 0, 1, 0,
+						 0, 0, 0, 1 };
 
 	return result;
 }
