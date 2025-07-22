@@ -53,13 +53,11 @@ PRIVATE
 )
 
 #physics
-#target_include_directories(${EXECUTABLE_NAME} PUBLIC src/physics)
-#target_sources(${EXECUTABLE_NAME}
-#PRIVATE
-	#src/physics/physics.c
-	#src/physics/octree.c
-	#src/physics/collision.c
-#)
+target_include_directories(${EXECUTABLE_NAME} PUBLIC src/physics)
+target_sources(${EXECUTABLE_NAME}
+PRIVATE
+	src/physics/physics.c
+)
 
 #assets
 target_include_directories(${EXECUTABLE_NAME} PUBLIC src/assets)

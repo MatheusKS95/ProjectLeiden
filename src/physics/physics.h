@@ -19,8 +19,6 @@
 
 #include <SDL3/SDL.h>
 #include <linmath.h>
-#include <octree.h>
-#include <collision.h>
 
 //TODO more stuff
 
