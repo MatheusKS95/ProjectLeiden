@@ -201,11 +201,21 @@ void SplashScreen_Logic(SDL_Event event)
 		{
 			if(event.key.key == SDLK_Q)
 			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to physics test");
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to retro test");
 				if(TestScreen2_Setup())
 				{
 					SplashScreen_Destroy();
 					current_screen = SCREEN_TEST2;
+					break;
+				}
+			}
+			if(event.key.key == SDLK_W)
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to blank test");
+				if(TestScreen3_Setup())
+				{
+					SplashScreen_Destroy();
+					current_screen = SCREEN_TEST3;
 					break;
 				}
 			}

@@ -20,7 +20,8 @@ typedef enum CurrentScreen
 {
 	SCREEN_SPLASH = 0,
 	SCREEN_TEST,
-	SCREEN_TEST2
+	SCREEN_TEST2,
+	SCREEN_TEST3
 } CurrentScreen;
 
 typedef struct RockportContext
@@ -101,7 +102,7 @@ void TestScreen1_Destroy();
 //END TEST 1
 
 /* TEST SCREEN 2
- * Temporary, empty test
+ * Temporary, retro scene
 */
 //BEGIN TEST 2
 
@@ -114,3 +115,18 @@ void TestScreen2_Draw();
 void TestScreen2_Destroy();
 
 //END TEST 2
+
+/* TEST SCREEN 3
+ * Temporary, empty test
+*/
+//BEGIN TEST 3
+
+bool TestScreen3_Setup();
+
+void TestScreen3_Logic(SDL_Event event);
+
+void TestScreen3_Draw();
+
+void TestScreen3_Destroy();
+
+//END TEST 3

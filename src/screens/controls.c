@@ -41,6 +41,7 @@ void SCR_Logic(SDL_Event event)
 		case SCREEN_SPLASH: SplashScreen_Logic(event); break;
 		case SCREEN_TEST: TestScreen1_Logic(event); break;
 		case SCREEN_TEST2: TestScreen2_Logic(event); break;
+		case SCREEN_TEST3: TestScreen3_Logic(event); break;
 		default: break;
 	}
 	return;
@@ -53,6 +54,7 @@ void SCR_Draw()
 		case SCREEN_SPLASH: SplashScreen_Draw(); break;
 		case SCREEN_TEST: TestScreen1_Draw(); break;
 		case SCREEN_TEST2: TestScreen2_Draw(); break;
+		case SCREEN_TEST3: TestScreen3_Draw(); break;
 		default: break;
 	}
 	return;
@@ -65,6 +67,7 @@ void SCR_Destroy()
 		case SCREEN_SPLASH: SplashScreen_Destroy(); break;
 		case SCREEN_TEST: TestScreen1_Destroy(); break;
 		case SCREEN_TEST2: TestScreen2_Destroy(); break;
+		case SCREEN_TEST3: TestScreen3_Destroy(); break;
 		default: break;
 	}
 	return;
