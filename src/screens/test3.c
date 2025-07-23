@@ -33,6 +33,19 @@ void TestScreen3_Logic(SDL_Event event)
 		{
 			exit_signal = true;
 		}
+		if(event.type == SDL_EVENT_KEY_DOWN)
+		{
+			if(event.key.key == SDLK_ESCAPE)
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "leaving...");
+				if(SplashScreen_Setup())
+				{
+					TestScreen3_Destroy();
+					current_screen = SCREEN_SPLASH;
+					break;
+				}
+			}
+		}
 	}
 	return;
 }

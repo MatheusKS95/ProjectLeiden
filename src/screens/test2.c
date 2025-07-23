@@ -197,6 +197,16 @@ void TestScreen2_Logic(SDL_Event event)
 				newpos.z = newpos.z - aux.z;
 				UpdateCameraPosition(&cam_1, newpos);
 			}
+			if(event.key.key == SDLK_ESCAPE)
+			{
+				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "leaving...");
+				if(SplashScreen_Setup())
+				{
+					TestScreen2_Destroy();
+					current_screen = SCREEN_SPLASH;
+					break;
+				}
+			}
 		}
 	}
 	//TODO mouse
