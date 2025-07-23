@@ -26,7 +26,8 @@ typedef struct test3object
 {
 	Model *model;
 	AABB box;
-	Matrix4x4 test_model_transform;
+	Vector3 position;
+	float scale;
 } test3object;
 
 typedef struct test3render
@@ -122,7 +123,7 @@ bool TestScreen3_Setup()
 {
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Starting physics test screen...");
 
-	test3render renderstuff = { 0 };
+	renderstuff = (test3render){ 0 };
 
 	int width, height;
 	SDL_GetWindowSize(drawing_context.window, &width, &height);
@@ -133,7 +134,9 @@ bool TestScreen3_Setup()
 	mouse_y = last_y;
 	first_mouse = true;
 	//need to bring lookat, or a camera update thing
-	InitCameraBasic(&cam_1, (Vector3){0.0f, 1.3f, 8.0f}, (float)width / (float)height);
+	//InitCameraBasic(&cam_1, (Vector3){0.0f, 20.0f, 30.0f}, (float)width / (float)height);
+	InitCameraFull(&cam_1, (Vector3){0.0f, 20.0f, 30.0f}, (Vector3){0.0f, 1.0f, 0.0f},
+					-90.0f, -30.0f, 0.0f, 45.0f, (float)width / (float)height);
 
 	SDL_GPUShader *vsimpleshader = LoadShader("shaders/fifthgen/fifthgen.vert.spv", drawing_context.device, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
 	if(vsimpleshader == NULL)
@@ -173,23 +176,25 @@ bool TestScreen3_Setup()
 	);
 
 	//load tower
-	test3object tower = { 0 };
+	tower = (test3object){ 0 };
 	tower.model = (Model*)SDL_malloc(sizeof(Model));
 	if(tower.model != NULL)
 	{
 		ImportIQM(drawing_context.device, tower.model, "testmodels/tower/tower.iqm");
 	}
-	tower.test_model_transform = Matrix4x4_Identity();
+	tower.position = (Vector3){ 0 };
+	tower.scale = 1.0f;
 	tower.box = (AABB){ 0 };
 
 	//load box
-	test3object box = { 0 };
+	box = (test3object){ 0 };
 	box.model = (Model*)SDL_malloc(sizeof(Model));
 	if(box.model != NULL)
 	{
 		ImportIQM(drawing_context.device, box.model, "testmodels/cube/cube.iqm");
 	}
-	box.test_model_transform = Matrix4x4_Identity();
+	box.position = (Vector3){ 2.0f, 0.0f, 1.0f };
+	box.scale = 1.0f;
 	box.box = (AABB){ 0 };
 
 	return true;
@@ -197,6 +202,17 @@ bool TestScreen3_Setup()
 
 void TestScreen3_Logic(SDL_Event event)
 {
+	float current_frame = (float)SDL_GetTicks();
+	deltatime = current_frame - lastframe;
+	lastframe = current_frame;
+	//float velocity = 0.01f * deltatime;
+	//TODO mouse
+	if(first_mouse)
+	{
+		last_x = mouse_x;
+		last_y = mouse_y;
+		first_mouse = false;
+	}
 	while(SDL_PollEvent(&event))
 	{
 		if(event.type == SDL_EVENT_QUIT)
@@ -215,9 +231,67 @@ void TestScreen3_Logic(SDL_Event event)
 					break;
 				}
 			}
+			//TODO check and update collisions
+			if(event.key.key == SDLK_LEFT)
+			{
+				box.position.x -= 0.5f;
+			}
+			if(event.key.key == SDLK_RIGHT)
+			{
+				box.position.x += 0.5f;
+			}
+			if(event.key.key == SDLK_UP)
+			{
+				box.position.z -= 0.5f;
+			}
+			if(event.key.key == SDLK_DOWN)
+			{
+				box.position.z += 0.5f;
+			}
 		}
+		/*if(event.type == SDL_EVENT_MOUSE_MOTION)
+		{
+			//mouse_x = state->mouse_x;
+			//mouse_y = state->mouse_y;
+			float x_offset = mouse_x + last_x;
+			float y_offset = last_y + mouse_y;
+			last_x = mouse_x;
+			last_y = mouse_y;
+			TestCameraFreecam(&cam_1, x_offset, y_offset, true);
+			mouse_x = mouse_y = 0;
+		}*/
 	}
+
 	return;
+}
+
+static void drawobject(test3object *object, SDL_GPURenderPass *renderpass, SDL_GPUCommandBuffer *cmdbuf, SDL_GPUGraphicsPipeline *pipeline)
+{
+	Matrix4x4 viewproj;
+	viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
+
+	Matrix4x4 model = Matrix4x4_Identity();
+	model = Matrix4x4_Scale(model, (Vector3){object->scale, object->scale, object->scale});
+	model = Matrix4x4_Translate(model, object->position.x, object->position.y, object->position.z);
+
+	Matrix4x4 mvp = Matrix4x4_Mul(model, viewproj);
+	for(size_t i = 0; i < object->model->meshes.count; i++)
+	{
+		Mesh *mesh = &object->model->meshes.meshes[i];
+		//binding graphics pipeline
+		SDL_BindGPUGraphicsPipeline(renderpass, pipeline);
+
+		//binding vertex and index buffers
+		SDL_BindGPUVertexBuffers(renderpass, 0, &(SDL_GPUBufferBinding){ mesh->vbuffer, 0 }, 1);
+		SDL_BindGPUIndexBuffer(renderpass, &(SDL_GPUBufferBinding){ mesh->ibuffer, 0 }, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+
+		SDL_BindGPUFragmentSamplers(renderpass, 0, &(SDL_GPUTextureSamplerBinding){ mesh->diffuse.texture, renderstuff.sampler }, 1);
+
+		//UBO
+		SDL_PushGPUVertexUniformData(cmdbuf, 0, &mvp, sizeof(mvp));
+
+		SDL_DrawGPUIndexedPrimitives(renderpass, mesh->iarray.count, 1, 0, 0, 0);
+	}
 }
 
 void TestScreen3_Draw()
@@ -240,18 +314,38 @@ void TestScreen3_Draw()
 		return;
 	}
 
+	SDL_GPUDepthStencilTargetInfo depthstenciltargetinfo = { 0 };
+	depthstenciltargetinfo.texture = renderstuff.depth_texture;
+	depthstenciltargetinfo.cycle = true;
+	depthstenciltargetinfo.clear_depth = 1;
+	depthstenciltargetinfo.clear_stencil = 0;
+	depthstenciltargetinfo.load_op = SDL_GPU_LOADOP_CLEAR;
+	depthstenciltargetinfo.store_op = SDL_GPU_STOREOP_STORE;
+	depthstenciltargetinfo.stencil_load_op = SDL_GPU_LOADOP_CLEAR;
+	depthstenciltargetinfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
+
 	SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
 	colorTargetInfo.texture = swapchain_texture;
-	colorTargetInfo.clear_color = (SDL_FColor){ 0.0f, 0.0f, 1.0f, 1.0f };
+	colorTargetInfo.clear_color = (SDL_FColor){ 0.0f, 0.0f, 0.0f, 1.0f };
 	colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
 	colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-	SDL_GPURenderPass *renderpass_simple = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, NULL);
-	SDL_EndGPURenderPass(renderpass_simple);
+	SDL_GPURenderPass *renderpass = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, &depthstenciltargetinfo);
+
+	drawobject(&tower, renderpass, cmdbuf, renderstuff.pipeline);
+	drawobject(&box, renderpass, cmdbuf, renderstuff.pipeline);
+
+	SDL_EndGPURenderPass(renderpass);
 
 	SDL_SubmitGPUCommandBuffer(cmdbuf);
 }
 
 void TestScreen3_Destroy()
 {
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing test screen 2...");
+	ReleaseModel(drawing_context.device, tower.model);
+	ReleaseModel(drawing_context.device, box.model);
+	SDL_ReleaseGPUGraphicsPipeline(drawing_context.device, renderstuff.pipeline);
+	SDL_ReleaseGPUSampler(drawing_context.device, renderstuff.sampler);
+	SDL_ReleaseGPUTexture(drawing_context.device, renderstuff.depth_texture);
 	return;
 }
