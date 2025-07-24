@@ -52,75 +52,6 @@ static Camera cam_1;
 
 static bool collision;
 
-static SDL_GPUGraphicsPipeline *createpipeline_retro(SDL_GPUShader *vs, SDL_GPUShader *fs,
-														bool release_shaders)
-{
-	if(vs == NULL || fs == NULL)
-	{
-		return NULL;
-	}
-
-	SDL_GPUGraphicsPipelineCreateInfo pipeline_createinfo = { 0 };
-	pipeline_createinfo = (SDL_GPUGraphicsPipelineCreateInfo)
-	{
-		.target_info =
-		{
-			.num_color_targets = 1,
-			.color_target_descriptions = (SDL_GPUColorTargetDescription[]){{
-				.format = SDL_GetGPUSwapchainTextureFormat(drawing_context.device, drawing_context.window)
-			}},
-			.has_depth_stencil_target = true,
-			.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM
-		},
-		.depth_stencil_state = (SDL_GPUDepthStencilState){
-			.enable_depth_test = true,
-			.enable_depth_write = true,
-			.enable_stencil_test = false,
-			.compare_op = SDL_GPU_COMPAREOP_LESS,
-			.write_mask = 0xFF
-		},
-		.rasterizer_state = (SDL_GPURasterizerState){
-			.cull_mode = SDL_GPU_CULLMODE_NONE,
-			.fill_mode = SDL_GPU_FILLMODE_FILL,
-			.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE
-		},
-		.vertex_input_state = (SDL_GPUVertexInputState){
-			.num_vertex_buffers = 1,
-			.vertex_buffer_descriptions = (SDL_GPUVertexBufferDescription[]){{
-				.slot = 0,
-				.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
-				.instance_step_rate = 0,
-				.pitch = sizeof(Vertex3D)
-			}},
-			.num_vertex_attributes = 2,
-			.vertex_attributes = (SDL_GPUVertexAttribute[]){{
-				//position
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-				.location = 0,
-				.offset = 0
-			}, {
-				//uv
-				.buffer_slot = 0,
-				.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-				.location = 1,
-				.offset = (sizeof(float) * 3)
-			}} //there's more, but I need only these now
-		},
-		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-		.vertex_shader = vs,
-		.fragment_shader = fs
-	};
-	SDL_GPUGraphicsPipeline *pipeline = SDL_CreateGPUGraphicsPipeline(drawing_context.device, &pipeline_createinfo);
-	if(release_shaders)
-	{
-		SDL_ReleaseGPUShader(drawing_context.device, vs);
-		SDL_ReleaseGPUShader(drawing_context.device, fs);
-	}
-
-	return pipeline;
-}
-
 bool TestScreen3_Setup()
 {
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Starting physics test screen...");
@@ -135,8 +66,7 @@ bool TestScreen3_Setup()
 	mouse_x = last_x;
 	mouse_y = last_y;
 	first_mouse = true;
-	//need to bring lookat, or a camera update thing
-	//InitCameraBasic(&cam_1, (Vector3){0.0f, 20.0f, 30.0f}, (float)width / (float)height);
+
 	InitCameraFull(&cam_1, (Vector3){0.0f, 20.0f, 30.0f}, (Vector3){0.0f, 1.0f, 0.0f},
 					-90.0f, -30.0f, 0.0f, 45.0f, (float)width / (float)height);
 
@@ -152,7 +82,7 @@ bool TestScreen3_Setup()
 		SDL_Log("Failed to load simple fragment shader.");
 		return NULL;
 	}
-	renderstuff.pipeline = createpipeline_retro(vsimpleshader, fsimpleshader, true);
+	renderstuff.pipeline = SCR_CreateSimplePipeline(vsimpleshader, fsimpleshader, true);
 
 	SDL_GPUSamplerCreateInfo samplercreateinfo = { 0 };
 	samplercreateinfo.min_filter = SDL_GPU_FILTER_NEAREST;
@@ -255,17 +185,6 @@ void TestScreen3_Logic(SDL_Event event)
 				box.position.z += 0.5f;
 			}
 		}
-		/*if(event.type == SDL_EVENT_MOUSE_MOTION)
-		{
-			//mouse_x = state->mouse_x;
-			//mouse_y = state->mouse_y;
-			float x_offset = mouse_x + last_x;
-			float y_offset = last_y + mouse_y;
-			last_x = mouse_x;
-			last_y = mouse_y;
-			TestCameraFreecam(&cam_1, x_offset, y_offset, true);
-			mouse_x = mouse_y = 0;
-		}*/
 	}
 
 	box.box.center = box.position;

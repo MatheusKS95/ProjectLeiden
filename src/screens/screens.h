@@ -51,6 +51,9 @@ extern bool exit_signal;
 
 void SCR_CreateEffectBuffers(EffectBuffers *buffers);
 void SCR_ReleaseEffectBuffers(EffectBuffers *buffers);
+SDL_GPUGraphicsPipeline *SCR_CreateSimplePipeline(SDL_GPUShader *vs,
+													SDL_GPUShader *fs,
+													bool release_shaders);
 
 //END HELPERS
 

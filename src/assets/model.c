@@ -378,47 +378,48 @@ bool ImportIQM(SDL_GPUDevice *device, Model *model,
 			}
 			case IQM_NORMAL:
 			{
-				normal = (float *)&iqmbuffer[vertarr.offset];
+				/*normal = (float *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].normal, &normal[x * vertarr.size], vertarr.size * sizeof(float));
-				}
+				}*/
 				break;
 			}
 			case IQM_TANGENT:
 			{
-				tangent = (float *)&iqmbuffer[vertarr.offset];
+				/*tangent = (float *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].tangent, &tangent[x * vertarr.size], vertarr.size * sizeof(float));
-				}
+				}*/
 				break;
 			}
 			case IQM_BLENDINDEXES:
 			{
-				blend_indexes = (Uint8 *)&iqmbuffer[vertarr.offset];
+				/*blend_indexes = (Uint8 *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].blend_indices, &blend_indexes[x * vertarr.size], vertarr.size * sizeof(Uint8));
-				}
+				}*/
 				break;
 			}
 			case IQM_BLENDWEIGHTS:
 			{
-				blend_weights = (uint8_t *)&iqmbuffer[vertarr.offset];
+				/*blend_weights = (uint8_t *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].blend_weights, &blend_weights[x * vertarr.size], vertarr.size * sizeof(Uint8));
-				}
+				}*/
 				break;
 			}
 			case IQM_COLOR:
 			{
-				color = (uint8_t *)&iqmbuffer[vertarr.offset];
+				/*color = (uint8_t *)&iqmbuffer[vertarr.offset];
 				for(int x = 0; x < header.num_vertexes; x++)
 				{
 					SDL_memcpy(&vertices[x].color, &color[x * vertarr.size], vertarr.size * sizeof(Uint8));
-				}
+				}*/
+				break;
 			}
 		}
 	}

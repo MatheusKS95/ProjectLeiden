@@ -72,11 +72,12 @@ typedef struct Vertex3D
 {
 	Vector3 position;
 	Vector2 uv;
-	Vector3 normal;
-	Vector3 tangent;
-	Color color;
-	Uint8 blend_indices[4];
-	Uint8 blend_weights[4];
+	//not really used
+	//Vector3 normal;
+	//Vector3 tangent;
+	//Color color;
+	//Uint8 blend_indices[4];
+	//Uint8 blend_weights[4];
 } Vertex3D;
 
 typedef struct VertexArray
