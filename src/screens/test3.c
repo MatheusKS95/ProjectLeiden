@@ -50,6 +50,8 @@ static float mouse_x, mouse_y;
 static bool first_mouse;
 static Camera cam_1;
 
+static bool collision;
+
 static SDL_GPUGraphicsPipeline *createpipeline_retro(SDL_GPUShader *vs, SDL_GPUShader *fs,
 														bool release_shaders)
 {
@@ -184,7 +186,8 @@ bool TestScreen3_Setup()
 	}
 	tower.position = (Vector3){ 0 };
 	tower.scale = 1.0f;
-	tower.box = (AABB){ 0 };
+	tower.box.center = tower.position;
+	tower.box.half_size = (Vector3){1.0f, 1.0f, 1.0f};
 
 	//load box
 	box = (test3object){ 0 };
@@ -193,9 +196,12 @@ bool TestScreen3_Setup()
 	{
 		ImportIQM(drawing_context.device, box.model, "testmodels/cube/cube.iqm");
 	}
-	box.position = (Vector3){ 2.0f, 0.0f, 1.0f };
+	box.position = (Vector3){ 4.0f, 0.0f, 5.0f };
 	box.scale = 1.0f;
-	box.box = (AABB){ 0 };
+	box.box.center = box.position;
+	box.box.half_size = (Vector3){1.0f, 1.0f, 1.0f};
+
+	collision = false;
 
 	return true;
 }
@@ -262,6 +268,17 @@ void TestScreen3_Logic(SDL_Event event)
 		}*/
 	}
 
+	box.box.center = box.position;
+
+	if(Physics_AABBvsAABB(box.box, tower.box))
+	{
+		collision = true;
+	}
+	else
+	{
+		collision = false;
+	}
+
 	return;
 }
 
@@ -324,9 +341,15 @@ void TestScreen3_Draw()
 	depthstenciltargetinfo.stencil_load_op = SDL_GPU_LOADOP_CLEAR;
 	depthstenciltargetinfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
 
+	SDL_FColor clearcolor;
+	if(collision)
+		clearcolor = (SDL_FColor){ 0.4f, 0.0f, 0.0f, 1.0f };
+	else
+		clearcolor = (SDL_FColor){ 0.0f, 0.0f, 0.0f, 1.0f };
+
 	SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
 	colorTargetInfo.texture = swapchain_texture;
-	colorTargetInfo.clear_color = (SDL_FColor){ 0.0f, 0.0f, 0.0f, 1.0f };
+	colorTargetInfo.clear_color = clearcolor;
 	colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
 	colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
 	SDL_GPURenderPass *renderpass = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, &depthstenciltargetinfo);
@@ -341,7 +364,7 @@ void TestScreen3_Draw()
 
 void TestScreen3_Destroy()
 {
-	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing test screen 2...");
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing test screen 3...");
 	ReleaseModel(drawing_context.device, tower.model);
 	ReleaseModel(drawing_context.device, box.model);
 	SDL_ReleaseGPUGraphicsPipeline(drawing_context.device, renderstuff.pipeline);

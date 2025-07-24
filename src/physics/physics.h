@@ -20,29 +20,6 @@
 #include <SDL3/SDL.h>
 #include <linmath.h>
 
-/*typedef struct Engine
-{
-	float displacement;
-} Engine;
-
-//Basic ass car
-typedef struct Car
-{
-	Vector3 position; //central position (x, y, z)
-	Vector3 velocity; //linear velocity
-	float angle; //yaw
-	float pitch, roll; //for suspension
-	float speed;
-
-	//float max_speed; //lemme do some basic engine calculations
-	//float acceleration;
-
-	float turn_rate; //how much car turns
-	float suspension_softness;
-	float wheel_base; //distance between axles (affects pitch)
-	float track_width; //distance between wheels from the same axle (affect roll)
-} Car;*/
-
 //box for collision
 typedef struct AABB
 {
