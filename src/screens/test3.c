@@ -136,56 +136,51 @@ bool TestScreen3_Setup()
 	return true;
 }
 
-void TestScreen3_Logic(SDL_Event event)
+void TestScreen3_Input(SDL_Event event)
+{
+
+	if(event.type == SDL_EVENT_QUIT)
+	{
+		exit_signal = true;
+	}
+	if(event.type == SDL_EVENT_KEY_DOWN)
+	{
+		if(event.key.key == SDLK_ESCAPE)
+		{
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "leaving...");
+			if(SplashScreen_Setup())
+			{
+				TestScreen3_Destroy();
+				current_screen = SCREEN_SPLASH;
+				return;
+			}
+		}
+		if(event.key.key == SDLK_LEFT)
+		{
+			box.position.x -= 0.5f;
+		}
+		if(event.key.key == SDLK_RIGHT)
+		{
+			box.position.x += 0.5f;
+		}
+		if(event.key.key == SDLK_UP)
+		{
+			box.position.z -= 0.5f;
+		}
+		if(event.key.key == SDLK_DOWN)
+		{
+			box.position.z += 0.5f;
+		}
+	}
+
+	return;
+}
+
+void TestScreen3_Iterate()
 {
 	float current_frame = (float)SDL_GetTicks();
 	deltatime = current_frame - lastframe;
 	lastframe = current_frame;
-	//float velocity = 0.01f * deltatime;
-	//TODO mouse
-	if(first_mouse)
-	{
-		last_x = mouse_x;
-		last_y = mouse_y;
-		first_mouse = false;
-	}
-	while(SDL_PollEvent(&event))
-	{
-		if(event.type == SDL_EVENT_QUIT)
-		{
-			exit_signal = true;
-		}
-		if(event.type == SDL_EVENT_KEY_DOWN)
-		{
-			if(event.key.key == SDLK_ESCAPE)
-			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "leaving...");
-				if(SplashScreen_Setup())
-				{
-					TestScreen3_Destroy();
-					current_screen = SCREEN_SPLASH;
-					break;
-				}
-			}
-			//TODO check and update collisions
-			if(event.key.key == SDLK_LEFT)
-			{
-				box.position.x -= 0.5f;
-			}
-			if(event.key.key == SDLK_RIGHT)
-			{
-				box.position.x += 0.5f;
-			}
-			if(event.key.key == SDLK_UP)
-			{
-				box.position.z -= 0.5f;
-			}
-			if(event.key.key == SDLK_DOWN)
-			{
-				box.position.z += 0.5f;
-			}
-		}
-	}
 
 	box.box.center = box.position;
 
@@ -197,8 +192,6 @@ void TestScreen3_Logic(SDL_Event event)
 	{
 		collision = false;
 	}
-
-	return;
 }
 
 static void drawobject(test3object *object, SDL_GPURenderPass *renderpass, SDL_GPUCommandBuffer *cmdbuf, SDL_GPUGraphicsPipeline *pipeline)

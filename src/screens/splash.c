@@ -188,49 +188,50 @@ bool SplashScreen_Setup()
 	return true;
 }
 
-void SplashScreen_Logic(SDL_Event event)
+void SplashScreen_Input(SDL_Event event)
 {
-	//TODO check keys
-	while(SDL_PollEvent(&event))
+	if(event.type == SDL_EVENT_QUIT)
 	{
-		if(event.type == SDL_EVENT_QUIT)
+		exit_signal = true;
+	}
+	if(event.type == SDL_EVENT_KEY_DOWN)
+	{
+		if(event.key.key == SDLK_Q)
 		{
-			exit_signal = true;
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to retro test");
+			if(TestScreen2_Setup())
+			{
+				SplashScreen_Destroy();
+				current_screen = SCREEN_TEST2;
+				return;
+			}
 		}
-		if(event.type == SDL_EVENT_KEY_DOWN)
+		if(event.key.key == SDLK_W)
 		{
-			if(event.key.key == SDLK_Q)
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to blank test");
+			if(TestScreen3_Setup())
 			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to retro test");
-				if(TestScreen2_Setup())
-				{
-					SplashScreen_Destroy();
-					current_screen = SCREEN_TEST2;
-					break;
-				}
+				SplashScreen_Destroy();
+				current_screen = SCREEN_TEST3;
+				return;
 			}
-			if(event.key.key == SDLK_W)
+		}
+		else
+		{
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to cel shading test");
+			if(TestScreen1_Setup())
 			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to blank test");
-				if(TestScreen3_Setup())
-				{
-					SplashScreen_Destroy();
-					current_screen = SCREEN_TEST3;
-					break;
-				}
-			}
-			else
-			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to cel shading test");
-				if(TestScreen1_Setup())
-				{
-					SplashScreen_Destroy();
-					current_screen = SCREEN_TEST;
-					break;
-				}
+				SplashScreen_Destroy();
+				current_screen = SCREEN_TEST;
+				return;;
 			}
 		}
 	}
+	return;
+}
+
+void SplashScreen_Iterate()
+{
 	return;
 }
 

@@ -19,16 +19,17 @@
 typedef enum CurrentScreen
 {
 	SCREEN_SPLASH = 0,
+	//the following are TEMPORARY
 	SCREEN_TEST,
 	SCREEN_TEST2,
 	SCREEN_TEST3
 } CurrentScreen;
 
-typedef struct RockportContext
+typedef struct LeidenContext
 {
 	SDL_Window *window;
 	SDL_GPUDevice *device;
-} RockportContext;
+} LeidenContext;
 
 typedef struct EffectBuffers
 {
@@ -43,7 +44,7 @@ typedef struct EffectVertex
 } EffectVertex;
 
 extern CurrentScreen current_screen;
-extern RockportContext drawing_context;
+extern LeidenContext drawing_context;
 extern bool exit_signal;
 
 /* HELPERS */
@@ -66,7 +67,9 @@ void SCR_SetContext(SDL_Window *window, SDL_GPUDevice *device);
 
 bool SCR_Setup();
 
-void SCR_Logic(SDL_Event event);
+void SCR_Input(SDL_Event event);
+
+void SCR_Iterate();
 
 void SCR_Draw();
 
@@ -81,7 +84,9 @@ void SCR_Destroy();
 
 bool SplashScreen_Setup();
 
-void SplashScreen_Logic(SDL_Event event);
+void SplashScreen_Input(SDL_Event event);
+
+void SplashScreen_Iterate();
 
 void SplashScreen_Draw();
 
@@ -96,7 +101,9 @@ void SplashScreen_Destroy();
 
 bool TestScreen1_Setup();
 
-void TestScreen1_Logic(SDL_Event event);
+void TestScreen1_Input(SDL_Event event);
+
+void TestScreen1_Iterate();
 
 void TestScreen1_Draw();
 
@@ -111,7 +118,9 @@ void TestScreen1_Destroy();
 
 bool TestScreen2_Setup();
 
-void TestScreen2_Logic(SDL_Event event);
+void TestScreen2_Input(SDL_Event event);
+
+void TestScreen2_Iterate();
 
 void TestScreen2_Draw();
 
@@ -120,13 +129,15 @@ void TestScreen2_Destroy();
 //END TEST 2
 
 /* TEST SCREEN 3
- * Temporary, empty test
+ * Temporary, collision test
 */
 //BEGIN TEST 3
 
 bool TestScreen3_Setup();
 
-void TestScreen3_Logic(SDL_Event event);
+void TestScreen3_Input(SDL_Event event);
+
+void TestScreen3_Iterate();
 
 void TestScreen3_Draw();
 

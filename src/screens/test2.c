@@ -27,6 +27,7 @@ static Matrix4x4 test_model_transform;
 
 static float deltatime;
 static float lastframe;
+static float velocity;
 
 static float last_x, last_y;
 static float mouse_x, mouse_y;
@@ -94,52 +95,54 @@ bool TestScreen2_Setup()
 	return true;
 }
 
-void TestScreen2_Logic(SDL_Event event)
+void TestScreen2_Input(SDL_Event event)
+{
+	if(event.type == SDL_EVENT_QUIT)
+	{
+		exit_signal = true;
+	}
+	if(event.type == SDL_EVENT_KEY_DOWN)
+	{
+		if(event.key.key == SDLK_RIGHT)
+		{
+			Vector3 aux = { 0 };
+			aux.x = cam_1.right.x * velocity;
+			aux.y = cam_1.right.y * velocity;
+			aux.z = cam_1.right.z * velocity;
+			UpdateCameraPosition(&cam_1, Vector3_Add(cam_1.position, aux));
+		}
+		if(event.key.key == SDLK_LEFT)
+		{
+			Vector3 aux = { 0 };
+			aux.x = cam_1.right.x * velocity;
+			aux.y = cam_1.right.y * velocity;
+			aux.z = cam_1.right.z * velocity;
+			Vector3 newpos = cam_1.position;
+			newpos.x = newpos.x - aux.x;
+			newpos.y = newpos.y - aux.y;
+			newpos.z = newpos.z - aux.z;
+			UpdateCameraPosition(&cam_1, newpos);
+		}
+		if(event.key.key == SDLK_ESCAPE)
+		{
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "leaving...");
+			if(SplashScreen_Setup())
+			{
+				TestScreen2_Destroy();
+				current_screen = SCREEN_SPLASH;
+				return;
+			}
+		}
+	}
+}
+
+void TestScreen2_Iterate()
 {
 	float current_frame = (float)SDL_GetTicks();
 	deltatime = current_frame - lastframe;
 	lastframe = current_frame;
-	float velocity = 0.01f * deltatime;
-	while(SDL_PollEvent(&event))
-	{
-		if(event.type == SDL_EVENT_QUIT)
-		{
-			exit_signal = true;
-		}
-		if(event.type == SDL_EVENT_KEY_DOWN)
-		{
-			if(event.key.key == SDLK_RIGHT)
-			{
-				Vector3 aux = { 0 };
-				aux.x = cam_1.right.x * velocity;
-				aux.y = cam_1.right.y * velocity;
-				aux.z = cam_1.right.z * velocity;
-				UpdateCameraPosition(&cam_1, Vector3_Add(cam_1.position, aux));
-			}
-			if(event.key.key == SDLK_LEFT)
-			{
-				Vector3 aux = { 0 };
-				aux.x = cam_1.right.x * velocity;
-				aux.y = cam_1.right.y * velocity;
-				aux.z = cam_1.right.z * velocity;
-				Vector3 newpos = cam_1.position;
-				newpos.x = newpos.x - aux.x;
-				newpos.y = newpos.y - aux.y;
-				newpos.z = newpos.z - aux.z;
-				UpdateCameraPosition(&cam_1, newpos);
-			}
-			if(event.key.key == SDLK_ESCAPE)
-			{
-				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "leaving...");
-				if(SplashScreen_Setup())
-				{
-					TestScreen2_Destroy();
-					current_screen = SCREEN_SPLASH;
-					break;
-				}
-			}
-		}
-	}
+	velocity = 0.01f * deltatime;
+
 	//TODO mouse
 	if(first_mouse)
 	{
