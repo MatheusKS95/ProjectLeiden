@@ -17,7 +17,7 @@
 #include <screens.h>
 
 CurrentScreen current_screen;
-RockportContext drawing_context;
+LeidenContext drawing_context;
 bool exit_signal;
 
 void SCR_SetContext(SDL_Window *window, SDL_GPUDevice *device)
@@ -34,14 +34,27 @@ bool SCR_Setup()
 	return false;
 }
 
-void SCR_Logic(SDL_Event event)
+void SCR_Input(SDL_Event event)
 {
 	switch(current_screen)
 	{
-		case SCREEN_SPLASH: SplashScreen_Logic(event); break;
-		case SCREEN_TEST: TestScreen1_Logic(event); break;
-		case SCREEN_TEST2: TestScreen2_Logic(event); break;
-		case SCREEN_TEST3: TestScreen3_Logic(event); break;
+		case SCREEN_SPLASH: SplashScreen_Input(event); break;
+		case SCREEN_TEST: TestScreen1_Input(event); break;
+		case SCREEN_TEST2: TestScreen2_Input(event); break;
+		case SCREEN_TEST3: TestScreen3_Input(event); break;
+		default: break;
+	}
+	return;
+}
+
+void SCR_Iterate()
+{
+	switch(current_screen)
+	{
+		case SCREEN_SPLASH: SplashScreen_Iterate(); break;
+		case SCREEN_TEST: TestScreen1_Iterate(); break;
+		case SCREEN_TEST2: TestScreen2_Iterate(); break;
+		case SCREEN_TEST3: TestScreen3_Iterate(); break;
 		default: break;
 	}
 	return;
