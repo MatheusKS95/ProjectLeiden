@@ -44,6 +44,10 @@
 
 /**************************************************************************************
  * ARRAY HELPERS (vertices, indices, textures, meshes and materials
+ * The following looks stupid, but I did this way so the compiler/IDE can point out
+ * if I use the wrong array (for example, no using iarray in the place of a varray).
+ * It allows me to do things with a bit of extra safety. There are better ways? Maybe.
+ * But that's what I came up with back then.
 ***************************************************************************************/
 static bool _arrayRealocVertex(VertexArray *arr, size_t new_size)
 {

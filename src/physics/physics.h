@@ -28,7 +28,7 @@ typedef struct AABB
 } AABB;
 
 //triangle used for mesh collision
-typedef struct Triangle
+/*typedef struct Triangle
 {
 	Vector3 v0, v1, v2;
 } Triangle;
@@ -38,10 +38,10 @@ typedef struct GroundContact
 {
 	float ground_height;
 	Vector3 normal;
-} GroundContact;
+} GroundContact;*/
 
 bool Physics_AABBvsAABB(AABB a, AABB b);
 
-bool Physics_AABBvsTriangle(AABB box, Triangle tri);
+//bool Physics_AABBvsTriangle(AABB box, Triangle tri);
 
 #endif

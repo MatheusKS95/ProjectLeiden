@@ -24,7 +24,8 @@ bool Physics_AABBvsAABB(AABB a, AABB b)
 }
 
 //uses SAT
-bool Physics_AABBvsTriangle(AABB box, Triangle tri)
+//this sucks
+/*bool Physics_AABBvsTriangle(AABB box, Triangle tri)
 {
 	//move triangle to AABB local space (centre at origin)
 	Vector3 v0 = Vector3_Sub(tri.v0, box.center);
@@ -88,6 +89,6 @@ bool Physics_AABBvsTriangle(AABB box, Triangle tri)
 
 	//no separating axis found: collision
 	return true;
-}
+}*/
 
 //TODO
