@@ -26,7 +26,7 @@ typedef struct Scene
 	//TODO
 	//pipeline
 	//camera
-	//entities
+	//objects
 } Scene;
 
 #endif
