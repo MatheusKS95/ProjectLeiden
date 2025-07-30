@@ -19,6 +19,7 @@
 
 #include <SDL3/SDL.h>
 #include <linmath.h>
+#include <physics.h>
 
 /*******************************************************************
  * STRUCTURES AND ENUMS ********************************************
@@ -122,6 +123,26 @@ typedef struct Model
 	MeshArray meshes;
 } Model;
 
+/* OBJECTS */
+
+typedef enum PhysicsBodyType
+{
+	PHYSICSBODY_NONE = 0, //no physics
+	PHYSICSBODY_AABB //simple box, widely used
+	//PHYSICSBODY_OBB //a bit more advanced, for cars
+} PhysicsBodyType;
+
+typedef struct Object
+{
+	Model *renderable; //can be null
+	Matrix4x4 transform;
+	PhysicsBodyType body_type;
+	union
+	{
+		AABB aabb;
+		//OBB TODO
+	};
+} Object;
 
 /*******************************************************************
  * FUNCTIONS *******************************************************
@@ -158,5 +179,9 @@ bool ImportIQM(SDL_GPUDevice *device, Model *model,
 				const char *iqmfile);
 
 void ReleaseModel(SDL_GPUDevice *device, Model *model);
+
+/* OBJECTS */
+
+//Object CreateObject(Model *model);
 
 #endif

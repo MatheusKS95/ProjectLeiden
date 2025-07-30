@@ -22,14 +22,6 @@
 #include <shader.h>
 #include <list.h>
 
-typedef struct test3object
-{
-	Model *model;
-	AABB box;
-	Vector3 position;
-	float scale;
-} test3object;
-
 typedef struct test3render
 {
 	SDL_GPUGraphicsPipeline *pipeline;
@@ -39,8 +31,8 @@ typedef struct test3render
 
 static test3render renderstuff;
 
-static test3object tower;
-static test3object box;
+static Object tower;
+static Object box;
 
 static float deltatime;
 static float lastframe;
@@ -108,28 +100,27 @@ bool TestScreen3_Setup()
 	);
 
 	//load tower
-	tower = (test3object){ 0 };
-	tower.model = (Model*)SDL_malloc(sizeof(Model));
-	if(tower.model != NULL)
+	tower = (Object){ 0 };
+	tower.renderable = (Model*)SDL_malloc(sizeof(Model));
+	if(tower.renderable != NULL)
 	{
-		ImportIQM(drawing_context.device, tower.model, "testmodels/tower/tower.iqm");
+		ImportIQM(drawing_context.device, tower.renderable, "testmodels/tower/tower.iqm");
 	}
-	tower.position = (Vector3){ 0 };
-	tower.scale = 1.0f;
-	tower.box.center = tower.position;
-	tower.box.half_size = (Vector3){1.0f, 1.0f, 1.0f};
+	tower.transform = Matrix4x4_Identity();
+	tower.aabb.center = (Vector3){ 0 }; //TODO get position from matrix
+	tower.aabb.half_size = (Vector3){1.0f, 1.0f, 1.0f};
 
 	//load box
-	box = (test3object){ 0 };
-	box.model = (Model*)SDL_malloc(sizeof(Model));
-	if(box.model != NULL)
+	box = (Object){ 0 };
+	box.renderable = (Model*)SDL_malloc(sizeof(Model));
+	if(box.renderable != NULL)
 	{
-		ImportIQM(drawing_context.device, box.model, "testmodels/cube/cube.iqm");
+		ImportIQM(drawing_context.device, box.renderable, "testmodels/cube/cube.iqm");
 	}
-	box.position = (Vector3){ 4.0f, 0.0f, 5.0f };
-	box.scale = 1.0f;
-	box.box.center = box.position;
-	box.box.half_size = (Vector3){1.0f, 1.0f, 1.0f};
+	box.transform = Matrix4x4_Identity();
+	box.transform = Matrix4x4_Translate(box.transform, 4.0f, 0.0f, 5.0f);
+	box.aabb.center = (Vector3){box.transform.da, box.transform.db, box.transform.dc};
+	box.aabb.half_size = (Vector3){1.0f, 1.0f, 1.0f};
 
 	collision = false;
 
@@ -157,19 +148,19 @@ void TestScreen3_Input(SDL_Event event)
 		}
 		if(event.key.key == SDLK_LEFT)
 		{
-			box.position.x -= 0.5f;
+			box.transform.da -= 0.5f; //x
 		}
 		if(event.key.key == SDLK_RIGHT)
 		{
-			box.position.x += 0.5f;
+			box.transform.da += 0.5f;
 		}
 		if(event.key.key == SDLK_UP)
 		{
-			box.position.z -= 0.5f;
+			box.transform.dc -= 0.5f; //z
 		}
 		if(event.key.key == SDLK_DOWN)
 		{
-			box.position.z += 0.5f;
+			box.transform.dc += 0.5f;
 		}
 	}
 
@@ -182,9 +173,9 @@ void TestScreen3_Iterate()
 	deltatime = current_frame - lastframe;
 	lastframe = current_frame;
 
-	box.box.center = box.position;
+	box.aabb.center = (Vector3){box.transform.da, box.transform.db, box.transform.dc};
 
-	if(Physics_AABBvsAABB(box.box, tower.box))
+	if(Physics_AABBvsAABB(box.aabb, tower.aabb))
 	{
 		collision = true;
 	}
@@ -194,19 +185,20 @@ void TestScreen3_Iterate()
 	}
 }
 
-static void drawobject(test3object *object, SDL_GPURenderPass *renderpass, SDL_GPUCommandBuffer *cmdbuf, SDL_GPUGraphicsPipeline *pipeline)
+static void drawobject(Object *object, SDL_GPURenderPass *renderpass, SDL_GPUCommandBuffer *cmdbuf, SDL_GPUGraphicsPipeline *pipeline)
 {
 	Matrix4x4 viewproj;
 	viewproj = Matrix4x4_Mul(cam_1.view, cam_1.projection);
 
 	Matrix4x4 model = Matrix4x4_Identity();
-	model = Matrix4x4_Scale(model, (Vector3){object->scale, object->scale, object->scale});
-	model = Matrix4x4_Translate(model, object->position.x, object->position.y, object->position.z);
+	//model = Matrix4x4_Scale(model, (Vector3){object->scale, object->scale, object->scale});
+	//model = Matrix4x4_Translate(model, object->position.x, object->position.y, object->position.z);
+	model = object->transform;
 
 	Matrix4x4 mvp = Matrix4x4_Mul(model, viewproj);
-	for(size_t i = 0; i < object->model->meshes.count; i++)
+	for(size_t i = 0; i < object->renderable->meshes.count; i++)
 	{
-		Mesh *mesh = &object->model->meshes.meshes[i];
+		Mesh *mesh = &object->renderable->meshes.meshes[i];
 		//binding graphics pipeline
 		SDL_BindGPUGraphicsPipeline(renderpass, pipeline);
 
@@ -277,8 +269,8 @@ void TestScreen3_Draw()
 void TestScreen3_Destroy()
 {
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Finishing test screen 3...");
-	ReleaseModel(drawing_context.device, tower.model);
-	ReleaseModel(drawing_context.device, box.model);
+	ReleaseModel(drawing_context.device, tower.renderable);
+	ReleaseModel(drawing_context.device, box.renderable);
 	SDL_ReleaseGPUGraphicsPipeline(drawing_context.device, renderstuff.pipeline);
 	SDL_ReleaseGPUSampler(drawing_context.device, renderstuff.sampler);
 	SDL_ReleaseGPUTexture(drawing_context.device, renderstuff.depth_texture);
