@@ -206,7 +206,7 @@ void SplashScreen_Input(SDL_Event event)
 				return;
 			}
 		}
-		if(event.key.key == SDLK_W)
+		else if(event.key.key == SDLK_W)
 		{
 			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to blank test");
 			if(TestScreen3_Setup())
@@ -216,8 +216,9 @@ void SplashScreen_Input(SDL_Event event)
 				return;
 			}
 		}
-		else
+		else if(event.key.key == SDLK_E)
 		{
+			//will be retired
 			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "going to cel shading test");
 			if(TestScreen1_Setup())
 			{

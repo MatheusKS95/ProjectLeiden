@@ -14,6 +14,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+//will be retired
+
 #include <SDL3/SDL.h>
 #include <fileio.h>
 #include <assets.h>
