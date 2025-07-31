@@ -20,6 +20,9 @@ CurrentScreen current_screen;
 LeidenContext drawing_context;
 bool exit_signal;
 
+//TODO use a file that tells the flow (or something like that)
+//thus not needing to edit this every time I make a test scene
+
 void SCR_SetContext(SDL_Window *window, SDL_GPUDevice *device)
 {
 	drawing_context.window = window;
@@ -41,7 +44,6 @@ void SCR_Input(SDL_Event event)
 		case SCREEN_SPLASH: SplashScreen_Input(event); break;
 		case SCREEN_TEST: TestScreen1_Input(event); break;
 		case SCREEN_TEST2: TestScreen2_Input(event); break;
-		case SCREEN_TEST3: TestScreen3_Input(event); break;
 		default: break;
 	}
 	return;
@@ -54,7 +56,6 @@ void SCR_Iterate()
 		case SCREEN_SPLASH: SplashScreen_Iterate(); break;
 		case SCREEN_TEST: TestScreen1_Iterate(); break;
 		case SCREEN_TEST2: TestScreen2_Iterate(); break;
-		case SCREEN_TEST3: TestScreen3_Iterate(); break;
 		default: break;
 	}
 	return;
@@ -67,7 +68,6 @@ void SCR_Draw()
 		case SCREEN_SPLASH: SplashScreen_Draw(); break;
 		case SCREEN_TEST: TestScreen1_Draw(); break;
 		case SCREEN_TEST2: TestScreen2_Draw(); break;
-		case SCREEN_TEST3: TestScreen3_Draw(); break;
 		default: break;
 	}
 	return;
@@ -80,7 +80,6 @@ void SCR_Destroy()
 		case SCREEN_SPLASH: SplashScreen_Destroy(); break;
 		case SCREEN_TEST: TestScreen1_Destroy(); break;
 		case SCREEN_TEST2: TestScreen2_Destroy(); break;
-		case SCREEN_TEST3: TestScreen3_Destroy(); break;
 		default: break;
 	}
 	return;

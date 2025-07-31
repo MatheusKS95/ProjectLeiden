@@ -21,8 +21,7 @@ typedef enum CurrentScreen
 	SCREEN_SPLASH = 0,
 	//the following are TEMPORARY
 	SCREEN_TEST,
-	SCREEN_TEST2,
-	SCREEN_TEST3
+	SCREEN_TEST2
 } CurrentScreen;
 
 typedef struct LeidenContext
@@ -95,7 +94,7 @@ void SplashScreen_Destroy();
 //END SPLASH
 
 /* TEST SCREEN 1
- * Temporary, I want to test how 3D is working
+ * Temporary test for retro style
 */
 //BEGIN TEST 1
 
@@ -112,7 +111,7 @@ void TestScreen1_Destroy();
 //END TEST 1
 
 /* TEST SCREEN 2
- * Temporary, retro scene
+ * Temporary test for collision detection
 */
 //BEGIN TEST 2
 
@@ -127,20 +126,3 @@ void TestScreen2_Draw();
 void TestScreen2_Destroy();
 
 //END TEST 2
-
-/* TEST SCREEN 3
- * Temporary, collision test
-*/
-//BEGIN TEST 3
-
-bool TestScreen3_Setup();
-
-void TestScreen3_Input(SDL_Event event);
-
-void TestScreen3_Iterate();
-
-void TestScreen3_Draw();
-
-void TestScreen3_Destroy();
-
-//END TEST 3

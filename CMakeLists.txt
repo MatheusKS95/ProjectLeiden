@@ -84,7 +84,6 @@ PRIVATE
 	src/screens/splash.c
 	src/screens/test1.c
 	src/screens/test2.c
-	src/screens/test3.c
 )
 
 #SDL
